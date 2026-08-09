@@ -7,7 +7,7 @@
  */
 
 const API_CONFIG = {
-  BASE_URL: 'http://127.0.0.1:7000',
+  BASE_URL: '',
   TIMEOUT: 30000, // 30 segundos
   TOKEN_KEY: 'jwt_token'
 };
