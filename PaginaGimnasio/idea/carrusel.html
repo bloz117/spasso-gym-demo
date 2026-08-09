@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrusel Infinito Sin Fondo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      height: 100%;
+      overflow: hidden;
+      background: black; /* Fondo negro */
+    }
+
+    .carousel-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .carousel-track {
+      display: flex;
+      width: calc(100vw * 8); /* 4 imágenes * 2 para loop infinito */
+      animation: scroll 30s linear infinite;
+    }
+
+    .slide {
+      flex: 0 0 100vw;
+      height: 100vh;
+      background-size: cover;
+      background-position: center;
+    }
+
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-400vw); }
+    }
+    
+  </style>
+</head>
+<body>
+
+  <div class="carousel-container">
+    <div class="carousel-track">
+      <!-- 4 imágenes originales -->
+      <div class="slide" style="background-image: url('img/carrusel1.png');"></div>
+      <div class="slide" style="background-image: url('img/carrusel2.jpeg');"></div>
+      <div class="slide" style="background-image: url('img/carrusel3.jpg');"></div>
+      <div class="slide" style="background-image: url('img/carrusel4.jpg');"></div>
+
+      <!-- Copia de las 4 imágenes para efecto loop infinito -->
+      <div class="slide" style="background-image: url('img/carrusel1.png');"></div>
+      <div class="slide" style="background-image: url('img/carrusel2.jpeg');"></div>
+      <div class="slide" style="background-image: url('img/carrusel3.jpg');"></div>
+      <div class="slide" style="background-image: url('img/carrusel4.jpg');"></div>
+    </div>
+  </div>
+
+</body>
+</html>

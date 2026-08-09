@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spasso - Sauna & Gym Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- musica -->
+    <audio id="audio" loop autoplay>
+        <source src="/portal-static/music/End of Line (From TRON_ LegacyScore).mp3" type="audio/mp3">
+    </audio>
+    
+    <!-- Header -->
+    <header>
+        <div class="logo-container">
+            <div class="logo-text">
+                <div class="logo-main">SPASSO</div>
+                <div class="logo-sub">SAUNA & GYM</div>
+            </div>
+        </div>
+        
+        <nav>
+            <ul class="nav-links">
+                <li><a href="#inicio" class="nav-link active">Inicio</a></li>
+                <li><a href="#saunas" class="nav-link">Saunas</a></li>
+                <li><a href="#piscina" class="nav-link">Piscina</a></li>
+                <li><a href="#gimnasio" class="nav-link">Gimnasio</a></li>
+                <li><a href="#promociones" class="nav-link">Promociones</a></li>
+                <li><a href="#contacto" class="nav-link">Contacto</a></li>
+            </ul>
+        </nav>
+        
+        <div class="header-actions">
+            <button class="login-btn" id="loginBtn">
+                <i class="fas fa-user"></i> Iniciar Sesión
+            </button>
+        </div>
+    </header>
+
+    <!-- Sección Inicio -->
+    <section id="inicio" class="section">
+        <div class="particles" id="particles"></div>
+        
+        <h1 class="welcome-title">BIENVENIDOS A SPASSO</h1>
+        <p class="welcome-subtitle">El lugar donde el bienestar se encuentra con el lujo. Disfruta de nuestras instalaciones premium diseñadas para tu relajación y salud.</p>
+        
+        <div class="info-boxes">
+            <div class="info-box">
+                <i class="fas fa-map-marker-alt"></i>
+                <h3>Ubicación</h3>
+                <p>Calle Nestor Galindo N° 1 <br>esquina Av. Canadá, zona terminal de buses.</p>
+            </div>
+            <div class="info-box">
+                <i class="fas fa-clock"></i>
+                <h3>Horarios</h3>
+                <p>Lun-Vie: 6:00 - 22:00<br>Sab-Dom: 8:00 - 20:00</p>
+            </div>
+            <div class="info-box">
+                <i class="fas fa-star"></i>
+                <h3>Experiencia</h3>
+                <p>5 años de excelencia en bienestar</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Saunas -->
+    <section id="saunas" class="section">
+        <h2 class="section-title">SAUNAS</h2>
+        <div class="content-grid">
+            <div class="image-gallery">
+                <img src="/portal-static/img/sauna1.jpeg" alt="Sauna Spasso">
+                <img src="/portal-static/img/sauna2.jpeg" alt="Sauna privada">
+                <img src="/portal-static/img/sauna3.jpg" alt="Sauna relajante">
+                <img src="/portal-static/img/sauna4.jpg" alt="Sauna premium">
+            </div>
+            <div class="content-info">
+                <h3>Experiencia de Sauna Completa</h3>
+                <p>Nuestras saunas combinan técnicas tradicionales con tecnología moderna para ofrecerte la mejor experiencia de relajación y desintoxicación.</p>
+                
+                <div class="pricing-table">
+                    <div class="pricing-card">
+                        <h4>Sauna Público</h4>
+                        <p class="price">25 bs.</p>
+                        <ul>
+                            <li>Acceso por 2 horas</li>
+                            <li>Toalla incluida</li>
+                            <li>Bebida refrescante</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card">
+                        <h4>Sauna Privado</h4>
+                        <p class="price">35 bs.</p>
+                        <ul>
+                            <li>Espacio exclusivo</li>
+                            <li>2 horas de uso</li>
+                            <li>Toalla y bata incluida</li>
+                            <li>Aceites esenciales</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="service-hours">
+                    <h4>Horario de Servicio</h4>
+                    <p>Lunes a Viernes: 8:00 - 22:00<br>
+                    Sábado y Domingo: 9:00 - 20:00</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Piscina -->
+    <section id="piscina" class="section">
+        <h2 class="section-title">PISCINA & JACUZZI</h2>
+        <div class="content-grid">
+            <div class="image-gallery">
+                <img src="/portal-static/img/piscina1.jpeg" alt="Piscina Spasso">
+                <img src="/portal-static/img/piscina2.jpeg" alt="Jacuzzi Spasso">
+                <img src="/portal-static/img/piscina3.jpg" alt="Área de descanso">
+                <img src="/portal-static/img/piscina4.jpg" alt="Vista panorámica">
+            </div>
+            <div class="content-info">
+                <h3>Área Acuática de Lujo</h3>
+                <p>Disfruta de nuestra piscina climatizada y jacuzzi con sistema de hidromasaje. Tenemos área de descanso exclusiva con servicio de bebidas.</p>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-umbrella-beach"></i>
+                        <h4>Área de Descanso</h4>
+                        <p>Camas lounge con servicio de toallas</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-swimming-pool"></i>
+                        <h4>Piscina</h4>
+                        <p>25m climatizada con carriles</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-hot-tub"></i>
+                        <h4>Jacuzzi</h4>
+                        <p>Capacidad para 8 personas</p>
+                    </div>
+                </div>
+                
+                <div class="pricing-info">
+                    <h4>Tarifas</h4>
+                    <p>Día completo: 30 bs<br>
+                    Medio día (4 hrs): 35 bs<br>
+                    Alquiler traje de baño: 45 bs</p>
+                </div>
+                
+                <div class="service-hours">
+                    <h4>Horario de Servicio</h4>
+                    <p>Todos los días: 7:00 - 21:00</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Gimnasio -->
+    <section id="gimnasio" class="section">
+        <h2 class="section-title">GIMNASIO PREMIUM</h2>
+        <div class="gym-grid">
+            <div class="gym-gallery">
+               
+                <img src="/portal-static/img/gym1.jpeg" alt="Gimnasio Spasso">
+                <img src="/portal-static/img/gym2.jpeg" alt="Área de pesas">
+                <img src="/portal-static/img/gym3.jpeg" alt="Clases grupales">
+                
+                
+                <img src="/portal-static/img/gym4.jpeg" alt="Cardio">
+                <img src="/portal-static/img/gym5.jpeg" alt="Estudio yoga">
+                <img src="/portal-static/img/gym5.jpeg" alt="Estudio yoga">
+                
+                
+                <img src="/portal-static/img/gym6.jpeg" alt="Vestidores">
+                <img src="/portal-static/img/gym7.jpeg" alt="Área crossfit">
+                <img src="/portal-static/img/gym8.jpeg" alt="Entrenamiento funcional">
+            </div>
+            
+            <div class="gym-info">
+                <h3>Más que un gimnasio, un estilo de vida</h3>
+                <p>Equipos de última generación, entrenadores certificados y programas personalizados para alcanzar tus metas.</p>
+                
+                <div class="membership-tiers">
+                    <div class="membership-card">
+                        <h4>Básico</h4>
+                        <p class="price">120 bs/mes</p>
+                        <ul>
+                            <li>Acceso a equipos</li>
+                            <li>Horario estándar</li>
+                            <li>1 evaluación mensual</li>
+                        </ul>
+                    </div>
+                    <div class="membership-card">
+                        <h4>Premium</h4>
+                        <p class="price">180 bs/mes</p>
+                        <ul>
+                            <li>Acceso ilimitado</li>
+                            <li>2 sesiones con entrenador</li>
+                            <li>Acceso a clases grupales</li>
+                            <li>Uso de sauna</li>
+                        </ul>
+                    </div>
+                    <div class="membership-card">
+                        <h4>VIP</h4>
+                        <p class="price">200 bs/mes</p>
+                        <ul>
+                            <li>Acceso 24/7</li>
+                            <li>Entrenador personal</li>
+                            <li>Acceso a todas las áreas</li>
+                            <li>Plan nutricional</li>
+                            <li>2 invitados/mes</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="service-hours">
+                    <h4>Horario</h4>
+                    <p>Lunes a Viernes: 5:00 - 23:00<br>
+                    Sábado y Domingo: 7:00 - 21:00<br>
+                    VIP: Acceso 24/7</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Promociones -->
+    <section id="promociones" class="section">
+        <h2 class="section-title">PROMOCIONES ESPECIALES</h2>
+        <div class="promo-grid">
+            <div class="promo-card">
+                <div class="promo-badge">¡NUEVO!</div>
+                <h3>Inscripción de Temporada</h3>
+                <p class="promo-date">Válido del 1 al 30 de Junio</p>
+                <p>Inscríbete este mes y obtén un 30% de descuento en tu primera mensualidad.</p>
+                <button class="promo-btn" data-promo="Inscripción de Temporada - 30% descuento primera mensualidad">Aprovechar Oferta</button>
+            </div>
+            
+            <div class="promo-card">
+                <div class="promo-badge">¡EXCLUSIVO!</div>
+                <h3>Trae un Amigo</h3>
+                <p class="promo-date">Válido todo el año</p>
+                <p>Si traes a un amigo, ambos obtienen 2 semanas gratis adicionales a su membresía.</p>
+                <button class="promo-btn" data-promo="Trae un Amigo - 2 semanas gratis para ambos">Aprovechar Oferta</button>
+            </div>
+            
+            <div class="promo-card">
+                <div class="promo-badge">¡LIMITADO!</div>
+                <h3>Combo Premium</h3>
+                <p class="promo-date">Válido hasta agotar stock</p>
+                <p>Membresía VIP + 5 sesiones de sauna privado por solo $150.000 (normal 180 bs).</p>
+                <button class="promo-btn" data-promo="Combo Premium - VIP + 5 saunas $150.000">Aprovechar Oferta</button>
+            </div>
+            
+            <div class="promo-card">
+                <div class="promo-badge">¡FLASH!</div>
+                <h3>Día del Padre</h3>
+                <p class="promo-date">Válido hasta el 30 de Junio</p>
+                <p>20% de descuento en todas las membresías para padres. Presenta certificado de nacimiento.</p>
+                <button class="promo-btn" data-promo="Día del Padre - 20% descuento membresías">Aprovechar Oferta</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Contacto -->
+    <section id="contacto" class="section">
+        <h2 class="section-title">CONTÁCTANOS</h2>
+        <div class="contact-grid">
+            <div class="contact-form">
+                <h3>Envíanos un Mensaje</h3>
+                <form id="contactForm">
+                    <div class="form-group">
+                        <input type="text" id="name" placeholder="Nombre" required>
+                    </div>
+                    <div class="form-container">
+                        <div class="form-group">
+                            <input type="email" id="email" placeholder="Correo Electrónico" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="tel" id="phone" placeholder="Teléfono">
+                        </div>
+                        <div class="form-group">
+                            <textarea id="message" rows="5" placeholder="Mensaje" required></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">Enviar Mensaje</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="contact-info">
+                <h3>Información de Contacto</h3>
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <p>73415902</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <p>spaziosaunaclub@gmail.com</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <p>Calle Nestor Galindo N° 1 <br>esquina Av. Canadá, zona terminal de buses.</p>
+                </div>
+                
+                <div class="social-links">
+                    <a href="https://wa.me/73415902" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://www.instagram.com/spassosaunaclub/" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.facebook.com/SpazioSaunaClub" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.tiktok.com/@spassosaunayfitnessclub" class="social-icon"><i class="fab fa-tiktok"></i></a>
+                </div>
+                
+                <div class="map-container">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3771.5927744933965!2d-65.24820322390714!3d-19.03765791114469!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x93fbc8d314a9c58b%3A0xa9c2e92ecc1c47b7!2sSpasso%20Sauna%20%26%20Fitness%20Club!5e0!3m2!1ses!2sbo!4v1743875963800!5m2!1ses!2sbo" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Login -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Iniciar Sesión</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <input type="email" id="loginEmail" placeholder="Correo Electrónico" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="loginPassword" placeholder="Contraseña" required>
+                </div>
+                <div class="form-group admin-login">
+                    <label>
+                        <input type="checkbox" id="adminLogin"> Acceso Administrador
+                    </label>
+                    <label>
+                        <input type="checkbox" id="receptionLogin"> Acceso Recepción
+                    </label>
+                </div>
+                <button type="submit" class="submit-btn">Ingresar</button>
+                <p class="toggle-form">¿No tienes cuenta? <a href="#" id="showRegister">Regístrate aquí</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Registro -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Crear Cuenta</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <input type="text" id="registerName" placeholder="Nombre Completo" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="registerEmail" placeholder="Correo Electrónico" required>
+                </div>
+                <div class="form-group">
+                    <input type="tel" id="registerPhone" placeholder="Teléfono">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="registerPassword" placeholder="Contraseña" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="registerConfirm" placeholder="Confirmar Contraseña" required>
+                </div>
+                <button type="submit" class="submit-btn">Registrarse</button>
+                <p class="toggle-form">¿Ya tienes cuenta? <a href="#" id="showLogin">Inicia sesión aquí</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Perfil/Admin -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content profile-content">
+            <span class="close-modal">&times;</span>
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="profile-info">
+                    <h2 id="profileName">Nombre Usuario</h2>
+                    <p id="profileEmail">usuario@email.com</p>
+                    <p id="profileRole">Miembro</p>
+                </div>
+            </div>
+            
+            <!-- Información de Mensualidad -->
+            <div class="profile-section">
+                <h3>Tu Membresía</h3>
+                <div class="membership-info">
+                    <h4 id="membershipPlan">Plan Premium</h4>
+                    <div>
+                        <p><strong>Fecha de inicio:</strong> <span id="membershipStart">01/06/2023</span></p>
+                        <p><strong>Fecha de término:</strong> <span id="membershipEnd">30/06/2023</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <h3>Rutinas Recomendadas</h3>
+                <div class="routine-tabs">
+                    <button class="tab-btn active" data-tab="hombres">Hombres</button>
+                    <button class="tab-btn" data-tab="mujeres">Mujeres</button>
+                </div>
+                
+                <div class="level-selector">
+                    <button class="level-btn active" data-level="novato">Novato</button>
+                    <button class="level-btn" data-level="intermedio">Intermedio</button>
+                    <button class="level-btn" data-level="avanzado">Avanzado</button>
+                </div>
+                
+                <div class="routine-content" id="hombres-tab">
+                    <!-- Rutinas para hombres novatos -->
+                    <div class="routine-grid" id="hombres-novato">
+                        <div class="routine-day">
+                            <h4>Lunes - Pecho/Tríceps</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Press banca 3x10</li>
+                                <li>Fondos asistidos 3x8</li>
+                                <li>Aperturas con mancuernas 3x10</li>
+                            </ul>
+                        </div>
+                        <div class="routine-day">
+                            <h4>Miércoles - Espalda/Bíceps</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Dominadas asistidas 3x6</li>
+                                <li>Remo con barra 3x10</li>
+                                <li>Curl de bíceps 3x12</li>
+                            </ul>
+                        </div>
+                        <div class="routine-day">
+                            <h4>Viernes - Piernas</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Sentadillas 3x10</li>
+                                <li>Prensa 3x12</li>
+                                <li>Peso muerto rumano 3x8</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Rutinas para hombres intermedios (ocultas inicialmente) -->
+                    <div class="routine-grid" id="hombres-intermedio" style="display:none">
+                        <div class="routine-day">
+                            <h4>Lunes - Pecho/Tríceps</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Press banca 4x8</li>
+                                <li>Fondos 3x10</li>
+                                <li>Aperturas con poleas 3x12</li>
+                            </ul>
+                        </div>
+                        <div class="routine-day">
+                            <h4>Miércoles - Espalda/Bíceps</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Dominadas 4x6</li>
+                                <li>Remo con mancuernas 3x10</li>
+                                <li>Curl martillo 3x12</li>
+                            </ul>
+                        </div>
+                        <div class="routine-day">
+                            <h4>Viernes - Piernas</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Sentadillas 4x8</li>
+                                <li>Prensa 4x10</li>
+                                <li>Peso muerto 3x6</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Rutinas para hombres avanzados (ocultas inicialmente) -->
+                    <div class="routine-grid" id="hombres-avanzado" style="display:none">
+                        <div class="routine-day">
+                            <h4>Lunes - Pecho/Tríceps</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Press banca 5x5</li>
+                                <li>Fondos con peso 4x8</li>
+                                <li>Aperturas inclinadas 4x10</li>
+                            </ul>
+                        </div>
+                        <div class="routine-day">
+                            <h4>Miércoles - Espalda/Bíceps</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Dominadas con peso 4x6</li>
+                                <li>Remo T 4x8</li>
+                                <li>Curl concentrado 4x10</li>
+                            </ul>
+                        </div>
+                        <div class="routine-day">
+                            <h4>Viernes - Piernas</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Sentadillas pesadas 5x5</li>
+                                <li>Prensa 5x8</li>
+                                <li>Peso muerto 4x6</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="routine-content" id="mujeres-tab" style="display:none">
+                    <!-- Rutinas para mujeres novatas -->
+                    <div class="routine-grid" id="mujeres-novato">
+                        <div class="routine-day">
+                            <h4>Lunes - Piernas/Glúteos</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Sentadillas sumo 3x12</li>
+                                <li>Hip thrust 3x10</li>
+                                <li>Zancadas 3x10 por pierna</li>
+                            </ul>
+                        </div>
+                        <div class="routine-day">
+                            <h4>Miércoles - Brazos/Espalda</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Remo con mancuernas 3x10</li>
+                                <li>Curl de bíceps 3x12</li>
+                                <li>Fondos de tríceps 3x10</li>
+                            </ul>
+                        </div>
+                        <div class="routine-day">
+                            <h4>Viernes - Cardio/Core</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Elíptica 30 min</li>
+                                <li>Burpees 3x10</li>
+                                <li>Plancha 3x30 seg</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Rutinas para mujeres intermedias (ocultas inicialmente) -->
+                    <div class="routine-grid" id="mujeres-intermedio" style="display:none">
+                        <div class="routine-day">
+                            <h4>Lunes - Piernas/Glúteos</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Sentadillas sumo con peso 4x10</li>
+                                <li>Hip thrust con peso 4x8</li>
+                                <li>Zancadas con mancuernas 3x10 por pierna</li>
+                            </ul>
+                        </div>
+                        <div class="routine-day">
+                            <h4>Miércoles - Brazos/Espalda</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Remo con barra 4x8</li>
+                                <li>Curl martillo 3x10</li>
+                                <li>Fondos en banco 3x12</li>
+                            </ul>
+                        </div>
+                        <div class="routine-day">
+                            <h4>Viernes - Cardio/Core</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>HIIT 20 min</li>
+                                <li>Burpees con salto 3x12</li>
+                                <li>Plancha con elevaciones 3x30 seg</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Rutinas para mujeres avanzadas (ocultas inicialmente) -->
+                    <div class="routine-grid" id="mujeres-avanzado" style="display:none">
+                        <div class="routine-day">
+                            <h4>Lunes - Piernas/Glúteos</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Sentadillas búlgaras 4x8 por pierna</li>
+                                <li>Hip thrust pesado 5x5</li>
+                                <li>Zancadas con barra 4x8 por pierna</li>
+                            </ul>
+                        </div>
+                        <div class="routine-day">
+                            <h4>Miércoles - Brazos/Espalda</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>Dominadas 4x6</li>
+                                <li>Remo invertido 4x8</li>
+                                <li>Curl con barra 4x8</li>
+                            </ul>
+                        </div>
+                        <div class="routine-day">
+                            <h4>Viernes - Cardio/Core</h4>
+                            <div class="video-placeholder">
+                                <video width="100%" height="120" controls>
+                                    <source src="vid/videoPecho.mp4" type="video/mp4">
+                                    Tu navegador no soporta el elemento de video.
+                                </video>
+                            </div>
+                            <ul>
+                                <li>HIIT avanzado 30 min</li>
+                                <li>Burpees con salto y flexión 4x10</li>
+                                <li>Plancha con movimientos 4x30 seg</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <h3>Promociones y Sorteos</h3>
+                <div class="promo-card">
+                    <h4>30% descuento en membresía Premium</h4>
+                    <p>Válido hasta 30 de junio</p>
+                </div>
+                <div class="promo-card">
+                    <h4>Sorteo entrada doble a sauna</h4>
+                    <p>Participa hasta el 15 de julio</p>
+                </div>
+            </div>
+            
+            <div class="admin-controls" id="adminControls" style="display:none">
+                <h3>Panel de Administrador</h3>
+                <button id="editContentBtn" class="admin-btn">Editar Contenido</button>
+                <button id="saveChangesBtn" class="admin-btn" style="display:none">Guardar Cambios</button>
+                <button id="manageUsersBtn" class="admin-btn">Gestionar Usuarios</button>
+                <button id="manageMembershipsBtn" class="admin-btn">Mensualidades</button>
+            </div>
+            
+            <div class="reception-controls" id="receptionControls" style="display:none">
+                <h3>Panel de Recepcionista</h3>
+                <div class="shift-selector">
+                    <label for="shiftSelect">Turno:</label>
+                    <select id="shiftSelect">
+                        <option value="morning">Mañana</option>
+                        <option value="afternoon">Tarde</option>
+                    </select>
+                </div>
+                <div class="receptionist-name">
+                    <label for="receptionistNameInput">Nombre Recepcionista:</label>
+                    <input type="text" id="receptionistNameInput" placeholder="Ingresa tu nombre">
+                </div>
+                <button id="registerIncomeBtn" class="reception-btn">
+                    <i class="fas fa-user-plus"></i> Registrar Ingreso
+                </button>
+                <button id="viewClientsBtn" class="reception-btn">
+                    <i class="fas fa-users"></i> Ver Clientes
+                </button>
+            </div>
+            
+            <button class="logout-btn" id="logoutBtn">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <!-- Modal Admin -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content admin-modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Panel de Administración</h2>
+            
+            <div class="admin-tabs">
+                <button class="admin-tab-btn active" data-tab="users">Usuarios</button>
+                <button class="admin-tab-btn" data-tab="memberships">Mensualidades</button>
+            </div>
+            
+            <div class="admin-tab-content" id="users-tab">
+                <div class="search-bar">
+                    <input type="text" id="userSearch" placeholder="Buscar usuarios...">
+                    <button id="searchUserBtn"><i class="fas fa-search"></i></button>
+                </div>
+                
+                <div class="users-list" id="usersList">
+                    <!-- Usuarios se cargarán aquí dinámicamente -->
+                </div>
+            </div>
+            
+            <div class="admin-tab-content" id="memberships-tab" style="display:none">
+                <h3>Gestión de Mensualidades</h3>
+                <div class="search-bar">
+                    <input type="text" id="membershipSearch" placeholder="Buscar usuarios...">
+                    <button id="searchMembershipBtn"><i class="fas fa-search"></i></button>
+                </div>
+                
+                <table class="memberships-table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Plan</th>
+                            <th>Inicio</th>
+                            <th>Término</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membershipsList">
+                        <!-- Mensualidades se cargarán aquí dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Recepcionista -->
+    <div class="modal" id="receptionModal">
+        <div class="modal-content reception-modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Panel de Recepcionista</h2>
+            
+            <div class="shift-selector">
+                <label for="receptionShiftSelect">Turno:</label>
+                <select id="receptionShiftSelect">
+                    <option value="morning">Mañana</option>
+                    <option value="afternoon">Tarde</option>
+                </select>
+            </div>
+            
+            <div class="receptionist-name">
+                <label for="receptionistName">Nombre Recepcionista:</label>
+                <input type="text" id="receptionistName" placeholder="Ingresa tu nombre">
+            </div>
+            
+            <div class="reception-controls">
+                <button id="registerGymIncomeBtn" class="reception-btn">
+                    <i class="fas fa-user-plus"></i> Registrar Ingreso al Gym
+                </button>
+                <button id="registerSaunaIncomeBtn" class="reception-btn">
+                    <i class="fas fa-spa"></i> Registrar Ingreso a Sauna
+                </button>
+                <button id="registerPoolIncomeBtn" class="reception-btn">
+                    <i class="fas fa-swimming-pool"></i> Registrar Ingreso a Piscina
+                </button>
+                <button id="viewTodayClientsBtn" class="reception-btn">
+                    <i class="fas fa-list"></i> Ver Clientes del Día
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación -->
+    <div class="notification" id="notification"></div>
+
+    <!-- WhatsApp popup -->
+    <div class="whatsapp-popup" id="whatsappPopup">
+        <span class="close-whatsapp" id="closeWhatsapp">&times;</span>
+        <h3>¡Contáctanos por WhatsApp!</h3>
+        <p id="whatsappMessage">Estás interesado en nuestra promoción.</p>
+        <a id="whatsappLink" href="https://wa.me/73415902" target="_blank" class="whatsapp-btn">
+            <i class="fab fa-whatsapp"></i> Enviar Mensaje
+        </a>
+    </div>
+
+    <!-- Modal de Promociones (aparece al cargar la página) -->
+    <div class="promo-popup" id="promoPopup" style="display: none;">
+        <span class="close-popup" id="closePopup">&times;</span>
+        <div class="promo-popup-content">
+            <h2>¡Promociones Especiales!</h2>
+            <div class="promo-card">
+                <div class="promo-badge">¡NUEVO!</div>
+                <h3>Inscripción de Temporada</h3>
+                <p class="promo-date">Válido del 1 al 30 de Junio</p>
+                <p>Inscríbete este mes y obtén un 30% de descuento en tu primera mensualidad.</p>
+                <button class="promo-btn" data-promo="Inscripción de Temporada - 30% descuento primera mensualidad">Aprovechar Oferta</button>
+            </div>
+            
+            <div class="promo-card">
+                <div class="promo-badge">¡EXCLUSIVO!</div>
+                <h3>Trae un Amigo</h3>
+                <p class="promo-date">Válido todo el año</p>
+                <p>Si traes a un amigo, ambos obtienen 2 semanas gratis adicionales a su membresía.</p>
+                <button class="promo-btn" data-promo="Trae un Amigo - 2 semanas gratis para ambos">Aprovechar Oferta</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/portal-static/funciones.js"></script>
+    <script src="/portal-static/portal-client.js"></script>
+    
+</body>
+</html>

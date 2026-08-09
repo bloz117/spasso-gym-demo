@@ -1,0 +1,41 @@
+databases:
+  - name: spasso-db
+    plan: free
+    databaseName: db_gym
+    user: spasso_user
+
+services:
+  - type: web
+    name: spasso-gym-demo
+    runtime: python
+    plan: free
+    rootDir: proyecto_gym
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: spasso-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: spasso-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: spasso-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: spasso-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: spasso-db
+          property: password
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "480"

@@ -1,0 +1,130 @@
+═══════════════════════════════════════════════════════════════════════════════
+INSTRUCCIONES RÁPIDAS — EJECUTAR MIGRACIÓN 002
+═══════════════════════════════════════════════════════════════════════════════
+
+PASO 1: Asegúrate que PostgreSQL está corriendo
+─────────────────────────────────────────────────
+En Windows:
+  • Abre pgAdmin 4
+  • Verifica que el servidor "PostgreSQL" muestre un ícono VERDE ✓
+  • Si está ROJO ✗, haz clic derecho → Connect
+
+En Linux/Mac:
+  • Abre terminal
+  • Verifica: psql --version
+  • Si no aparece, instala: brew install postgresql (Mac)
+
+
+PASO 2: Asegúrate que .env tiene credenciales correctas
+────────────────────────────────────────────────────────
+Archivo: /workspace/proyecto_gym/.env
+
+Verifica que tenga:
+  DB_HOST=localhost          (o tu IP si BD está en otro servidor)
+  DB_PORT=5433               (puerto PostgreSQL)
+  DB_NAME=db_gym
+  DB_USER=postgres
+  DB_PASSWORD=<tu_contraseña>
+
+Si NO tienes .env, cópialo de .env.example y edítalo.
+
+
+PASO 3: EJECUTA LA MIGRACIÓN
+──────────────────────────────
+
+OPCIÓN A - WINDOWS (cmd):
+  cd C:\ruta\a\Escritorio\proyecto_gym\migrations
+  run_migration_002.bat
+
+OPCIÓN B - WINDOWS (PowerShell):
+  cd C:\ruta\a\Escritorio\proyecto_gym
+  python migrations\execute_migration.py --migration 002
+
+OPCIÓN C - LINUX/MAC (Terminal):
+  cd ~/Escritorio/proyecto_gym/migrations
+  bash run_migration_002.sh
+
+OPCIÓN D - TODAS PLATAFORMAS (Python):
+  cd /ruta/a/proyecto_gym
+  python3 -m pip install psycopg2-binary python-dotenv --quiet
+  python3 migrations/execute_migration.py --migration 002
+
+
+PASO 4: VERIFICA QUE LA MIGRACIÓN FUNCIONÓ
+────────────────────────────────────────────
+Debería mostrar:
+
+  ✅ ¡MIGRACION 002 EJECUTADA EXITOSAMENTE!
+
+  📊 Tablas creadas:
+     ✓ portal_accounts (autenticación de socios)
+     ✓ gym_config (configuración global)
+     ✓ cms_theme (temas visuales)
+     ✓ workout_routines (rutinas de entrenamiento)
+
+  📈 Datos semilla insertados:
+     ✓ 1 configuración de gimnasio
+     ✓ 1 tema CMS (ocean_sport, por defecto)
+     ✓ 9 rutinas de entrenamiento (3 por nivel: básico, medio, avanzado)
+
+
+PASO 5 (OPCIONAL): Verifica en pgAdmin
+────────────────────────────────────────
+1. Abre pgAdmin 4
+2. Navega a: Servers → PostgreSQL → Databases → db_gym → Schemas → Tables
+3. Deberías ver:
+   ✓ portal_accounts
+   ✓ gym_config
+   ✓ cms_theme
+   ✓ workout_routines
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PROBLEMAS COMUNES Y SOLUCIONES
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ ERROR: "Connection refused" o "connection to server failed"
+──────────────────────────────────────────────────────────────
+Solución:
+  1. Verifica que PostgreSQL está corriendo (icono verde en pgAdmin)
+  2. Verifica el puerto en .env (default: 5433 en Windows, 5432 en Linux)
+  3. Verifica que no hay firewall bloqueando puerto 5433
+  4. Verifica que la contraseña en .env es correcta
+
+❌ ERROR: "database db_gym does not exist"
+───────────────────────────────────────────
+Solución:
+  1. En pgAdmin, verifica que existe "db_gym"
+  2. Si no existe, crea: New → Database → db_gym
+  3. Vuelve a ejecutar la migración
+
+❌ ERROR: "psycopg2: No such file or directory"
+────────────────────────────────────────────────
+Solución:
+  pip install psycopg2-binary
+  
+  O si usas el venv del proyecto (Windows):
+  venv\Scripts\pip install psycopg2-binary
+
+
+═══════════════════════════════════════════════════════════════════════════════
+¿SIGUIENTE PASO?
+═════════════════════════════════════════════════════════════════════════════════
+
+Después de ejecutar exitosamente la migración:
+
+1. El agente continuará con FASE 3 (Endpoints API)
+2. Se crearán routers nuevos:
+   ✓ portal_auth.py (autenticación de socios)
+   ✓ portal_client.py (dashboard del socio)
+   ✓ cms.py (gestión de temas)
+   ✓ gym_config.py (configuración de módulos)
+   ✓ routines.py (rutinas de entrenamiento)
+
+3. Se modificarán routers existentes:
+   ✓ socios.py (auto-generar cuenta portal)
+
+Consulta: REPORTE_FASE2.md para documentación completa
+
+
+═══════════════════════════════════════════════════════════════════════════════
