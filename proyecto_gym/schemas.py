@@ -5,10 +5,11 @@ Pydantic valida automáticamente tipos, longitudes y formatos ANTES
 de que los datos lleguen a la base de datos. Esto previene errores SQL
 y ataques de inyección a nivel de modelo de datos.
 """
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import Optional
 from datetime import datetime
 import re
+import validadores as V
 
 
 # ─────────────────────────────────────────────
@@ -36,13 +37,45 @@ class SocioCreate(BaseModel):
     dni: str = Field(..., min_length=5, max_length=20)
     email: Optional[EmailStr] = None
     foto_url: Optional[str] = None
+    genero: Optional[str] = None  # 'masculino' | 'femenino'
+    telefono: Optional[str] = Field(None, max_length=30)
+
+    @field_validator('nombres')
+    @classmethod
+    def _nombres(cls, v):
+        return V.nombre_persona(v, "El nombre")
+
+    @field_validator('apellidos')
+    @classmethod
+    def _apellidos(cls, v):
+        return V.nombre_persona(v, "El apellido")
 
     @field_validator('dni')
     @classmethod
     def dni_solo_alfanumerico(cls, v):
-        if not re.match(r'^[A-Za-z0-9\-]+$', v):
-            raise ValueError('El DNI solo puede contener letras, números y guiones')
+        v = (v or '').strip()
+        if not re.match(r'^[A-Za-z0-9\-]{5,20}$', v):
+            raise ValueError('El carnet/DNI solo puede contener letras, números y guiones (5 a 20 caracteres)')
         return v.upper()
+
+    @field_validator('email', mode='after')
+    @classmethod
+    def _email_minusculas(cls, v):
+        return str(v).strip().lower() if v else None
+
+    @field_validator('telefono')
+    @classmethod
+    def _telefono(cls, v):
+        return V.telefono(v)
+
+    @field_validator('genero')
+    @classmethod
+    def _genero(cls, v):
+        if v in (None, ''):
+            return None
+        if v not in ('masculino', 'femenino'):
+            raise ValueError("El género debe ser 'masculino' o 'femenino'")
+        return v
 
 
 class SocioResponse(BaseModel):
@@ -52,6 +85,10 @@ class SocioResponse(BaseModel):
     dni: str
     email: Optional[str]
     fecha_registro: datetime
+    # Solo en la respuesta del registro: acceso al portal y si el correo de
+    # bienvenida se envía solo ("automatico") o queda para enviarlo a mano.
+    portal_credentials: Optional[dict] = None
+    bienvenida_auto: Optional[str] = None
 
 
 # ─────────────────────────────────────────────
@@ -98,6 +135,42 @@ class VentaResponse(BaseModel):
 
 
 # ─────────────────────────────────────────────
+# CAJA (apertura/cierre de turno y movimientos de efectivo)
+# ─────────────────────────────────────────────
+
+class CajaAbrir(BaseModel):
+    monto_apertura: float = Field(..., ge=0, le=10_000_000)
+
+
+class CajaCerrar(BaseModel):
+    monto_cierre_declarado: float = Field(..., ge=0)
+
+
+class CajaMovimientoCreate(BaseModel):
+    tipo: str = Field(..., pattern=r'^(deposito|retiro)$')
+    monto: float = Field(..., gt=0, le=10_000_000)
+    motivo: Optional[str] = Field(default=None, max_length=200)
+
+
+# ─────────────────────────────────────────────
+# ÓRDENES ABIERTAS (guardar una venta en curso sin cobrarla)
+# ─────────────────────────────────────────────
+
+class OrdenAbiertaItem(BaseModel):
+    id_item: int
+    tipo_item: str = Field(..., pattern=r'^(plan|producto|servicio)$')
+    nombre: str
+    precio: float = Field(..., gt=0)
+    cantidad: int = Field(..., ge=1)
+
+
+class OrdenAbiertaCreate(BaseModel):
+    referencia: Optional[str] = Field(default=None, max_length=100)
+    items: list[OrdenAbiertaItem] = Field(..., min_length=1)
+    total: float = Field(..., gt=0)
+
+
+# ─────────────────────────────────────────────
 # PLANES
 # ─────────────────────────────────────────────
 
@@ -129,13 +202,27 @@ class LockerResponse(BaseModel):
 # ─────────────────────────────────────────────
 
 class PortalLoginRequest(BaseModel):
-    email: EmailStr
+    email: str
     password: str = Field(..., min_length=1)
 
 
 class PortalChangePasswordRequest(BaseModel):
-    password_actual: str = Field(..., min_length=1)
-    password_nuevo: str = Field(..., min_length=8)
+    password_actual: str = Field(..., min_length=1, max_length=72)
+    password_nuevo: str = Field(..., min_length=8, max_length=72)
+
+    @field_validator('password_nuevo')
+    @classmethod
+    def _nueva(cls, v):
+        v = V.contrasena(v, minimo=8)
+        if not (re.search(r'[A-Za-z]', v) and re.search(r'\d', v)):
+            raise ValueError('La contraseña nueva debe combinar letras y números')
+        return v
+
+    @model_validator(mode='after')
+    def _distinta(self):
+        if self.password_actual == self.password_nuevo:
+            raise ValueError('La contraseña nueva debe ser distinta a la actual')
+        return self
 
 
 # ─────────────────────────────────────────────
@@ -207,18 +294,53 @@ class GymConfigResponse(BaseModel):
     pantalla_bienvenida_habilitada: bool = False
     duracion_pantalla_bienvenida: int = 4
     pantalla_bienvenida_logo_url: Optional[str] = None
-    pantalla_bienvenida_tema: str = "azul"
+    pantalla_bienvenida_tema: str = "auto"
+    # Plantillas de tickets/comprobantes (ver routes/gym_config.py::PLANTILLA_TICKET_DEFAULT
+    # para la forma exacta del dict — siempre vienen con valores por defecto
+    # rellenados, nunca None, aunque el gimnasio nunca las haya personalizado).
+    ticket_registro_config: dict = {}
+    ticket_renovacion_config: dict = {}
+    ticket_venta_config: dict = {}
+    # Diseño predeterminado de la Tarjeta de Socio (ver
+    # routes/gym_config.py::PLANTILLA_TARJETA_DEFAULT) — un plan puntual
+    # puede tener su propio diseño especial en planes.tarjeta_config.
+    tarjeta_socio_config_default: dict = {}
 
 
 class GymConfigUpdate(BaseModel):
     nombre_gimnasio: Optional[str] = None
     lockers_habilitados: Optional[bool] = None
-    cantidad_lockers: Optional[int] = None
+    cantidad_lockers: Optional[int] = Field(None, ge=0, le=1000)
     horario_apertura: Optional[str] = None
     horario_cierre: Optional[str] = None
+
+    @field_validator('nombre_gimnasio')
+    @classmethod
+    def _nombre_gym(cls, v):
+        return None if v is None else V.texto(v, "El nombre del gimnasio", minimo=2, maximo=80)
+
+    @field_validator('horario_apertura', 'horario_cierre')
+    @classmethod
+    def _horas(cls, v):
+        return None if v in (None, '') else V.hora(v, "El horario")
     precios_planes: Optional[dict] = None
     asignacion_lockers_automatica: Optional[bool] = None
     pantalla_bienvenida_habilitada: Optional[bool] = None
-    duracion_pantalla_bienvenida: Optional[int] = None
+    duracion_pantalla_bienvenida: Optional[int] = Field(None, ge=1, le=60)
     pantalla_bienvenida_logo_url: Optional[str] = None
     pantalla_bienvenida_tema: Optional[str] = None
+    ticket_registro_config: Optional[dict] = None
+    ticket_renovacion_config: Optional[dict] = None
+    ticket_venta_config: Optional[dict] = None
+    tarjeta_socio_config_default: Optional[dict] = None
+    hardware_config: Optional[dict] = None
+
+    @field_validator('pantalla_bienvenida_tema')
+    @classmethod
+    def _tema_pantalla(cls, v):
+        # Mismos fondos que Recepción; "auto" = el que use Recepción.
+        if v is None:
+            return v
+        if v not in ('auto', 'claro', 'claro-tenue', 'liso', 'movimiento'):
+            raise ValueError("El tema de la pantalla de bienvenida no es válido")
+        return v

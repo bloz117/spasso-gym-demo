@@ -4,18 +4,176 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spasso - Sauna & Gym Premium</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
+    <link href="vendor/fonts/fonts.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css?v=20261204">
+    <link rel="stylesheet" href="css/fondos-portal.css?v=20261105">
+    <link rel="stylesheet" href="css/entrenador-portal.css?v=20261203">
+    <script>
+        /* Fondo elegido por el visitante (claro-tenue | liso | movimiento).
+           Se aplica antes de pintar para evitar parpadeo. */
+        (function () {
+            var f = 'movimiento';
+            try { f = localStorage.getItem('fondoPortal') || f; } catch (e) {}
+            if (f === 'claro') f = 'claro-tenue';
+            if (['claro-tenue', 'liso', 'movimiento'].indexOf(f) < 0) f = 'movimiento';
+            document.documentElement.setAttribute('data-fondo', f);
+        })();
+    </script>
 </head>
 <body>
+    <!-- Intro de bienvenida: pantalla completa negra que tapa el sitio los
+         primeros 2.5s mientras se cargan pesa (0.5s) -> piscina (0.5s) ->
+         sauna (0.5s) -> logo SPASSO (1s), y luego se desvanece sola.
+
+         Se probaron dos efectos de transición entre íconos (un filtro
+         "gooey" y luego un morph real de forma con la librería Flubber vía
+         una silueta intermedia) y en ambos casos, al ir tan rápido (cada
+         ícono dura medio segundo), la forma de transición se terminaba
+         leyendo como un cuarto/quinto ícono random parpadeando en vez de
+         una transformación fluida. Así que se volvió a lo simple: un
+         crossfade limpio de opacity/transform entre los 3 íconos
+         detallados (sin forma intermedia visible), que es lo que se ve
+         bien a esta velocidad.
+
+         Los 3 íconos son SVG del usuario (svgrepo.com); el <path> de cada
+         uno usa fill="url(#introIconGradient)" -el mismo degradado
+         magenta->cian del logo- para que los tres compartan un solo
+         tratamiento de color en vez de uno por ícono. El script que
+         controla el timing va justo después, así corre apenas se pinta
+         este div (no espera a DOMContentLoaded ni al resto de
+         funciones.js). -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <defs>
+            <linearGradient id="introIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#E619A8" />
+                <stop offset="100%" stop-color="#14C6DE" />
+            </linearGradient>
+        </defs>
+    </svg>
+    <div class="intro-loader" id="introLoader" aria-hidden="true">
+        <div class="intro-loader__stage">
+            <div class="intro-loader__icon intro-loader__icon--gym">
+                <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="url(#introIconGradient)" d="M17.962 44.874c.374.403.352 1.041-.05 1.416l-2.172 2.031c-.402.375-1.037.353-1.411-.051l-12.649-13.632c-.374-.403-.351-1.04.051-1.416l2.175-2.028c.402-.376 1.037-.353 1.411.051l12.645 13.629zm16.14-25.65c.374.403.351 1.041-.051 1.416l-13.67 12.77c-.402.375-1.037.353-1.411-.051l-3.263-3.521c-.374-.403-.351-1.041.051-1.416l13.667-12.77c.401-.375 1.036-.353 1.41.051l3.267 3.521zm-11.489 21.303c.374.403.351 1.04-.051 1.416l-2.175 2.03c-.402.376-1.037.353-1.411-.051l-12.642-13.632c-.374-.403-.352-1.041.05-1.416l2.171-2.029c.402-.375 1.037-.353 1.411.051l12.647 13.631zm21.063-20.814c.374.403.351 1.041-.052 1.416l-2.174 2.03c-.402.375-1.037.353-1.412-.05l-12.644-13.629c-.375-.403-.352-1.04.05-1.416l2.18-2.035c.401-.375 1.036-.353 1.41.051l12.642 13.633zm4.644-4.34c.374.403.351 1.041-.051 1.417l-2.17 2.029c-.401.376-1.036.353-1.41-.05l-12.642-13.635c-.374-.403-.352-1.041.05-1.417l2.172-2.033c.401-.376 1.035-.354 1.409.05l12.642 13.639z"/>
+                </svg>
+            </div>
+            <div class="intro-loader__icon intro-loader__icon--pool">
+                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="url(#introIconGradient)" d="M327.042,199.711H196.888c-0.928,0-1.683,0.756-1.683,1.683v68.736c0,0.928,0.755,1.683,1.683,1.683h130.155c0.928,0,1.683-0.755,1.683-1.683v-68.736C328.725,200.467,327.97,199.711,327.042,199.711z M308.865,251.952h-93.801V219.58h93.801V251.952z"/>
+                    <path fill="url(#introIconGradient)" d="M510.317,235.614c0.928,0,1.683-0.755,1.683-1.683v-21.995c0-0.928-0.755-1.683-1.683-1.683h-132.1V105.599c-0.058-22.184-7.456-43.374-20.838-59.679c-7.044-8.481-15.435-15.271-24.95-20.173c-10.214-5.188-21.585-7.93-32.882-7.93c-11.329,0-22.708,2.742-32.931,7.939c-13.998,7.201-25.689,18.695-33.808,33.227c-7.8,13.883-11.922,30.008-11.922,46.626c0,19.121,15.558,34.68,34.671,34.68c19.121,0,34.68-15.558,34.68-34.696c-0.057-5.968,1.766-11.724,4.893-15.41c1.462-1.766,2.694-2.479,2.98-2.627c0.706-0.32,1.06-0.386,1.437-0.386c0.378,0,0.739,0.066,1.33,0.329c1.79,0.993,3.506,2.874,4.853,5.296c2.019,3.628,3.136,8.185,3.136,12.816v44.613h-93.801v-44.613c0-22.134-7.406-43.326-20.845-59.688c-7.003-8.457-15.378-15.238-24.884-20.173c-10.214-5.188-21.585-7.93-32.882-7.93c-11.362,0-22.766,2.742-32.988,7.939c-14.032,7.25-25.722,18.736-33.801,33.227c-7.8,13.982-11.93,30.106-11.93,46.626c0,19.121,15.558,34.68,34.68,34.68c19.114,0,34.672-15.558,34.672-34.68c0-5.895,1.872-11.799,4.893-15.427c1.018-1.232,2.019-2.11,2.972-2.627c0.722-0.329,1.084-0.386,1.502-0.386c0.329,0,0.69,0.066,1.281,0.329c1.79,0.993,3.53,2.881,4.902,5.296c1.986,3.563,3.079,8.12,3.079,12.816v104.646H1.683c-0.927,0-1.683,0.756-1.683,1.683v21.995c0,0.928,0.756,1.683,1.683,1.683h144.031c0,0,0,121.378,0,121.502c-5.476,1.88-10.033,4.146-13.448,5.944l-3.81,2.045c-4.474,2.414-8.349,4.507-12.635,6.1c-4.418,1.592-10.92,3.423-22.036,3.48c-7.923,0-14.138-0.87-20.155-2.832c-3.366-1.092-6.56-2.496-10.69-4.679l-3.826-2.045c-4.417-2.405-9.425-5.123-15.656-7.439c-9.138-3.365-19.032-5-30.755-5c-0.008,0-11.018,0-11.018,0c-0.927,0-1.683,0.756-1.683,1.683v138.127c0,0.928,0.756,1.683,1.683,1.683h508.634c0.928,0,1.683-0.755,1.683-1.683V354.374c0-0.928-0.755-1.683-1.683-1.683h-11.001c-10.517,0-19.68,1.322-28.014,4.04c-6.067,1.987-11.002,4.426-14.622,6.33l-3.711,1.995c-4.508,2.439-8.407,4.548-12.717,6.15c-4.417,1.592-10.928,3.423-22.094,3.48c-7.816,0-14.22-0.894-20.156-2.832c-3.366-1.092-6.56-2.496-10.681-4.671l-3.292-1.774c-1.831-0.994-3.76-2.036-5.812-3.07V235.614H510.317z M308.865,356.787c-5.698,1.881-10.492,4.22-14.45,6.272l-3.9,2.102c-4.417,2.389-8.235,4.458-12.545,6.043c-4.368,1.592-10.821,3.423-22.028,3.48c-7.816,0-14.22-0.894-20.156-2.832c-3.341-1.084-6.535-2.488-10.681-4.671l-3.39-1.823c-2.069-1.117-4.269-2.308-6.65-3.498v-40.558h93.801V356.787z M358.356,354.874c-6.478-1.469-13.235-2.184-20.598-2.184h-0.706c-2.939,0-5.69,0.107-8.326,0.296v-49.86c0-0.927-0.755-1.683-1.683-1.683H196.888c-0.928,0-1.683,0.756-1.683,1.683v51.551c-6.1-1.322-12.75-1.987-20.32-1.987c-0.016,0-0.024,0-0.041,0c-3.44,0-6.486,0.124-9.26,0.37V105.607c0-8.161-1.962-15.936-5.666-22.48c-3.308-5.977-7.972-10.689-13.128-13.283c-3.375-1.708-6.774-2.546-10.386-2.546c-3.612,0-7.012,0.838-10.378,2.546c-3.35,1.674-6.56,4.318-9.277,7.635c-6.052,7.241-9.524,17.495-9.524,28.128c0,8.168-6.643,14.811-14.812,14.811c-8.168,0-14.811-6.642-14.811-14.811c0-13.112,3.251-25.895,9.409-36.954c6.223-11.101,15.049-19.827,25.517-25.221c7.373-3.769,15.64-5.756,23.924-5.756c8.21,0,16.445,1.986,23.818,5.756c7.053,3.628,13.334,8.726,18.662,15.131c10.492,12.758,16.272,29.458,16.272,47.044v62.799c0,0.928,0.755,1.683,1.683,1.683h130.155c0.928,0,1.683-0.756,1.683-1.683v-62.799c0-8.169-1.962-15.944-5.656-22.48c-3.316-5.993-8.005-10.706-13.177-13.276c-3.325-1.716-6.716-2.554-10.345-2.554c-3.612,0-7.012,0.838-10.377,2.546c-3.301,1.658-6.527,4.293-9.335,7.635c-6.068,7.331-9.515,17.586-9.458,28.128c0,8.168-6.65,14.811-14.819,14.811s-14.811-6.642-14.811-14.811c0-13.202,3.251-25.978,9.408-36.954c6.224-11.101,15.05-19.82,25.526-25.221c7.372-3.769,15.64-5.756,23.924-5.756c8.21,0,16.444,1.986,23.809,5.756c7.11,3.686,13.374,8.784,18.613,15.131c10.476,12.733,16.272,29.441,16.329,47.044V354.874z"/>
+                </svg>
+            </div>
+            <div class="intro-loader__icon intro-loader__icon--sauna">
+                <svg viewBox="0 0 248.914 248.914" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="url(#introIconGradient)" d="M185.05,137.067c0.905,0.784,2.016,1.167,3.127,1.167c1.335,0,2.669-0.561,3.612-1.643c0.737-0.859,17.978-21.112,4.909-37.563c-7.257-9.126-1.899-14.433-0.728-15.422c2.035-1.647,2.361-4.63,0.728-6.681c-1.643-2.067-4.662-2.403-6.72-0.758c-5.013,3.991-11.621,15.145-0.766,28.808c8.139,10.242-4.527,25.214-4.648,25.359C182.838,132.321,183.052,135.341,185.05,137.067z"/>
+                    <path fill="url(#introIconGradient)" d="M226.381,130.328c-1.727,1.993-1.512,5.013,0.485,6.739c0.905,0.784,2.017,1.167,3.127,1.167c1.335,0,2.67-0.561,3.612-1.643c0.738-0.859,17.979-21.112,4.91-37.563c-7.258-9.126-1.899-14.433-0.729-15.422c2.035-1.647,2.362-4.63,0.729-6.681c-1.643-2.067-4.662-2.403-6.721-0.758c-5.013,3.991-11.621,15.145-0.766,28.808C239.169,115.216,226.503,130.184,226.381,130.328z"/>
+                    <path fill="url(#introIconGradient)" d="M55.165,76.162c-2.065-1.641-5.076-1.305-6.721,0.758c-1.634,2.051-1.305,5.034,0.716,6.681c1.176,0.989,6.524,6.293-0.716,15.422c-13.065,16.456,4.163,36.709,4.907,37.559c0.943,1.092,2.28,1.652,3.615,1.652c1.108,0,2.221-0.393,3.125-1.167c1.998-1.731,2.212-4.751,0.488-6.744c-0.128-0.145-12.788-15.116-4.651-25.358C66.776,91.307,60.168,80.152,55.165,76.162z"/>
+                    <path fill="url(#introIconGradient)" d="M11.535,136.592c0.943,1.092,2.28,1.643,3.615,1.643c1.108,0,2.221-0.383,3.125-1.167c1.998-1.727,2.212-4.746,0.488-6.739c-0.128-0.145-12.788-15.117-4.651-25.358c10.849-13.663,4.24-24.817-0.763-28.808c-2.065-1.641-5.075-1.305-6.721,0.758c-1.633,2.051-1.304,5.034,0.717,6.681c1.176,0.989,6.524,6.296-0.717,15.422C-6.443,115.479,10.79,135.732,11.535,136.592z"/>
+                    <circle fill="url(#introIconGradient)" cx="124.165" cy="56.452" r="24.468"/>
+                    <path fill="url(#introIconGradient)" d="M14.337,194.454h72.188c5.276,0,9.558-4.284,9.558-9.559v-11.71v-6.356c0-0.145,0.037-0.275,0.037-0.42c-0.028-7.892,6.394-14.313,14.3-14.313c6.55,0,12.031,4.452,13.74,10.463c1.696-6.011,7.18-10.463,13.742-10.463c7.893,0,14.314,6.422,14.328,14.313c-0.032,0.145,0.01,0.275,0.01,0.42v6.356v11.71c0,5.274,4.274,9.559,9.558,9.559h72.778c7.925,0,14.338-6.272,14.338-14.021c0-7.747-6.413-14.024-14.338-14.024h-54.623c2.212-2.739,2.847-6.585,1.27-9.997l-25.688-55.557c-0.438-0.938-1.036-1.736-1.699-2.457c-2.623-9.29-11.92-13.581-23.083-13.581h-13.189c-10.79,0-19.81,4.042-22.766,12.701c-1.076,0.884-1.988,1.988-2.616,3.337l-25.688,55.557c-1.575,3.412-0.94,7.258,1.271,9.997H14.337C6.422,166.409,0,172.687,0,180.434C0,188.182,6.422,194.454,14.337,194.454z M154.648,162.904v-18.416l9.227,19.942c0.331,0.732,0.803,1.372,1.288,1.979h-10.818C154.518,165.266,154.648,164.1,154.648,162.904z M83.849,164.431l9.819-21.24v19.714c0,1.195,0.131,2.361,0.306,3.505H82.549C83.046,165.803,83.503,165.163,83.849,164.431z"/>
+                    <path fill="url(#introIconGradient)" d="M100.867,166.461v40.911c0,5.274,4.277,9.559,9.558,9.559c5.276,0,9.558-4.284,9.558-9.559v-40.911c0-5.283-4.282-9.559-9.558-9.559C105.14,156.902,100.867,161.178,100.867,166.461z"/>
+                    <path fill="url(#introIconGradient)" d="M128.347,166.461v40.911c0,5.274,4.277,9.559,9.556,9.559c5.279,0,9.559-4.284,9.559-9.559v-40.911c0-5.283-4.279-9.559-9.559-9.559C132.619,156.902,128.347,161.178,128.347,166.461z"/>
+                </svg>
+            </div>
+            <div class="intro-loader__logo">
+                <div class="logo-text">
+                    <div class="logo-main">SPASSO</div>
+                    <div class="logo-sub">SAUNA & GYM</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Timeline de la intro: 0.5s pesa, 0.5s piscina, 0.5s sauna, 1s logo
+        // (2.5s en total) y se desvanece sola. Va acá, fuera del gran
+        // DOMContentLoaded de funciones.js, para arrancar apenas se pinta
+        // este div sin esperar a que cargue el resto del script.
+        //
+        // Cambio de ícono simple: cada uno tiene ".is-active" durante su
+        // medio segundo y la transición opacity/transform de
+        // .intro-loader__icon (ver styles.css) hace el crossfade solo, sin
+        // forma de transición intermedia.
+        (function () {
+            var loader = document.getElementById('introLoader');
+            if (!loader) return;
+
+            document.documentElement.style.overflowY = 'hidden';
+            document.body.style.overflowY = 'hidden';
+
+            var pasos = [
+                { selector: '.intro-loader__icon--gym', entra: 0, sale: 500 },
+                { selector: '.intro-loader__icon--pool', entra: 500, sale: 1000 },
+                { selector: '.intro-loader__icon--sauna', entra: 1000, sale: 1500 }
+            ];
+
+            pasos.forEach(function (paso) {
+                var el = loader.querySelector(paso.selector);
+                if (!el) return;
+                setTimeout(function () { el.classList.add('is-active'); }, paso.entra);
+                setTimeout(function () { el.classList.remove('is-active'); }, paso.sale);
+            });
+
+            setTimeout(function () {
+                var logo = loader.querySelector('.intro-loader__logo');
+                if (logo) logo.classList.add('is-active');
+            }, 1500);
+
+            setTimeout(function () {
+                loader.classList.add('is-hidden');
+                document.documentElement.style.overflowY = '';
+                document.body.style.overflowY = '';
+            }, 2500);
+
+            // Saca el loader del DOM del todo una vez terminó de desvanecerse
+            // (el fade dura 0.5s, ver .intro-loader en styles.css).
+            setTimeout(function () {
+                if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+            }, 3000);
+        })();
+    </script>
+
+    <!-- Fondo animado tipo aurora, con la paleta de marca (magenta/cian sobre negro).
+         Es el fondo POR DEFECTO de TODA la página (inicio, beneficios, gimnasio,
+         planes...): position:fixed a nivel <body>, no vive dentro de ninguna
+         sección. -->
+    <div class="aurora-bg" aria-hidden="true"></div>
+
+    <!-- Fondo de página personalizado (Recepción > Configuración > Página Web):
+         reemplaza a .aurora-bg de arriba cuando Recepción elige un shader
+         animado o un color/degradado liso. Igual que .aurora-bg, es global a
+         TODA la página, no solo al inicio -ver window.__establecerFondoPagina
+         en funciones.js y las clases fondo-pagina-animado/fondo-pagina-solido
+         en <html>-. El carrusel de fotos del hero (#inicio) es un elemento
+         totalmente aparte que sigue funcionando igual sin importar qué fondo
+         de página esté activo. -->
+    <canvas id="fondoPaginaAnimado" class="fondo-pagina-canvas" aria-hidden="true"></canvas>
+    <div id="fondoPaginaSolido" class="fondo-pagina-solido" aria-hidden="true"></div>
+
     <!-- musica -->
-    <audio id="audio" loop autoplay>
-        <source src="/portal-static/music/End of Line (From TRON_ LegacyScore).mp3" type="audio/mp3">
+    <!-- Sin el atributo autoplay a propósito: el auto-play real lo maneja
+         funciones.js, que primero revisa si esta página está siendo
+         mostrada dentro de un iframe (por ejemplo, la vista previa del
+         editor en Recepción) para no reproducir nada ahí. Dejar el
+         atributo autoplay aquí haría que el navegador intente sonar antes
+         de que ese chequeo corra. -->
+    <audio id="audio" loop>
+        <source src="music/worry (Slowed).mp3" type="audio/mp3">
     </audio>
-    
+
+    <!-- Botón flotante de música: visitantes reales pueden pausar/reanudar
+         la música de fondo del portal. Dentro de Recepción (iframe) este
+         botón se oculta por completo, ver funciones.js. -->
+    <button id="btnMusicaPortal" class="musica-toggle-btn" type="button" aria-label="Pausar música" title="Pausar música">
+        <span class="musica-toggle-btn__disco">
+            <span class="musica-toggle-btn__hoyo"></span>
+        </span>
+        <i class="fas fa-pause musica-toggle-btn__icono"></i>
+    </button>
+
     <!-- Header -->
     <header>
+      <div class="header-inner">
         <div class="logo-container">
             <div class="logo-text">
                 <div class="logo-main">SPASSO</div>
@@ -24,58 +182,150 @@
         </div>
         
         <nav>
-            <ul class="nav-links">
-                <li><a href="#inicio" class="nav-link active">Inicio</a></li>
-                <li><a href="#saunas" class="nav-link">Saunas</a></li>
-                <li><a href="#piscina" class="nav-link">Piscina</a></li>
-                <li><a href="#gimnasio" class="nav-link">Gimnasio</a></li>
-                <li><a href="#promociones" class="nav-link">Promociones</a></li>
-                <li><a href="#contacto" class="nav-link">Contacto</a></li>
+            <!-- Menú hamburguesa (solo pantallas angostas/celular) - basado en
+                 el componente de Uiverse.io (JkHuger), truco 100% CSS con un
+                 checkbox oculto: al marcarse, las 3 líneas se transforman en
+                 una X (:checked + .hamburger-label) y el <ul> de abajo se
+                 despliega (:checked ~ .nav-links), ver reglas en styles.css
+                 dentro de @media (max-width: 900px). -->
+            <input class="label-check" id="navToggle" type="checkbox">
+            <label for="navToggle" class="hamburger-label" aria-label="Abrir menú">
+                <div class="line1"></div>
+                <div class="line2"></div>
+                <div class="line3"></div>
+            </label>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#inicio" class="nav-link active" data-nav="inicio">Inicio</a></li>
+                <li><a href="#beneficios" class="nav-link" data-nav="beneficios">Beneficios</a></li>
+                <!-- Saunas y Piscina: ocultos hasta que recepción los habilite dinámicamente -->
+                <li style="display:none"><a href="#saunas" class="nav-link">Saunas</a></li>
+                <li style="display:none"><a href="#piscina" class="nav-link">Piscina</a></li>
+                <li><a href="#gimnasio" class="nav-link" data-nav="gimnasio">Gimnasio</a></li>
+                <li><a href="#planes" class="nav-link" data-nav="planes">Planes</a></li>
+                <!-- Promociones: oculto hasta que se habilite dinámicamente
+                     desde la app de recepción (igual que Saunas/Piscina) -->
+                <li style="display:none"><a href="#promociones" class="nav-link">Promociones</a></li>
+                <!-- Ubicaciones y Contacto ya no es una sección más del
+                     scroll: se abre como ventana flotante solo al hacer
+                     clic aquí (no aparece si simplemente bajas la página). -->
+                <li><a href="#" class="nav-link" id="navUbicacionContacto" data-nav="ubicacion">Ubicaciones y Contacto</a></li>
             </ul>
         </nav>
         
         <div class="header-actions">
-            <button class="login-btn" id="loginBtn">
-                <i class="fas fa-user"></i> Iniciar Sesión
+            <!-- Selector de fondo (el visitante elige; no depende de Recepción) -->
+            <div class="fondo-selector" id="fondoSelector">
+                <button type="button" class="fondo-selector__btn" id="fondoSelectorBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="fondoSelectorMenu" title="Cambiar fondo de la página">
+                    <span class="fondo-swatch" id="fondoSwatchActual"></span>
+                    <span class="fondo-selector__nombre" id="fondoNombreActual">Fondo</span>
+                    <i class="fas fa-chevron-down fondo-selector__chev"></i>
+                </button>
+                <ul class="fondo-selector__menu" id="fondoSelectorMenu" role="listbox" aria-label="Fondo de la página">
+                    <li class="fondo-opt" role="option" tabindex="0" data-fondo="claro-tenue" style="--k:0"><span class="fondo-swatch fondo-swatch--claro-tenue"></span><span class="fondo-opt__txt"><b>Claro tenue</b><small>Con círculos rosa y celeste</small></span><i class="fas fa-check fondo-opt__check"></i></li>
+                    <li class="fondo-opt" role="option" tabindex="0" data-fondo="liso" style="--k:1"><span class="fondo-swatch fondo-swatch--liso"></span><span class="fondo-opt__txt"><b>Liso oscuro</b><small>Oscuro, sin movimiento</small></span><i class="fas fa-check fondo-opt__check"></i></li>
+                    <li class="fondo-opt" role="option" tabindex="0" data-fondo="movimiento" style="--k:2"><span class="fondo-swatch fondo-swatch--movimiento"></span><span class="fondo-opt__txt"><b>En movimiento</b><small>Fondo animado</small></span><i class="fas fa-check fondo-opt__check"></i></li>
+                </ul>
+            </div>
+            <!-- Solo visible con sesión iniciada: da acceso a "Mi Perfil"
+                 ahora que el botón principal es exclusivamente de logout
+                 (ver actualizarBotonSesion() en funciones.js). -->
+            <a href="#" class="header-profile-link" id="headerProfileLink" hidden aria-hidden="true">Mi Perfil</a>
+            <!-- Botón de sesión estilo Uiverse (vinodjangid07): círculo con
+                 ícono que se expande a una píldora con texto al hacer hover.
+                 Lleva los 2 íconos ya en el DOM (usuario / logout) y
+                 funciones.js solo alterna cuál se ve, en vez de reescribir
+                 el SVG a mano cada vez. Arranca en el estado "no logueado";
+                 actualizarBotonSesion() lo cambia si ya hay sesión activa.
+                 El wrapper ".session-btn-slot" reserva solo el espacio del
+                 círculo (45px); el botón real es position:absolute dentro
+                 de él, así al expandirse hacia la derecha en hover no
+                 empuja nada del layout (nav, logo, etc.), solo se superpone
+                 visualmente sobre el espacio vacío a su derecha. -->
+            <div class="session-btn-slot">
+                <button class="session-btn" id="loginBtn" type="button">
+                <span class="session-btn__icon">
+                    <svg class="icon-user" viewBox="0 0 448 512"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512l388.6 0c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304l-91.4 0z"/></svg>
+                    <svg class="icon-logout" viewBox="0 0 512 512" hidden><path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"/></svg>
+                </span>
+                <span class="session-btn__text" id="loginBtnText">Iniciar Sesión</span>
             </button>
+            </div>
         </div>
+      </div>
     </header>
 
     <!-- Sección Inicio -->
     <section id="inicio" class="section">
+        <!-- Fondo del hero: 2 capas apiladas que funciones.js va alternando
+             (initHeroCarousel) para lograr un fade real entre las 4 fotos,
+             en vez del corte seco de antes (que solo cambiaba el
+             background-image del propio #inicio de un golpe). -->
+        <div class="hero-bg-layer hero-bg-layer--a" aria-hidden="true"></div>
+        <div class="hero-bg-layer hero-bg-layer--b" aria-hidden="true"></div>
+        <!-- El fondo animado/liso de página (Aurora, Floating Lines, etc.)
+             ya NO vive acá: es global a toda la página (ver .aurora-bg /
+             #fondoPaginaAnimado / #fondoPaginaSolido, hijos directos de
+             <body> arriba del todo). El carrusel de fotos de arriba es
+             exclusivo del inicio y no cambia según el fondo de página. -->
         <div class="particles" id="particles"></div>
-        
-        <h1 class="welcome-title">BIENVENIDOS A SPASSO</h1>
-        <p class="welcome-subtitle">El lugar donde el bienestar se encuentra con el lujo. Disfruta de nuestras instalaciones premium diseñadas para tu relajación y salud.</p>
-        
-        <div class="info-boxes">
-            <div class="info-box">
-                <i class="fas fa-map-marker-alt"></i>
-                <h3>Ubicación</h3>
-                <p>Calle Nestor Galindo N° 1 <br>esquina Av. Canadá, zona terminal de buses.</p>
+
+        <h1 class="welcome-title" id="heroTitulo">¡BIENVENIDO<br>AL MEJOR GYM<br>#SPASSO!</h1>
+        <p class="welcome-subtitle" id="heroSubtitulo">El lugar donde el bienestar se encuentra con el lujo. Disfruta de nuestras instalaciones premium diseñadas para tu relajación y salud.</p>
+        <a href="#beneficios" class="hero-cta" id="heroBoton">Conoce Más y Sorpréndete</a>
+    </section>
+
+    <!-- Sección Beneficios -->
+    <section id="beneficios" class="section">
+        <h2 class="section-title" data-tit="beneficios">BENEFICIOS</h2>
+        <p class="section-subtitle" data-tit="beneficios_sub">Pronto te darás cuenta por qué somos los mejores</p>
+
+        <div class="benefits-grid">
+            <div class="benefit-card" data-benef="0">
+                <!-- Las dos marcas de equipos que hay en el gym, alternando
+                     con un crossfade suave en vez de una sola foto fija. -->
+                <div class="benefit-card-image benefit-card-image--logos">
+                    <div class="crossfade-layer crossfade-layer--a" style="background-image: url('img/logo-mdbuddy.jpg')"></div>
+                    <div class="crossfade-layer crossfade-layer--b" style="background-image: url('img/logo-insight.png')"></div>
+                    <h3>MÁQUINAS<br>DE PRIMERA CALIDAD</h3>
+                </div>
+                <p>Entrena con equipos de <strong>última generación</strong>, pensados para resultados reales.</p>
             </div>
-            <div class="info-box">
-                <i class="fas fa-clock"></i>
-                <h3>Horarios</h3>
-                <p>Lun-Vie: 6:00 - 22:00<br>Sab-Dom: 8:00 - 20:00</p>
+            <div class="benefit-card" data-benef="1">
+                <!-- Dos fotos de atención al socio, mismo crossfade. -->
+                <div class="benefit-card-image benefit-card-image--photos">
+                    <div class="crossfade-layer crossfade-layer--a" style="background-image: url('img/atencion1.jpg')"></div>
+                    <div class="crossfade-layer crossfade-layer--b" style="background-image: url('img/atencion2.jpg')"></div>
+                    <h3>ATENCIÓN<br>TODOS LOS DÍAS</h3>
+                </div>
+                <p>Abrimos <strong>los 7 días de la semana</strong>, para que entrenes cuando mejor te acomode.</p>
             </div>
-            <div class="info-box">
-                <i class="fas fa-star"></i>
-                <h3>Experiencia</h3>
-                <p>5 años de excelencia en bienestar</p>
+            <div class="benefit-card" data-benef="2">
+                <!-- El GIF cambiaba de foto muy rápido y no se podía
+                     controlar su velocidad (los tiempos de cada cuadro
+                     vienen fijos dentro del archivo). Se usan dos fotos
+                     sueltas sacadas de ese mismo GIF con el mismo
+                     crossfade lento de las otras tarjetas, para que las
+                     tres vayan al mismo ritmo. -->
+                <div class="benefit-card-image benefit-card-image--photos">
+                    <div class="crossfade-layer crossfade-layer--a" style="background-image: url('img/instructores1.jpg')"></div>
+                    <div class="crossfade-layer crossfade-layer--b" style="background-image: url('img/instructores2.jpg')"></div>
+                    <h3>INSTRUCTORES<br>DE PRIMER NIVEL</h3>
+                </div>
+                <p>Nos preocupamos por tu bienestar: seleccionamos y capacitamos <strong>a todo nuestro personal</strong>.</p>
             </div>
         </div>
     </section>
 
-    <!-- Sección Saunas -->
-    <section id="saunas" class="section">
+    <!-- Sección Saunas: oculta, lista para ser habilitada dinámicamente
+         desde la app de recepción cuando el módulo esté activo. -->
+    <section id="saunas" class="section" style="display:none">
         <h2 class="section-title">SAUNAS</h2>
         <div class="content-grid">
             <div class="image-gallery">
-                <img src="/portal-static/img/sauna1.jpeg" alt="Sauna Spasso">
-                <img src="/portal-static/img/sauna2.jpeg" alt="Sauna privada">
-                <img src="/portal-static/img/sauna3.jpg" alt="Sauna relajante">
-                <img src="/portal-static/img/sauna4.jpg" alt="Sauna premium">
+                <img src="img/sauna1.jpeg" alt="Sauna Spasso">
+                <img src="img/sauna2.jpeg" alt="Sauna privada">
+                <img src="img/sauna3.jpg" alt="Sauna relajante">
+                <img src="img/sauna4.jpg" alt="Sauna premium">
             </div>
             <div class="content-info">
                 <h3>Experiencia de Sauna Completa</h3>
@@ -112,15 +362,16 @@
         </div>
     </section>
 
-    <!-- Sección Piscina -->
-    <section id="piscina" class="section">
+    <!-- Sección Piscina: oculta, lista para ser habilitada dinámicamente
+         desde la app de recepción cuando el módulo esté activo. -->
+    <section id="piscina" class="section" style="display:none">
         <h2 class="section-title">PISCINA & JACUZZI</h2>
         <div class="content-grid">
             <div class="image-gallery">
-                <img src="/portal-static/img/piscina1.jpeg" alt="Piscina Spasso">
-                <img src="/portal-static/img/piscina2.jpeg" alt="Jacuzzi Spasso">
-                <img src="/portal-static/img/piscina3.jpg" alt="Área de descanso">
-                <img src="/portal-static/img/piscina4.jpg" alt="Vista panorámica">
+                <img src="img/piscina1.jpeg" alt="Piscina Spasso">
+                <img src="img/piscina2.jpeg" alt="Jacuzzi Spasso">
+                <img src="img/piscina3.jpg" alt="Área de descanso">
+                <img src="img/piscina4.jpg" alt="Vista panorámica">
             </div>
             <div class="content-info">
                 <h3>Área Acuática de Lujo</h3>
@@ -161,74 +412,123 @@
 
     <!-- Sección Gimnasio -->
     <section id="gimnasio" class="section">
-        <h2 class="section-title">GIMNASIO PREMIUM</h2>
-        <div class="gym-grid">
-            <div class="gym-gallery">
-               
-                <img src="/portal-static/img/gym1.jpeg" alt="Gimnasio Spasso">
-                <img src="/portal-static/img/gym2.jpeg" alt="Área de pesas">
-                <img src="/portal-static/img/gym3.jpeg" alt="Clases grupales">
-                
-                
-                <img src="/portal-static/img/gym4.jpeg" alt="Cardio">
-                <img src="/portal-static/img/gym5.jpeg" alt="Estudio yoga">
-                <img src="/portal-static/img/gym5.jpeg" alt="Estudio yoga">
-                
-                
-                <img src="/portal-static/img/gym6.jpeg" alt="Vestidores">
-                <img src="/portal-static/img/gym7.jpeg" alt="Área crossfit">
-                <img src="/portal-static/img/gym8.jpeg" alt="Entrenamiento funcional">
+        <h2 class="section-title" data-tit="gimnasio">GIMNASIO PREMIUM</h2>
+
+        <!-- Ruleta 3D de fotos (CSS puro, gira sola con "@keyframes"). Al
+             pasar el cursor se congela donde esté; al quitarlo retoma el
+             giro exactamente desde ahí (así funciona "animation-play-state:
+             paused" en CSS, sin saltos). Clic en cualquier foto la abre en
+             grande en la ventana flotante de abajo. -->
+        <div class="card-3d" id="gymCard3d">
+            <div><img src="img/gym1.jpeg" alt="Gimnasio Spasso"></div>
+            <div><img src="img/gym2.jpeg" alt="Área de pesas"></div>
+            <div><img src="img/gym3.jpeg" alt="Clases grupales"></div>
+            <div><img src="img/gym4.jpeg" alt="Cardio"></div>
+            <div><img src="img/gym5.jpeg" alt="Estudio yoga"></div>
+            <div><img src="img/gym6.jpeg" alt="Vestidores"></div>
+            <div><img src="img/gym7.jpeg" alt="Área crossfit"></div>
+            <div><img src="img/gym8.jpeg" alt="Entrenamiento funcional"></div>
+            <div><img src="img/gym9.jpeg" alt="Zona de entrenamiento"></div>
+        </div>
+
+        <!-- Ventana flotante (lightbox): al hacer clic en cualquier foto se
+             abre en grande aquí. -->
+        <div class="gym-lightbox" id="gymLightbox">
+            <button class="gym-lightbox-cerrar" id="gymLightboxCerrar" aria-label="Cerrar">&times;</button>
+            <img id="gymLightboxImg" src="" alt="">
+        </div>
+    </section>
+
+    <!-- Sección Planes -->
+    <section id="planes" class="section">
+        <h2 class="section-title" data-tit="planes">PLANES</h2>
+        <p class="section-subtitle" data-tit="planes_sub">Elige la membresía que mejor se adapte a ti</p>
+
+        <div class="membership-tiers" id="planesContenedor">
+            <!-- Tarjeta de plan: adaptada de un snippet de Uiverse.io por
+                 themrsami, recoloreada a la paleta de marca (rosa/celeste)
+                 en vez de cyan/azul. El botón lleva directo a WhatsApp con
+                 un mensaje ya armado para registrarse en ese plan. -->
+            <div class="plan-card">
+                <div class="plan-card-glow plan-card-glow-tl"></div>
+                <div class="plan-card-glow plan-card-glow-br"></div>
+                <div class="plan-card-header">
+                    <h3 class="plan-card-nombre">Básico</h3>
+                    <div class="plan-card-precio">
+                        <span class="plan-card-monto">120</span>
+                        <span class="plan-card-periodo">bs/mes</span>
+                    </div>
+                    <p class="plan-card-desc">Ideal para empezar a entrenar sin complicarte.</p>
+                </div>
+                <ul class="plan-card-features">
+                    <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>Acceso a equipos</p></li>
+                    <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>Horario estándar</p></li>
+                    <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>1 evaluación mensual</p></li>
+                </ul>
+                <a class="plan-card-btn" target="_blank" href="https://wa.me/73415902?text=Hola%2C%20quiero%20registrarme%20en%20el%20plan%20B%C3%A1sico%20(120%20bs%2Fmes).">
+                    <span>Registrarme
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg>
+                    </span>
+                </a>
             </div>
-            
-            <div class="gym-info">
-                <h3>Más que un gimnasio, un estilo de vida</h3>
-                <p>Equipos de última generación, entrenadores certificados y programas personalizados para alcanzar tus metas.</p>
-                
-                <div class="membership-tiers">
-                    <div class="membership-card">
-                        <h4>Básico</h4>
-                        <p class="price">120 bs/mes</p>
-                        <ul>
-                            <li>Acceso a equipos</li>
-                            <li>Horario estándar</li>
-                            <li>1 evaluación mensual</li>
-                        </ul>
+
+            <div class="plan-card plan-card-popular">
+                <div class="plan-card-glow plan-card-glow-tl"></div>
+                <div class="plan-card-glow plan-card-glow-br"></div>
+                <div class="plan-card-ribbon"><span>MÁS POPULAR</span></div>
+                <div class="plan-card-header">
+                    <h3 class="plan-card-nombre">Premium</h3>
+                    <div class="plan-card-precio">
+                        <span class="plan-card-monto">180</span>
+                        <span class="plan-card-periodo">bs/mes</span>
                     </div>
-                    <div class="membership-card">
-                        <h4>Premium</h4>
-                        <p class="price">180 bs/mes</p>
-                        <ul>
-                            <li>Acceso ilimitado</li>
-                            <li>2 sesiones con entrenador</li>
-                            <li>Acceso a clases grupales</li>
-                            <li>Uso de sauna</li>
-                        </ul>
-                    </div>
-                    <div class="membership-card">
-                        <h4>VIP</h4>
-                        <p class="price">200 bs/mes</p>
-                        <ul>
-                            <li>Acceso 24/7</li>
-                            <li>Entrenador personal</li>
-                            <li>Acceso a todas las áreas</li>
-                            <li>Plan nutricional</li>
-                            <li>2 invitados/mes</li>
-                        </ul>
-                    </div>
+                    <p class="plan-card-desc">Para quienes quieren entrenar sin límites.</p>
                 </div>
-                
-                <div class="service-hours">
-                    <h4>Horario</h4>
-                    <p>Lunes a Viernes: 5:00 - 23:00<br>
-                    Sábado y Domingo: 7:00 - 21:00<br>
-                    VIP: Acceso 24/7</p>
+                <ul class="plan-card-features">
+                    <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>Acceso ilimitado</p></li>
+                    <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>2 sesiones con entrenador</p></li>
+                    <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>Acceso a clases grupales</p></li>
+                    <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>Uso de sauna</p></li>
+                </ul>
+                <a class="plan-card-btn" target="_blank" href="https://wa.me/73415902?text=Hola%2C%20quiero%20registrarme%20en%20el%20plan%20Premium%20(180%20bs%2Fmes).">
+                    <span>Registrarme
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg>
+                    </span>
+                </a>
+            </div>
+
+            <div class="plan-card">
+                <div class="plan-card-glow plan-card-glow-tl"></div>
+                <div class="plan-card-glow plan-card-glow-br"></div>
+                <div class="plan-card-header">
+                    <h3 class="plan-card-nombre">VIP</h3>
+                    <div class="plan-card-precio">
+                        <span class="plan-card-monto">200</span>
+                        <span class="plan-card-periodo">bs/mes</span>
+                    </div>
+                    <p class="plan-card-desc">La experiencia completa, sin restricciones.</p>
                 </div>
+                <ul class="plan-card-features">
+                    <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>Acceso 24/7</p></li>
+                    <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>Entrenador personal</p></li>
+                    <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>Acceso a todas las áreas</p></li>
+                    <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>Plan nutricional</p></li>
+                    <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>2 invitados/mes</p></li>
+                </ul>
+                <a class="plan-card-btn" target="_blank" href="https://wa.me/73415902?text=Hola%2C%20quiero%20registrarme%20en%20el%20plan%20VIP%20(200%20bs%2Fmes).">
+                    <span>Registrarme
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg>
+                    </span>
+                </a>
             </div>
         </div>
     </section>
 
-    <!-- Sección Promociones -->
-    <section id="promociones" class="section">
+    <!-- Sección Promociones: oculta hasta que se habilite dinámicamente
+         desde la app de recepción (mismo patrón que Saunas/Piscina). El
+         contenido queda listo, solo hace falta quitar el display:none
+         cuando esa función se active del lado de recepción. -->
+    <section id="promociones" class="section" style="display:none">
         <h2 class="section-title">PROMOCIONES ESPECIALES</h2>
         <div class="promo-grid">
             <div class="promo-card">
@@ -265,12 +565,99 @@
         </div>
     </section>
 
+    <!-- Pie de página del sitio: Logo + Horario + Redes, en fila, al estilo
+         del footer de referencia (OneLifeFitness). Va justo debajo de Planes
+         (Promociones está oculto por ahora), como una franja más del scroll
+         normal -no dentro de ningún modal-, para que se vea siempre al bajar
+         la página sin tener que hacer clic en "Ubicaciones y Contacto". -->
+    <footer class="sitio-footer" id="sitioFooter">
+        <div class="sitio-footer-inner">
+            <div class="ubicacion-footer-col ubicacion-footer-logo">
+                <div class="logo-text">
+                    <div class="logo-main">SPASSO</div>
+                    <div class="logo-sub">SAUNA &amp; GYM</div>
+                </div>
+            </div>
+            <div class="ubicacion-footer-col">
+                <h4>Horario de Atención</h4>
+                <p class="js-horario"><strong>Lunes a Viernes:</strong> 5:00 - 23:00<br>
+                <strong>Sábado y Domingo:</strong> 7:00 - 21:00</p>
+            </div>
+            <div class="ubicacion-footer-col">
+                <h4>Síguenos</h4>
+                <div class="social-links">
+                    <a href="https://wa.me/73415902" class="social-icon whatsapp"><span class="social-icon-shine"></span><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://www.instagram.com/spassosaunaclub/" class="social-icon instagram"><span class="social-icon-shine"></span><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.facebook.com/SpazioSaunaClub" class="social-icon facebook"><span class="social-icon-shine"></span><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.tiktok.com/@spassosaunayfitnessclub" class="social-icon tiktok"><span class="social-icon-shine"></span><i class="fab fa-tiktok"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
     <!-- Sección Contacto -->
-    <section id="contacto" class="section">
-        <h2 class="section-title">CONTÁCTANOS</h2>
-        <div class="contact-grid">
+    <!-- Ubicaciones y Contacto: antes era una sección más del scroll, luego
+         pasó a ser una ventana flotante con fondo difuminado (igual que los
+         demás modales), pero eso se veía como un popup encima de la página.
+         Ahora es una "página" propia a pantalla completa (sin tarjeta
+         centrada ni blur detrás): solo aparece al hacer clic en el enlace
+         del menú, nunca bajando la página con el mouse, y ocupa todo el
+         espacio debajo del header, igual que el resto de las secciones. -->
+    <div class="pagina-ubicacion" id="ubicacionModal">
+        <div class="pagina-ubicacion-content">
+            <span class="close-modal pagina-ubicacion-cerrar">&times;</span>
+            <!-- Igual que en la referencia (onelifefitness.com.bo/contact): primero
+                 la información de ubicación + mapa en un bloque, y DEBAJO -no al
+                 lado-, ya como su propia sección de ancho completo, el formulario
+                 de contacto. Antes ambos estaban forzados en dos columnas una
+                 junto a la otra, lo que apretaba todo arriba y dejaba la página
+                 casi sin scroll real.
+                 .contact-intro ocupa (como mínimo) todo el alto visible debajo del
+                 header, para que al entrar a la página SOLO se vea el título +
+                 info de contacto + mapa, y el formulario quede completamente
+                 debajo del "pliegue" hasta que el usuario baje. -->
+            <div class="contact-intro">
+                <h2 class="section-title" data-tit="ubicacion">UBICACIONES Y CONTACTO</h2>
+                <div class="contact-top">
+                    <div class="contact-info">
+                        <!-- Mismo orden que la referencia: ciudad + dirección primero,
+                             después teléfono y correo, cada uno con su ícono arriba
+                             y el dato debajo (no uno al lado del otro). -->
+                        <h3 id="contactoCiudad">Sucre</h3>
+                        <p class="contact-address" id="contactoDireccion">Calle Nestor Galindo N° 1 <br>esquina Av. Canadá, zona terminal de buses.</p>
+
+                        <div class="contact-cta">
+                            <h4>¿Tienes alguna consulta?</h4>
+                            <p>Estamos para atenderte en lo que requieras, ¡a la brevedad posible!</p>
+                        </div>
+
+                        <div class="contact-row">
+                            <div class="contact-item">
+                                <i class="fas fa-phone"></i>
+                                <p id="contactoTelefono">73415902</p>
+                            </div>
+                            <div class="contact-item">
+                                <i class="fas fa-envelope"></i>
+                                <p id="contactoCorreo">spaziosaunaclub@gmail.com</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="map-container">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3771.5927744933965!2d-65.24820322390714!3d-19.03765791114469!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x93fbc8d314a9c58b%3A0xa9c2e92ecc1c47b7!2sSpasso%20Sauna%20%26%20Fitness%20Club!5e0!3m2!1ses!2sbo!4v1743875963800!5m2!1ses!2sbo" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pista visual de "seguí bajando": reemplaza al viejo separador
+                 "+", que no comunicaba nada. La flechita rebota sutilmente
+                 para que quede claro que el formulario sigue más abajo. -->
+            <div class="scroll-hint" aria-hidden="true">
+                <i class="fas fa-chevron-down"></i>
+            </div>
+
             <div class="contact-form">
-                <h3>Envíanos un Mensaje</h3>
+                <h3>¿Tienes alguna consulta? Envíanos un Mensaje</h3>
                 <form id="contactForm">
                     <div class="form-group">
                         <input type="text" id="name" placeholder="Nombre" required>
@@ -289,59 +676,108 @@
                     </div>
                 </form>
             </div>
-            
-            <div class="contact-info">
-                <h3>Información de Contacto</h3>
-                <div class="contact-item">
-                    <i class="fas fa-phone"></i>
-                    <p>73415902</p>
-                </div>
-                <div class="contact-item">
-                    <i class="fas fa-envelope"></i>
-                    <p>spaziosaunaclub@gmail.com</p>
-                </div>
-                <div class="contact-item">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <p>Calle Nestor Galindo N° 1 <br>esquina Av. Canadá, zona terminal de buses.</p>
-                </div>
-                
-                <div class="social-links">
-                    <a href="https://wa.me/73415902" class="social-icon"><i class="fab fa-whatsapp"></i></a>
-                    <a href="https://www.instagram.com/spassosaunaclub/" class="social-icon"><i class="fab fa-instagram"></i></a>
-                    <a href="https://www.facebook.com/SpazioSaunaClub" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-                    <a href="https://www.tiktok.com/@spassosaunayfitnessclub" class="social-icon"><i class="fab fa-tiktok"></i></a>
-                </div>
-                
-                <div class="map-container">
-                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3771.5927744933965!2d-65.24820322390714!3d-19.03765791114469!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x93fbc8d314a9c58b%3A0xa9c2e92ecc1c47b7!2sSpasso%20Sauna%20%26%20Fitness%20Club!5e0!3m2!1ses!2sbo!4v1743875963800!5m2!1ses!2sbo" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+            <!-- Mismo pie (Logo + Horario + Redes) que aparece al final de
+                 Planes: en la referencia, esta franja cierra TODAS las
+                 páginas del sitio (incluida la de Contacto), así que acá se
+                 repite para que también se vea al llegar al final de esta
+                 página en vez de quedar "cortada" justo después del
+                 formulario. -->
+            <div class="sitio-footer pagina-ubicacion-footer">
+                <div class="sitio-footer-inner">
+                    <div class="ubicacion-footer-col ubicacion-footer-logo">
+                        <div class="logo-text">
+                            <div class="logo-main">SPASSO</div>
+                            <div class="logo-sub">SAUNA &amp; GYM</div>
+                        </div>
+                    </div>
+                    <div class="ubicacion-footer-col">
+                        <h4>Horario de Atención</h4>
+                        <p class="js-horario"><strong>Lunes a Viernes:</strong> 5:00 - 23:00<br>
+                        <strong>Sábado y Domingo:</strong> 7:00 - 21:00</p>
+                    </div>
+                    <div class="ubicacion-footer-col">
+                        <h4>Síguenos</h4>
+                        <div class="social-links">
+                            <a href="https://wa.me/73415902" class="social-icon whatsapp"><span class="social-icon-shine"></span><i class="fab fa-whatsapp"></i></a>
+                            <a href="https://www.instagram.com/spassosaunaclub/" class="social-icon instagram"><span class="social-icon-shine"></span><i class="fab fa-instagram"></i></a>
+                            <a href="https://www.facebook.com/SpazioSaunaClub" class="social-icon facebook"><span class="social-icon-shine"></span><i class="fab fa-facebook-f"></i></a>
+                            <a href="https://www.tiktok.com/@spassosaunayfitnessclub" class="social-icon tiktok"><span class="social-icon-shine"></span><i class="fab fa-tiktok"></i></a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 
     <!-- Modal Login -->
+    <!-- Tarjeta adaptada del diseño de Uiverse.io by Smit-Prajapati, recoloreada
+         a la paleta de marca (magenta/cian sobre negro). Se quitaron "Forgot
+         Password" y los botones de login social del original porque el
+         sistema no tiene esas integraciones (ni recuperación de contraseña,
+         ni OAuth). El público de este portal son solo socios, así que
+         "Acceso Administrador/Recepción" ya no se muestra; esos checkboxes
+         siguen existiendo ocultos (siempre sin marcar) solo para no romper
+         funciones.js, que los lee por id al enviar el formulario - el staff
+         real inicia sesión desde la app interna, no desde aquí.
+         El enlace de abajo ahora es "¿Olvidaste tu contraseña?" en vez del
+         de Registro (a pedido); como no hay un flujo de recuperación por
+         correo, "Cambiar" abre el mismo popup de WhatsApp que ya usa el
+         sitio para contactar al gym, con el mensaje ya armado. El enlace
+         de Registro sigue en el DOM pero oculto: funciones.js lo busca por
+         id al cargar la página y se rompe si no existe.
+         El checkbox "Recordarme" es el neon-checkbox de Uiverse.io by 00Kubi,
+         recoloreado a cian de marca. Sí es funcional: si está marcado, el
+         token de sesión (ver portal-client.js) se guarda en localStorage en
+         vez de sessionStorage, así que la sesión sobrevive a cerrar el
+         navegador; si no, se comporta como hasta ahora. -->
     <div class="modal" id="loginModal">
-        <div class="modal-content">
+        <div class="login-card">
             <span class="close-modal">&times;</span>
-            <h2>Iniciar Sesión</h2>
-            <form id="loginForm">
-                <div class="form-group">
-                    <input type="email" id="loginEmail" placeholder="Correo Electrónico" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" id="loginPassword" placeholder="Contraseña" required>
-                </div>
-                <div class="form-group admin-login">
-                    <label>
-                        <input type="checkbox" id="adminLogin"> Acceso Administrador
-                    </label>
-                    <label>
-                        <input type="checkbox" id="receptionLogin"> Acceso Recepción
-                    </label>
-                </div>
-                <button type="submit" class="submit-btn">Ingresar</button>
-                <p class="toggle-form">¿No tienes cuenta? <a href="#" id="showRegister">Regístrate aquí</a></p>
+            <div class="login-card__heading">Iniciar sesión</div>
+            <form id="loginForm" class="login-card__form">
+                <input class="login-card__input" type="text" id="loginEmail" placeholder="Correo o usuario" autocomplete="username" required>
+                <input class="login-card__input" type="password" id="loginPassword" placeholder="Contraseña" required>
+                <input type="checkbox" id="adminLogin" hidden aria-hidden="true">
+                <input type="checkbox" id="receptionLogin" hidden aria-hidden="true">
+                <label class="login-card__remember">
+                    <div class="neon-checkbox">
+                        <input type="checkbox" id="rememberMe">
+                        <div class="neon-checkbox__frame">
+                            <div class="neon-checkbox__box">
+                                <div class="neon-checkbox__check-container">
+                                    <svg viewBox="0 0 24 24" class="neon-checkbox__check">
+                                        <path d="M3,12.5l7,7L21,5"></path>
+                                    </svg>
+                                </div>
+                                <div class="neon-checkbox__glow"></div>
+                                <div class="neon-checkbox__borders">
+                                    <span></span><span></span><span></span><span></span>
+                                </div>
+                            </div>
+                            <div class="neon-checkbox__effects">
+                                <div class="neon-checkbox__particles">
+                                    <span></span><span></span><span></span><span></span>
+                                    <span></span><span></span><span></span><span></span>
+                                    <span></span><span></span><span></span><span></span>
+                                </div>
+                                <div class="neon-checkbox__rings">
+                                    <div class="ring"></div>
+                                    <div class="ring"></div>
+                                    <div class="ring"></div>
+                                </div>
+                                <div class="neon-checkbox__sparks">
+                                    <span></span><span></span><span></span><span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="login-card__remember-text">Recordarme</span>
+                </label>
+                <button type="submit" class="login-card__submit">Entrar</button>
             </form>
+            <span class="login-card__toggle">¿Olvidaste tu contraseña? <a href="#" id="forgotPasswordLink">Cambiar</a></span>
+            <a href="#" id="showRegister" hidden aria-hidden="true"></a>
         </div>
     </div>
 
@@ -372,369 +808,346 @@
         </div>
     </div>
 
-    <!-- Modal Perfil/Admin -->
-    <div class="modal" id="profileModal">
-        <div class="modal-content profile-content">
-            <span class="close-modal">&times;</span>
-            <div class="profile-header">
-                <div class="profile-avatar">
-                    <i class="fas fa-user-circle"></i>
-                </div>
-                <div class="profile-info">
-                    <h2 id="profileName">Nombre Usuario</h2>
-                    <p id="profileEmail">usuario@email.com</p>
-                    <p id="profileRole">Miembro</p>
-                </div>
-            </div>
-            
-            <!-- Información de Mensualidad -->
-            <div class="profile-section">
-                <h3>Tu Membresía</h3>
-                <div class="membership-info">
-                    <h4 id="membershipPlan">Plan Premium</h4>
-                    <div>
-                        <p><strong>Fecha de inicio:</strong> <span id="membershipStart">01/06/2023</span></p>
-                        <p><strong>Fecha de término:</strong> <span id="membershipEnd">30/06/2023</span></p>
-                    </div>
+    <!-- Página de Perfil/Admin: página completa dentro del sitio (igual
+         patrón que "Ubicaciones y Contacto" .pagina-ubicacion), NO modal
+         flotante. Se abre/cierra con las mismas showModal()/hideModal()
+         de siempre (solo alternan la clase is-open), pero su fondo es
+         opaco y cubre toda la pantalla debajo del header, que se queda
+         visible arriba (mismo z-index que .pagina-ubicacion). -->
+    <div class="pagina-ubicacion" id="profileModal">
+        <div class="pagina-ubicacion-content profile-page-content">
+            <span class="close-modal pagina-ubicacion-cerrar">&times;</span>
+
+            <h2 class="profile-page-heading"><i class="fas fa-user-circle"></i> Mi Cuenta</h2>
+
+            <!-- Solo celular: nombre real + correo (en PC lo muestra el sidebar) -->
+            <div class="profile-mhead">
+                <span class="profile-mhead__avatar"><i class="fas fa-user"></i></span>
+                <div class="profile-mhead__txt">
+                    <strong id="profileMobName">Mi cuenta</strong>
+                    <span id="profileMobEmail"></span>
                 </div>
             </div>
-            
-            <div class="profile-section">
-                <h3>Rutinas Recomendadas</h3>
-                <div class="routine-tabs">
-                    <button class="tab-btn active" data-tab="hombres">Hombres</button>
-                    <button class="tab-btn" data-tab="mujeres">Mujeres</button>
+
+            <div class="profile-shell">
+                <!-- Sidebar en PC/tablet; se convierte en barra inferior en celular (ver .profile-bottomnav) -->
+                <div class="profile-sidebar">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="profile-info">
+                        <h2 id="profileName">Nombre Usuario</h2>
+                        <p id="profileEmail">usuario@email.com</p>
+                        <p id="profileRole">Miembro</p>
+                    </div>
+                    <nav class="profile-nav">
+                        <button class="profile-nav__item active" data-panel="resumen"><i class="fas fa-house"></i> Resumen</button>
+                        <button class="profile-nav__item" data-panel="perfil"><i class="fas fa-id-card"></i> Perfil</button>
+                        <button class="profile-nav__item" data-panel="ejercicios"><i class="fas fa-list-check"></i> Ejercicios</button>
+                        <button class="profile-nav__item" data-panel="rutinas"><i class="fas fa-dumbbell"></i> Mi rutina</button>
+                        <button class="profile-nav__item" data-panel="promociones"><i class="fas fa-tags"></i> Promociones</button>
+                    </nav>
                 </div>
-                
-                <div class="level-selector">
-                    <button class="level-btn active" data-level="novato">Novato</button>
-                    <button class="level-btn" data-level="intermedio">Intermedio</button>
-                    <button class="level-btn" data-level="avanzado">Avanzado</button>
-                </div>
-                
-                <div class="routine-content" id="hombres-tab">
-                    <!-- Rutinas para hombres novatos -->
-                    <div class="routine-grid" id="hombres-novato">
-                        <div class="routine-day">
-                            <h4>Lunes - Pecho/Tríceps</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
+
+                <div class="profile-panels">
+                    <!-- RESUMEN -->
+                    <div class="profile-panel active" data-panel="resumen">
+                        <h3>Resumen</h3>
+                        <div class="resumen-plan">
+                            <!-- Anillo estilo Apple Fitness: círculo SVG con
+                                 extremo redondeado (stroke-linecap round) en
+                                 vez del truco de conic-gradient de antes, y
+                                 el "riel" de fondo usa el mismo celeste
+                                 apagado en vez de un gris neutro, igual que
+                                 el Activity Ring real. -->
+                            <div class="resumen-anillo" id="resumenAnillo">
+                                <svg class="resumen-anillo__svg" viewBox="0 0 72 72">
+                                    <circle class="resumen-anillo__track" cx="36" cy="36" r="30"></circle>
+                                    <circle class="resumen-anillo__fill" id="resumenAnilloFill" cx="36" cy="36" r="30"></circle>
+                                </svg>
+                                <span id="resumenDiasTexto">--</span>
                             </div>
-                            <ul>
-                                <li>Press banca 3x10</li>
-                                <li>Fondos asistidos 3x8</li>
-                                <li>Aperturas con mancuernas 3x10</li>
-                            </ul>
+                            <div>
+                                <h4 id="resumenPlanNombre">Plan Premium</h4>
+                                <p id="resumenPlanVence">Vence el --</p>
+                            </div>
                         </div>
-                        <div class="routine-day">
-                            <h4>Miércoles - Espalda/Bíceps</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Dominadas asistidas 3x6</li>
-                                <li>Remo con barra 3x10</li>
-                                <li>Curl de bíceps 3x12</li>
-                            </ul>
+
+                        <!-- Accesos rápidos: llevan directamente a otra pestaña
+                             del perfil sin tener que ir al sidebar/barra inferior. -->
+                        <div class="resumen-accesos" id="resumenAccesos">
+                            <button class="resumen-acceso" data-ir-panel="ejercicios">
+                                <i class="fas fa-list-check"></i><span>Ejercicios</span>
+                            </button>
+                            <button class="resumen-acceso" data-ir-panel="rutinas">
+                                <i class="fas fa-dumbbell"></i><span>Mi rutina</span>
+                            </button>
+                            <button class="resumen-acceso" data-ir-panel="perfil">
+                                <i class="fas fa-id-card"></i><span>Mi perfil</span>
+                            </button>
                         </div>
-                        <div class="routine-day">
-                            <h4>Viernes - Piernas</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
+
+                        <!-- Casillero asignado: solo visible si el socio tiene uno
+                             (dato real de /api/portal/me/locker). -->
+                        <div class="resumen-locker-card" id="resumenLockerCard" hidden>
+                            <span class="locker-badge"><i class="fas fa-lock"></i></span>
+                            <div class="locker-info">
+                                <h4>Casillero <span id="resumenLockerNumero">--</span></h4>
+                                <p id="resumenLockerZona" hidden>--</p>
                             </div>
-                            <ul>
-                                <li>Sentadillas 3x10</li>
-                                <li>Prensa 3x12</li>
-                                <li>Peso muerto rumano 3x8</li>
-                            </ul>
+                        </div>
+
+                        <!-- Asistencia real: días que el socio marcó entrada con
+                             su huella (asistencias_log), traídos de
+                             /api/portal/me/visits y pintados en un mini-calendario
+                             del mes actual, sin datos inventados. -->
+                        <p class="resumen-section-title">Tu asistencia</p>
+                        <div class="resumen-asistencia">
+                            <div class="resumen-asistencia__header">
+                                <span class="resumen-asistencia__mes" id="resumenAsistenciaMes">--</span>
+                            </div>
+                            <div class="resumen-leyenda">
+                                <span><i class="cal-pt cal-pt--ok"></i> Asististe</span>
+                                <span><i class="cal-pt cal-pt--falta"></i> No asististe</span>
+                            </div>
+                            <div class="resumen-asistencia__stats">
+                                <div class="resumen-stat">
+                                    <strong id="resumenVisitasMes">0</strong>
+                                    <span>Este mes</span>
+                                </div>
+                                <div class="resumen-stat">
+                                    <strong id="resumenVisitasTotal">0</strong>
+                                    <span>Totales</span>
+                                </div>
+                                <div class="resumen-stat resumen-stat--racha" id="resumenRacha">
+                                    <strong><i class="fas fa-fire"></i> <span id="resumenRachaTexto">0</span></strong>
+                                    <span>Días seguidos</span>
+                                </div>
+                            </div>
+                            <div class="resumen-calendario" id="resumenCalendario">
+                                <!-- Cabecera de días + celdas del mes: se generan en JS -->
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- PERFIL: datos personales del socio (con los que se
+                         registró en el gimnasio) + su membresía actual. Antes
+                         era "Membresía" y solo mostraba el plan; ahora agrupa
+                         también nombre/correo/DNI/fecha de registro. -->
+                    <div class="profile-panel" data-panel="perfil">
+                        <div class="perfil-head">
+                            <h3>Mi Perfil</h3>
+                            <button type="button" class="perfil-logout" id="btnPerfilLogout"><i class="fas fa-right-from-bracket"></i> Cerrar sesión</button>
+                        </div>
+
+                        <p class="resumen-section-title" style="margin-top:0">Datos personales</p>
+                        <div class="perfil-datos">
+                            <div class="perfil-dato">
+                                <span class="perfil-dato__label">Nombre</span>
+                                <span class="perfil-dato__valor" id="perfilNombre">--</span>
+                            </div>
+                            <div class="perfil-dato">
+                                <span class="perfil-dato__label">DNI</span>
+                                <span class="perfil-dato__valor" id="perfilDni">--</span>
+                            </div>
+                            <div class="perfil-dato perfil-dato--full">
+                                <span class="perfil-dato__label">Correo</span>
+                                <span class="perfil-dato__valor" id="perfilCorreo">--</span>
+                            </div>
+                            <div class="perfil-dato">
+                                <span class="perfil-dato__label">Casillero</span>
+                                <span class="perfil-dato__valor" id="perfilLocker">--</span>
+                            </div>
+                            <div class="perfil-dato">
+                                <span class="perfil-dato__label">Miembro desde</span>
+                                <span class="perfil-dato__valor" id="perfilMiembroDesde">--</span>
+                            </div>
+                        </div>
+
+                        <p class="resumen-section-title">Membresía</p>
+                        <div class="memb-card">
+                            <div class="memb-card__top">
+                                <div>
+                                    <span class="memb-card__tag"><i class="fas fa-crown"></i> Tu plan</span>
+                                    <h4 id="membershipPlan">Plan Premium</h4>
+                                </div>
+                                <span class="memb-card__estado" id="membershipEstado" hidden></span>
+                            </div>
+                            <div class="memb-card__fechas">
+                                <div><small>Empezó el</small><strong id="membershipStart">--</strong></div>
+                                <div><small>Vence el</small><strong id="membershipEnd">--</strong></div>
+                            </div>
+                        </div>
+
+                        <p class="resumen-section-title">Seguridad</p>
+                        <button type="button" class="perfil-pass__abrir" id="btnAbrirPass"><i class="fas fa-key"></i> Cambiar contraseña <i class="fas fa-chevron-right"></i></button>
+                    </div>
+
+                    <!-- EJERCICIOS: biblioteca general (todos los ejercicios reales,
+                         organizados por parte del cuerpo). Distinto de "Rutinas",
+                         que son planes ya armados usando estos mismos ejercicios. -->
+                    <div class="profile-panel" data-panel="ejercicios">
+                        <h3>Ejercicios</h3>
+
+                        <!-- Sidebar vertical (parte del cuerpo) + contenido a la
+                             derecha (subcategoría de músculo si aplica + buscador
+                             + grid). Antes era una fila horizontal de tabs; con
+                             11 categorías se organiza mejor como lista lateral. -->
+                        <div class="ejercicios-layout">
+                            <div class="ejercicios-tabs" id="ejerciciosTabs">
+                                <!-- Los botones de parte del cuerpo se generan en JS
+                                     (ejercicios.js) a partir de window.EJERCICIOS_DATA -->
+                            </div>
+
+                            <div class="ejercicios-contenido">
+                                <!-- Subcategorías por músculo específico (p.ej. dentro
+                                     de "Piernas": Cuádriceps/Glúteos/Isquiotibiales/...).
+                                     Solo aparece si la parte elegida tiene más de un
+                                     músculo objetivo distinto en los datos; si no, queda
+                                     vacío y oculto (ver ejercicios.js). -->
+                                <div class="ejercicios-subtabs" id="ejerciciosSubtabs" hidden></div>
+
+                                <!-- Buscador con borde animado en degradado (adaptado de un
+                                     componente de Uiverse.io by Lakshay-art, retinteado a
+                                     celeste/rosa-fucsia de la marca). El <input> real conserva
+                                     el mismo id="ejerciciosBuscar" que ya usa ejercicios.js,
+                                     todo lo demás es decoración alrededor. -->
+                                <div class="ejercicios-toolbar">
+                                    <div class="ejbuscar">
+                                        <div class="ejbuscar__glow"></div>
+                                        <div class="ejbuscar__darkborder"></div>
+                                        <div class="ejbuscar__white"></div>
+                                        <div class="ejbuscar__border"></div>
+                                        <div class="ejbuscar__main">
+                                            <span class="ejbuscar__icon" aria-hidden="true">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" viewBox="0 0 24 24" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" height="18" fill="none">
+                                                    <circle stroke="url(#ejbuscarGradA)" r="8" cy="11" cx="11"></circle>
+                                                    <line stroke="url(#ejbuscarGradB)" y2="16.65" y1="22" x2="16.65" x1="22"></line>
+                                                    <defs>
+                                                        <linearGradient gradientTransform="rotate(50)" id="ejbuscarGradA">
+                                                            <stop stop-color="#8fe9f2" offset="0%"></stop>
+                                                            <stop stop-color="#14c6de" offset="50%"></stop>
+                                                        </linearGradient>
+                                                        <linearGradient id="ejbuscarGradB">
+                                                            <stop stop-color="#14c6de" offset="0%"></stop>
+                                                            <stop stop-color="#0f97a8" offset="50%"></stop>
+                                                        </linearGradient>
+                                                    </defs>
+                                                </svg>
+                                            </span>
+                                            <input type="text" id="ejerciciosBuscar" class="ejbuscar__input" placeholder="Buscar ejercicio..." autocomplete="off">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="ejercicios-grid" id="ejerciciosGrid"></div>
+
+                                <button class="ejercicios-cargar-mas" id="ejerciciosCargarMas" hidden>Cargar más ejercicios</button>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- Rutinas para hombres intermedios (ocultas inicialmente) -->
-                    <div class="routine-grid" id="hombres-intermedio" style="display:none">
-                        <div class="routine-day">
-                            <h4>Lunes - Pecho/Tríceps</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Press banca 4x8</li>
-                                <li>Fondos 3x10</li>
-                                <li>Aperturas con poleas 3x12</li>
-                            </ul>
+
+                    <!-- RUTINAS -->
+                    <div class="profile-panel" data-panel="rutinas">
+                        <div class="perfil-head">
+                            <h3>Mi rutina</h3>
+                            <button type="button" class="btn-datos" id="btnAbrirDatos"><i class="fas fa-pen-to-square"></i> <span>Añadir mis datos</span></button>
+                            <button type="button" class="btn-datos btn-partida" id="btnPartida" hidden><i class="fas fa-flag-checkered"></i> <span>Mi inicio</span></button>
                         </div>
-                        <div class="routine-day">
-                            <h4>Miércoles - Espalda/Bíceps</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Dominadas 4x6</li>
-                                <li>Remo con mancuernas 3x10</li>
-                                <li>Curl martillo 3x12</li>
-                            </ul>
-                        </div>
-                        <div class="routine-day">
-                            <h4>Viernes - Piernas</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Sentadillas 4x8</li>
-                                <li>Prensa 4x10</li>
-                                <li>Peso muerto 3x6</li>
-                            </ul>
-                        </div>
+                        <div id="miPuntoPartida"></div>
+                        <!-- La rutina la arma y publica el entrenador (js/entrenador-portal.js
+                             inyecta el contenido en #miRutinaEntrenador). Sin rutinas genéricas
+                             por género/nivel: cada socio recibe una rutina personalizada. -->
+                        <div id="miRutinaEntrenador" class="mirutina"></div>
                     </div>
-                    
-                    <!-- Rutinas para hombres avanzados (ocultas inicialmente) -->
-                    <div class="routine-grid" id="hombres-avanzado" style="display:none">
-                        <div class="routine-day">
-                            <h4>Lunes - Pecho/Tríceps</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Press banca 5x5</li>
-                                <li>Fondos con peso 4x8</li>
-                                <li>Aperturas inclinadas 4x10</li>
-                            </ul>
-                        </div>
-                        <div class="routine-day">
-                            <h4>Miércoles - Espalda/Bíceps</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Dominadas con peso 4x6</li>
-                                <li>Remo T 4x8</li>
-                                <li>Curl concentrado 4x10</li>
-                            </ul>
-                        </div>
-                        <div class="routine-day">
-                            <h4>Viernes - Piernas</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Sentadillas pesadas 5x5</li>
-                                <li>Prensa 5x8</li>
-                                <li>Peso muerto 4x6</li>
-                            </ul>
-                        </div>
+
+                    <!-- PROMOCIONES: se llena desde Recepción > Configuración > Página Web
+                         (contenido-portal.js -> window.renderPromosPanel). -->
+                    <div class="profile-panel" data-panel="promociones">
+                        <h3>Promociones</h3>
+                        <div id="promosPanel" class="promos-panel"></div>
                     </div>
-                </div>
-                
-                <div class="routine-content" id="mujeres-tab" style="display:none">
-                    <!-- Rutinas para mujeres novatas -->
-                    <div class="routine-grid" id="mujeres-novato">
-                        <div class="routine-day">
-                            <h4>Lunes - Piernas/Glúteos</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Sentadillas sumo 3x12</li>
-                                <li>Hip thrust 3x10</li>
-                                <li>Zancadas 3x10 por pierna</li>
-                            </ul>
-                        </div>
-                        <div class="routine-day">
-                            <h4>Miércoles - Brazos/Espalda</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Remo con mancuernas 3x10</li>
-                                <li>Curl de bíceps 3x12</li>
-                                <li>Fondos de tríceps 3x10</li>
-                            </ul>
-                        </div>
-                        <div class="routine-day">
-                            <h4>Viernes - Cardio/Core</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Elíptica 30 min</li>
-                                <li>Burpees 3x10</li>
-                                <li>Plancha 3x30 seg</li>
-                            </ul>
-                        </div>
+
+                    <!-- Paneles de staff: no forman parte de las pestañas del socio,
+                         siguen mostrándose/ocultándose exactamente igual que antes
+                         según el rol (ver funciones.js). -->
+                    <div class="admin-controls" id="adminControls" style="display:none">
+                        <h3>Panel de Administrador</h3>
+                        <button id="editContentBtn" class="admin-btn">Editar Contenido</button>
+                        <button id="saveChangesBtn" class="admin-btn" style="display:none">Guardar Cambios</button>
+                        <button id="manageUsersBtn" class="admin-btn">Gestionar Usuarios</button>
+                        <button id="manageMembershipsBtn" class="admin-btn">Mensualidades</button>
                     </div>
-                    
-                    <!-- Rutinas para mujeres intermedias (ocultas inicialmente) -->
-                    <div class="routine-grid" id="mujeres-intermedio" style="display:none">
-                        <div class="routine-day">
-                            <h4>Lunes - Piernas/Glúteos</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Sentadillas sumo con peso 4x10</li>
-                                <li>Hip thrust con peso 4x8</li>
-                                <li>Zancadas con mancuernas 3x10 por pierna</li>
-                            </ul>
+
+                    <div class="reception-controls" id="receptionControls" style="display:none">
+                        <h3>Panel de Recepcionista</h3>
+                        <div class="shift-selector">
+                            <label for="shiftSelect">Turno:</label>
+                            <select id="shiftSelect">
+                                <option value="morning">Mañana</option>
+                                <option value="afternoon">Tarde</option>
+                            </select>
                         </div>
-                        <div class="routine-day">
-                            <h4>Miércoles - Brazos/Espalda</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Remo con barra 4x8</li>
-                                <li>Curl martillo 3x10</li>
-                                <li>Fondos en banco 3x12</li>
-                            </ul>
+                        <div class="receptionist-name">
+                            <label for="receptionistNameInput">Nombre Recepcionista:</label>
+                            <input type="text" id="receptionistNameInput" placeholder="Ingresa tu nombre">
                         </div>
-                        <div class="routine-day">
-                            <h4>Viernes - Cardio/Core</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>HIIT 20 min</li>
-                                <li>Burpees con salto 3x12</li>
-                                <li>Plancha con elevaciones 3x30 seg</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <!-- Rutinas para mujeres avanzadas (ocultas inicialmente) -->
-                    <div class="routine-grid" id="mujeres-avanzado" style="display:none">
-                        <div class="routine-day">
-                            <h4>Lunes - Piernas/Glúteos</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Sentadillas búlgaras 4x8 por pierna</li>
-                                <li>Hip thrust pesado 5x5</li>
-                                <li>Zancadas con barra 4x8 por pierna</li>
-                            </ul>
-                        </div>
-                        <div class="routine-day">
-                            <h4>Miércoles - Brazos/Espalda</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>Dominadas 4x6</li>
-                                <li>Remo invertido 4x8</li>
-                                <li>Curl con barra 4x8</li>
-                            </ul>
-                        </div>
-                        <div class="routine-day">
-                            <h4>Viernes - Cardio/Core</h4>
-                            <div class="video-placeholder">
-                                <video width="100%" height="120" controls>
-                                    <source src="vid/videoPecho.mp4" type="video/mp4">
-                                    Tu navegador no soporta el elemento de video.
-                                </video>
-                            </div>
-                            <ul>
-                                <li>HIIT avanzado 30 min</li>
-                                <li>Burpees con salto y flexión 4x10</li>
-                                <li>Plancha con movimientos 4x30 seg</li>
-                            </ul>
-                        </div>
+                        <button id="registerIncomeBtn" class="reception-btn">
+                            <i class="fas fa-user-plus"></i> Registrar Ingreso
+                        </button>
+                        <button id="viewClientsBtn" class="reception-btn">
+                            <i class="fas fa-users"></i> Ver Clientes
+                        </button>
                     </div>
                 </div>
             </div>
-            
-            <div class="profile-section">
-                <h3>Promociones y Sorteos</h3>
-                <div class="promo-card">
-                    <h4>30% descuento en membresía Premium</h4>
-                    <p>Válido hasta 30 de junio</p>
+
+            <!-- Barra inferior: solo visible en celular (ver media query), refleja profile-nav -->
+            <nav class="profile-bottomnav">
+                <button class="profile-bottomnav__item active" data-panel="resumen"><i class="fas fa-house"></i><span>Resumen</span></button>
+                <button class="profile-bottomnav__item" data-panel="perfil"><i class="fas fa-id-card"></i><span>Perfil</span></button>
+                <button class="profile-bottomnav__item" data-panel="ejercicios"><i class="fas fa-list-check"></i><span>Ejercicios</span></button>
+                <button class="profile-bottomnav__item" data-panel="rutinas"><i class="fas fa-dumbbell"></i><span>Mi rutina</span></button>
+                <button class="profile-bottomnav__item" data-panel="promociones"><i class="fas fa-tags"></i><span>Promos</span></button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Cambiar contraseña: ventana flotante (se abre desde Mi Perfil > Seguridad) -->
+    <div class="modal" id="passModal">
+        <div class="modal-content pass-modal">
+            <span class="close-modal" id="passModalCerrar">&times;</span>
+            <h2 class="pass-modal__titulo">Cambiar contraseña</h2>
+            <p class="pass-modal__hint">Mínimo 8 caracteres, con letras y números.</p>
+            <form class="perfil-pass" id="formCambiarPass" autocomplete="off">
+                <input type="password" id="passActual" placeholder="Contraseña actual" autocomplete="current-password" required>
+                <input type="password" id="passNueva" placeholder="Nueva contraseña" maxlength="72" minlength="8" autocomplete="new-password" required>
+                <input type="password" id="passNueva2" placeholder="Repite la nueva contraseña" minlength="8" autocomplete="new-password" required>
+                <button type="submit" class="perfil-pass__btn" id="btnCambiarPass"><i class="fas fa-key"></i> Guardar contraseña</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ventana flotante (lightbox) de un ejercicio: se abre al hacer clic
+         en una tarjeta de la sección Ejercicios. Mismo patrón que
+         .gym-lightbox de la galería, pero con gif animado (toda la
+         ejecución del movimiento) en vez de una foto fija. Vive fuera de
+         #profileModal para poder flotar por encima de todo con z-index alto. -->
+    <div class="gym-lightbox ejercicio-lightbox" id="ejercicioLightbox">
+        <div class="ejercicio-lightbox__body">
+            <button class="gym-lightbox-cerrar" id="ejercicioLightboxCerrar" aria-label="Cerrar">&times;</button>
+            <img id="ejercicioLightboxGif" src="" alt="">
+            <div class="ejercicio-lightbox__info">
+                <h4 id="ejercicioLightboxNombre"></h4>
+                <div class="ejercicio-detalle__chips">
+                    <span class="ejercicio-chip" id="ejercicioLightboxParte"></span>
+                    <span class="ejercicio-chip" id="ejercicioLightboxEquipo"></span>
+                    <span class="ejercicio-chip" id="ejercicioLightboxObjetivo"></span>
                 </div>
-                <div class="promo-card">
-                    <h4>Sorteo entrada doble a sauna</h4>
-                    <p>Participa hasta el 15 de julio</p>
-                </div>
+                <h5>Cómo hacerlo</h5>
+                <ol id="ejercicioLightboxPasos"></ol>
             </div>
-            
-            <div class="admin-controls" id="adminControls" style="display:none">
-                <h3>Panel de Administrador</h3>
-                <button id="editContentBtn" class="admin-btn">Editar Contenido</button>
-                <button id="saveChangesBtn" class="admin-btn" style="display:none">Guardar Cambios</button>
-                <button id="manageUsersBtn" class="admin-btn">Gestionar Usuarios</button>
-                <button id="manageMembershipsBtn" class="admin-btn">Mensualidades</button>
-            </div>
-            
-            <div class="reception-controls" id="receptionControls" style="display:none">
-                <h3>Panel de Recepcionista</h3>
-                <div class="shift-selector">
-                    <label for="shiftSelect">Turno:</label>
-                    <select id="shiftSelect">
-                        <option value="morning">Mañana</option>
-                        <option value="afternoon">Tarde</option>
-                    </select>
-                </div>
-                <div class="receptionist-name">
-                    <label for="receptionistNameInput">Nombre Recepcionista:</label>
-                    <input type="text" id="receptionistNameInput" placeholder="Ingresa tu nombre">
-                </div>
-                <button id="registerIncomeBtn" class="reception-btn">
-                    <i class="fas fa-user-plus"></i> Registrar Ingreso
-                </button>
-                <button id="viewClientsBtn" class="reception-btn">
-                    <i class="fas fa-users"></i> Ver Clientes
-                </button>
-            </div>
-            
-            <button class="logout-btn" id="logoutBtn">Cerrar Sesión</button>
         </div>
     </div>
 
@@ -857,9 +1270,30 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="/portal-static/funciones.js"></script>
-    <script src="/portal-static/portal-client.js"></script>
+    <!-- Alerta de promoción (se llena desde Recepción > Configuración > Página Web) -->
+    <div class="promo-alerta" id="promoAlerta" hidden>
+        <div class="promo-alerta__caja" role="dialog" aria-modal="true" aria-labelledby="promoAlertaTitulo">
+            <button type="button" class="promo-alerta__cerrar" id="promoAlertaCerrar" aria-label="Cerrar">&times;</button>
+            <span class="promo-alerta__badge">PROMOCIÓN</span>
+            <h3 id="promoAlertaTitulo"></h3>
+            <p class="promo-alerta__texto" id="promoAlertaTexto"></p>
+            <p class="promo-alerta__vigencia" id="promoAlertaVigencia"></p>
+            <a href="#planes" class="promo-alerta__btn" id="promoAlertaBtn">Ver planes</a>
+        </div>
+    </div>
+    <script src="vendor/js/chart.umd.min.js"></script>
+    <!-- Dataset de ejercicios (1324, generado desde exercises-dataset-main).
+         Se carga como <script> (no fetch/JSON) para que funcione también
+         abriendo el sitio con doble clic (file://), donde fetch() a un
+         archivo local es bloqueado por el navegador. -->
+    <script src="data/exercises-data.js?v=20260826"></script>
+    <script src="js/fondos-animados.js?v=20260924-fondoglobal"></script>
+    <script src="js/funciones.js?v=20261127"></script>
+    <script src="js/portal-client.js?v=20261119"></script>
+    <script src="js/ejercicios.js?v=20261103"></script>
+    <script src="js/fondos-portal.js?v=20261010"></script>
+    <script src="js/contenido-portal.js?v=20261014"></script>
+    <script src="js/entrenador-portal.js?v=20261202"></script>
     
 </body>
 </html>

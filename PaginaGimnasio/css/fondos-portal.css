@@ -1,0 +1,189 @@
+/* =========================================================
+   FONDOS DEL PORTAL PÚBLICO (elige el visitante)
+   html[data-fondo] = claro | claro-tenue | liso | movimiento
+   Solo cambia fondos y colores del tema; las fotos no se tocan.
+   ========================================================= */
+
+/* ---- "En movimiento": el aurora animado de siempre (sin cambios) ---- */
+
+/* ---- LISO OSCURO: oscuro, quieto ---- */
+html[data-fondo="liso"] .aurora-bg {
+    animation: none;
+    background: linear-gradient(160deg, #15122b 0%, #1b1840 55%, #111129 100%);
+}
+html[data-fondo="liso"] .aurora-bg::before,
+html[data-fondo="liso"] .aurora-bg::after { display: none; }
+
+/* ---- CLARO y CLARO TENUE: variables invertidas ---- */
+html[data-fondo="claro"],
+html[data-fondo="claro-tenue"] {
+    --blanco: #1D1D1F;
+    --negro: #FFFFFF;
+    --cafe-claro: #5c5c63;
+    --gris-oscuro: #E8E8ED;
+    --gris-claro: #F5F5F7;
+    --rgb-superficie: 0, 0, 0;
+}
+html[data-fondo="claro"] .aurora-bg,
+html[data-fondo="claro-tenue"] .aurora-bg { animation: none; }
+html[data-fondo="claro"] .aurora-bg::before,
+html[data-fondo="claro"] .aurora-bg::after,
+html[data-fondo="claro-tenue"] .aurora-bg::before,
+html[data-fondo="claro-tenue"] .aurora-bg::after { display: none; }
+
+html[data-fondo="claro"] .aurora-bg { background: #FFFFFF; }
+html[data-fondo="claro-tenue"] .aurora-bg {
+    background:
+        radial-gradient(circle at 12% 18%, rgba(230, 25, 168, 0.42) 0, rgba(230, 25, 168, 0) 34%),
+        radial-gradient(circle at 88% 22%, rgba(20, 198, 222, 0.46) 0, rgba(20, 198, 222, 0) 36%),
+        radial-gradient(circle at 20% 88%, rgba(20, 198, 222, 0.36) 0, rgba(20, 198, 222, 0) 32%),
+        radial-gradient(circle at 82% 84%, rgba(230, 25, 168, 0.36) 0, rgba(230, 25, 168, 0) 34%),
+        #FBFAFE;
+}
+/* Pie de página claro */
+html[data-fondo="claro-tenue"] .sitio-footer { background: rgba(255, 255, 255, 0.6); }
+
+/* Barra superior y menú móvil claros */
+html[data-fondo="claro"] header,
+html[data-fondo="claro-tenue"] header { background: rgba(255, 255, 255, 0.78); }
+html[data-fondo="claro"] header.is-scrolled,
+html[data-fondo="claro-tenue"] header.is-scrolled { background: rgba(255, 255, 255, 0.94); }
+@media (max-width: 900px) {
+    html[data-fondo="claro"] .nav-links,
+    html[data-fondo="claro-tenue"] .nav-links { background: rgba(255, 255, 255, 0.97); }
+}
+
+/* El hero va sobre fotos oscuras: conserva texto blanco */
+html[data-fondo="claro"] #inicio,
+html[data-fondo="claro-tenue"] #inicio {
+    --blanco: #FFFFFF;
+    --cafe-claro: #d8d8de;
+    --rgb-superficie: 255, 255, 255;
+}
+/* Las tarjetas oscuras sobre foto (galería, lightbox) siguen igual */
+html[data-fondo="claro"] .gym-lightbox,
+html[data-fondo="claro-tenue"] .gym-lightbox {
+    --blanco: #FFFFFF;
+    --rgb-superficie: 255, 255, 255;
+}
+
+/* ---- SELECTOR DE FONDO (barra superior) ---- */
+.fondo-selector { position: relative; margin-right: 12px; }
+.fondo-selector__btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 40px; padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(var(--rgb-superficie), 0.18);
+    background: rgba(var(--rgb-superficie), 0.07);
+    color: var(--blanco);
+    font: 600 14px 'Montserrat', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+.fondo-selector__btn:hover { background: rgba(var(--rgb-superficie), 0.14); }
+.fondo-selector__chev { font-size: 11px; transition: transform 0.25s var(--ease-out); }
+.fondo-selector__btn[aria-expanded="true"] .fondo-selector__chev { transform: rotate(180deg); }
+
+.fondo-swatch {
+    width: 20px; height: 20px; border-radius: 50%;
+    flex-shrink: 0;
+    border: 1.5px solid rgba(128, 128, 128, 0.45);
+    background: #fff;
+}
+.fondo-swatch--claro { background: #ffffff; }
+.fondo-swatch--claro-tenue {
+    background:
+        radial-gradient(circle at 25% 30%, #f6a6dd 0 30%, transparent 32%),
+        radial-gradient(circle at 75% 70%, #9ee6f0 0 30%, transparent 32%), #fbfaff;
+}
+.fondo-swatch--liso { background: linear-gradient(160deg, #15122b, #1b1840); }
+.fondo-swatch--movimiento { background: conic-gradient(from 0deg, #E619A8, #14C6DE, #0A0A0C, #E619A8); }
+
+.fondo-selector__menu {
+    position: absolute; top: calc(100% + 12px); right: 0;
+    list-style: none; margin: 0; padding: 8px;
+    min-width: 270px;
+    border-radius: 16px;
+    background: var(--gris-claro);
+    border: 1px solid rgba(var(--rgb-superficie), 0.14);
+    box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.55);
+    opacity: 0; visibility: hidden; transform: translateY(-8px) scale(0.97);
+    transform-origin: top right;
+    transition: opacity 0.22s var(--ease-out), transform 0.28s var(--ease-out), visibility 0s linear 0.28s;
+    z-index: 1100;
+}
+.fondo-selector__menu.abierto {
+    opacity: 1; visibility: visible; transform: none;
+    transition-delay: 0s;
+}
+.fondo-opt {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 12px;
+    color: var(--blanco); cursor: pointer;
+    opacity: 0; transform: translateY(-6px);
+    transition: background 0.15s, opacity 0.25s var(--ease-out), transform 0.3s var(--ease-out);
+}
+.fondo-selector__menu.abierto .fondo-opt {
+    opacity: 1; transform: none;
+    transition-delay: calc(var(--k, 0) * 45ms);
+}
+.fondo-opt:hover, .fondo-opt:focus-visible { background: rgba(var(--rgb-superficie), 0.1); outline: none; }
+.fondo-opt .fondo-swatch { width: 32px; height: 32px; }
+.fondo-opt__txt { display: flex; flex-direction: column; flex: 1; line-height: 1.25; }
+.fondo-opt__txt b { font-size: 15px; font-weight: 700; }
+.fondo-opt__txt small { font-size: 12px; opacity: 0.7; }
+.fondo-opt__check { color: var(--celeste); opacity: 0; }
+.fondo-opt[aria-selected="true"] .fondo-opt__check { opacity: 1; }
+
+@media (max-width: 900px) {
+    .fondo-selector__nombre { display: none; }
+    .fondo-selector__btn { padding: 0 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .fondo-selector__menu, .fondo-opt { transition-duration: 0.01s !important; transition-delay: 0s !important; }
+}
+
+/* ---- ALERTA DE PROMOCIÓN ---- */
+.promo-alerta {
+    position: fixed; inset: 0; z-index: 3000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    opacity: 0; transition: opacity 0.3s var(--ease-out);
+}
+.promo-alerta[hidden] { display: none; }
+.promo-alerta.visible { opacity: 1; }
+.promo-alerta__caja {
+    position: relative; width: min(440px, 100%);
+    padding: 34px 30px 28px; text-align: center;
+    border-radius: 22px;
+    background: var(--gris-claro); color: var(--blanco);
+    border: 1.5px solid transparent;
+    background-image: linear-gradient(var(--gris-claro), var(--gris-claro)),
+                      linear-gradient(135deg, var(--rosa-fucsia), var(--celeste));
+    background-origin: border-box; background-clip: padding-box, border-box;
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.6);
+    transform: translateY(18px) scale(0.96);
+    transition: transform 0.4s var(--ease-out);
+}
+.promo-alerta.visible .promo-alerta__caja { transform: none; }
+.promo-alerta__cerrar {
+    position: absolute; top: 10px; right: 14px;
+    background: none; border: none; color: var(--blanco);
+    font-size: 28px; line-height: 1; cursor: pointer; opacity: 0.7;
+}
+.promo-alerta__cerrar:hover { opacity: 1; }
+.promo-alerta__badge {
+    display: inline-block; padding: 5px 14px; border-radius: 999px;
+    font: 700 12px 'Montserrat', sans-serif; letter-spacing: 0.08em;
+    color: #fff; background: linear-gradient(135deg, var(--rosa-fucsia), var(--celeste));
+}
+.promo-alerta__caja h3 { margin: 14px 0 8px; font-size: 26px; }
+.promo-alerta__texto { font-size: 17px; line-height: 1.5; margin: 0 0 8px; }
+.promo-alerta__vigencia { font-size: 14px; color: var(--cafe-claro); margin: 0 0 18px; }
+.promo-alerta__btn {
+    display: inline-block; padding: 12px 26px; border-radius: 999px;
+    font: 700 15px 'Montserrat', sans-serif; text-decoration: none;
+    color: #fff; background: linear-gradient(135deg, var(--rosa-fucsia), #b8128a);
+}

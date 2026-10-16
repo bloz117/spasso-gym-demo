@@ -1,43 +1,28 @@
-databases:
-  - name: spasso-db
-    plan: free
-    databaseName: db_gym
-    user: spasso_user
-
+# Portal público de Spasso Gym (SOLO el portal; Recepción se queda en la PC del gimnasio).
+# La base de datos vive en Neon (gratis, permanente). Aquí NO se crea base de datos.
 services:
   - type: web
-    name: spasso-gym-demo
+    name: spasso-portal
     runtime: python
     plan: free
     rootDir: proyecto_gym
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn main_cloud:app --host 0.0.0.0 --port $PORT --proxy-headers
+    healthCheckPath: /api/health
     envVars:
-      - key: DB_HOST
-        fromDatabase:
-          name: spasso-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: spasso-db
-          property: port
-      - key: DB_NAME
-        fromDatabase:
-          name: spasso-db
-          property: database
-      - key: DB_USER
-        fromDatabase:
-          name: spasso-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: spasso-db
-          property: password
-      - key: SECRET_KEY
-        generateValue: true
-      - key: ALGORITHM
-        value: HS256
-      - key: ACCESS_TOKEN_EXPIRE_MINUTES
-        value: "480"
       - key: PYTHON_VERSION
         value: 3.11.9
+      - key: DATABASE_URL        # cadena de conexión de Neon (la pegas tú en Render)
+        sync: false
+      - key: SYNC_SECRET         # el MISMO valor que pondrás en el .env de Recepción
+        sync: false
+      - key: SECRET_KEY          # lo genera Render solo
+        generateValue: true
+      - key: FORWARDED_ALLOW_IPS # para ver la IP real de cada visitante
+        value: "*"
+      - key: DB_POOL_MAX         # pocas conexiones: la base gratis de Neon es pequeña
+        value: "5"
+      - key: APP_TIMEZONE
+        value: America/La_Paz
+      - key: TZ
+        value: America/La_Paz
