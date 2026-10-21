@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
             role: 'user',
             status: 'active',
             membership: {
-                plan: 'Premium',
+                plan: 'Estándar',
                 startDate: '2023-06-01',
                 endDate: '2023-06-30'
             }
@@ -1444,17 +1444,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Obtener planes disponibles
-        const plans = ['Ninguno', 'Básico', 'Premium', 'VIP'];
+        const plans = ['Ninguno', 'Básico', 'Estándar', 'VIP'];
         
         // Crear formulario de edición
-        const plan = prompt('Selecciona el plan:\n\n1. Básico\n2. Premium\n3. VIP\n\nIngresa el número del plan:', 
+        const plan = prompt('Selecciona el plan:\n\n1. Básico\n2. Estándar\n3. VIP\n\nIngresa el número del plan:', 
             plans.indexOf(user.membership.plan) + 1);
         
         if (plan === null) return;
         
         let selectedPlan = '';
         if (plan === '1') selectedPlan = 'Básico';
-        else if (plan === '2') selectedPlan = 'Premium';
+        else if (plan === '2') selectedPlan = 'Estándar';
         else if (plan === '3') selectedPlan = 'VIP';
         else {
             showNotification('Opción no válida', 'error');

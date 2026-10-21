@@ -194,6 +194,11 @@
                 <div class="line2"></div>
                 <div class="line3"></div>
             </label>
+            <!-- Solo celular y solo dentro de Mi Cuenta: reemplaza al hamburguesa
+                 y vuelve a la página pública (ver perfil-movil.js / styles.css). -->
+            <button type="button" class="header-back-btn" id="headerBackBtn" aria-label="Volver a la página">
+                <i class="fas fa-arrow-left"></i>
+            </button>
             <ul class="nav-links" id="navLinks">
                 <li><a href="#inicio" class="nav-link active" data-nav="inicio">Inicio</a></li>
                 <li><a href="#beneficios" class="nav-link" data-nav="beneficios">Beneficios</a></li>
@@ -455,7 +460,7 @@
                 <div class="plan-card-header">
                     <h3 class="plan-card-nombre">Básico</h3>
                     <div class="plan-card-precio">
-                        <span class="plan-card-monto">120</span>
+                        <span class="plan-card-monto">130</span>
                         <span class="plan-card-periodo">bs/mes</span>
                     </div>
                     <p class="plan-card-desc">Ideal para empezar a entrenar sin complicarte.</p>
@@ -465,7 +470,7 @@
                     <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>Horario estándar</p></li>
                     <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>1 evaluación mensual</p></li>
                 </ul>
-                <a class="plan-card-btn" target="_blank" href="https://wa.me/73415902?text=Hola%2C%20quiero%20registrarme%20en%20el%20plan%20B%C3%A1sico%20(120%20bs%2Fmes).">
+                <a class="plan-card-btn" target="_blank" href="https://wa.me/73415902?text=Hola%2C%20quiero%20registrarme%20en%20el%20plan%20B%C3%A1sico%20(130%20bs%2Fmes).">
                     <span>Registrarme
                         <svg viewBox="0 0 24 24" fill="none"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg>
                     </span>
@@ -477,7 +482,7 @@
                 <div class="plan-card-glow plan-card-glow-br"></div>
                 <div class="plan-card-ribbon"><span>MÁS POPULAR</span></div>
                 <div class="plan-card-header">
-                    <h3 class="plan-card-nombre">Premium</h3>
+                    <h3 class="plan-card-nombre">Estándar</h3>
                     <div class="plan-card-precio">
                         <span class="plan-card-monto">180</span>
                         <span class="plan-card-periodo">bs/mes</span>
@@ -490,7 +495,7 @@
                     <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>Acceso a clases grupales</p></li>
                     <li><span class="plan-card-check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></span><p>Uso de sauna</p></li>
                 </ul>
-                <a class="plan-card-btn" target="_blank" href="https://wa.me/73415902?text=Hola%2C%20quiero%20registrarme%20en%20el%20plan%20Premium%20(180%20bs%2Fmes).">
+                <a class="plan-card-btn" target="_blank" href="https://wa.me/73415902?text=Hola%2C%20quiero%20registrarme%20en%20el%20plan%20Est%C3%A1ndar%20(180%20bs%2Fmes).">
                     <span>Registrarme
                         <svg viewBox="0 0 24 24" fill="none"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg>
                     </span>
@@ -1290,6 +1295,7 @@
     <script src="js/fondos-animados.js?v=20260924-fondoglobal"></script>
     <script src="js/funciones.js?v=20261127"></script>
     <script src="js/portal-client.js?v=20261119"></script>
+    <script src="js/perfil-movil.js?v=20261203"></script>
     <script src="js/ejercicios.js?v=20261103"></script>
     <script src="js/fondos-portal.js?v=20261010"></script>
     <script src="js/contenido-portal.js?v=20261014"></script>

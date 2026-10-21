@@ -5822,3 +5822,43 @@ nav {
 }
 #notification.notification.show { transform: translate(-50%, 0); opacity: 1; }
 @media (min-width: 1025px) { #notification.notification { top: 96px; font-size: 0.88rem; } }
+
+/* ---------- Mi Cuenta en celular: flecha "volver" en lugar del hamburguesa + nombres que se ajustan ---------- */
+.header-back-btn { display: none; }
+
+@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+    /* Dentro de Mi Cuenta: se va el hamburguesa y entra la flecha */
+    body:has(#profileModal.is-open) .hamburger-label { display: none; }
+    body:has(#profileModal.is-open) header nav { width: 40px; margin-right: 0.6rem; }
+    body:has(#profileModal.is-open) .header-back-btn {
+        display: grid; place-items: center;
+        width: 40px; height: 40px; padding: 0; flex: none;
+        border-radius: 50%; cursor: pointer;
+        color: var(--blanco); font-size: 1rem;
+        background: rgba(var(--rgb-superficie), 0.1);
+        border: 1px solid rgba(var(--rgb-superficie), 0.16);
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.18s var(--ease-out), background 0.18s var(--ease-out);
+        animation: backBtnEntra 0.28s var(--ease-out);
+    }
+    .header-back-btn:active { transform: scale(0.9); background: rgba(var(--rgb-superficie), 0.2); }
+    /* La X flotante ya no hace falta */
+    #profileModal .pagina-ubicacion-cerrar { display: none !important; }
+    .profile-mhead { padding-right: 0.8rem !important; }
+
+    /* Nombre en el header: primer nombre completo, tamaño según largo */
+    .header-profile-link { max-width: 44vw !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+    .header-profile-link.nm-0 { font-size: 0.98rem; padding: 0.48rem 1rem; }
+    .header-profile-link.nm-1 { font-size: 0.88rem; }
+    .header-profile-link.nm-2 { font-size: 0.8rem; }
+    .header-profile-link.nm-3 { font-size: 0.72rem; padding: 0.42rem 0.65rem; }
+    .header-profile-link.nm-4 { font-size: 0.66rem; padding: 0.4rem 0.6rem; }
+
+    /* Nombre completo en la tarjeta de Mi Cuenta */
+    .profile-mhead__txt strong.nm-0 { font-size: 1.15rem; }
+    .profile-mhead__txt strong.nm-1 { font-size: 1.02rem; }
+    .profile-mhead__txt strong.nm-2 { font-size: 0.92rem; }
+    .profile-mhead__txt strong.nm-3 { font-size: 0.84rem; }
+}
+@keyframes backBtnEntra { from { opacity: 0; transform: translateX(-8px) scale(0.85); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .header-back-btn { animation: none !important; } }
