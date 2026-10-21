@@ -619,6 +619,7 @@
                     '<p>Tu entrenador aún no publicó tu rutina semanal. Aparecerá aquí en cuanto la publique.</p></div></div>';
                 return;
             }
+            window.__rutinaSocio = r.rutina;
             el.innerHTML = renderRutinaSocio(r.rutina, r.actualizada);
             el.querySelectorAll('.mirutina__tab').forEach(function (t) {
                 t.addEventListener('click', function () {
@@ -627,6 +628,12 @@
                     el.querySelectorAll('.mirutina__dia').forEach(function (p) { p.hidden = p.getAttribute('data-dia') !== d; });
                 });
             });
+            el.querySelectorAll('.mirutina__go').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    if (window.RutinaGo) window.RutinaGo.abrir(parseInt(b.getAttribute('data-i'), 10));
+                });
+            });
+            if (window.RutinaGo) window.RutinaGo.refrescar();
             el.querySelectorAll('.mirutina__ej[data-id]').forEach(function (b) {
                 b.addEventListener('click', function () {
                     var ref = ejercicio(b.getAttribute('data-id'));
@@ -635,6 +642,18 @@
             });
         }).catch(function () { el.innerHTML = ''; });
     }
+
+    // Descanso en segundos (el entrenador lo escribe como "60 s", "90", "1:30", "2 min"); vacío = 60
+    function segDescanso(t) {
+        var x = String(t || '').toLowerCase().trim();
+        var m;
+        if ((m = x.match(/(\d+)\s*:\s*(\d{1,2})/))) return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+        if ((m = x.match(/(\d+(?:[.,]\d+)?)\s*(?:min|m\b)/))) return Math.round(parseFloat(m[1].replace(',', '.')) * 60);
+        if ((m = x.match(/(\d+)/))) return parseInt(m[1], 10);
+        return 60;
+    }
+    window.segDescansoRutina = segDescanso;
+    window.ejercicioPorId = ejercicio;
 
     var DIAS_SEM = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
@@ -656,13 +675,17 @@
             '<div class="mirutina__leyenda"><span><b style="border-color:#22c55e"></b>Con rutina</span></div>';
         var paneles = DIAS_SEM.map(function (d) {
             var ejs = porDia[d] || [];
-            var cuerpo = ejs.length ? ejs.map(function (e) {
+            var cuerpo = ejs.length ? ejs.map(function (e, i) {
                 var ref = ejercicio(e.id);
-                return '<button type="button" class="mirutina__ej" data-id="' + esc(e.id) + '">' +
+                var seg = segDescanso(e.descanso);
+                var fila = '<button type="button" class="mirutina__ej" data-id="' + esc(e.id) + '">' +
                     (ref ? '<img loading="lazy" src="' + esc(ref.imagen) + '" alt="">' : '<span class="mirutina__ph"><i class="fas fa-dumbbell"></i></span>') +
                     '<span class="mirutina__ej-info"><strong>' + esc(e.nombre) + '</strong>' +
-                    '<small>' + esc(e.series) + ' × ' + esc(e.repeticiones) + (e.descanso ? ' · descanso ' + esc(e.descanso) : '') + '</small>' +
-                    (e.nota ? '<em>' + esc(e.nota) + '</em>' : '') + '</span></button>';
+                    '<small>' + esc(e.series) + '×' + esc(e.repeticiones) + ' · ' + seg + 's</small>' +
+                    '</span></button>';
+                if (d !== hoy) return fila;
+                return '<div class="mirutina__fila">' + fila +
+                    '<button type="button" class="mirutina__go" data-i="' + i + '" aria-label="Empezar ' + esc(e.nombre) + '"><i class="fas fa-play"></i><span>GO</span></button></div>';
             }).join('') : '<div class="mirutina__descanso"><i class="fas fa-bed"></i><strong>Día de descanso</strong>' +
                 '<p>Tu entrenador no asignó ejercicios para este día.</p></div>';
             return '<div class="mirutina__dia" data-dia="' + d + '"' + (d === hoy ? '' : ' hidden') + '><h5>' + d + (d === hoy ? ' · hoy' : '') + '</h5>' + cuerpo + '</div>';
