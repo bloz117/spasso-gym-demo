@@ -5828,10 +5828,10 @@ nav {
 
 @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
     /* Dentro de Mi Cuenta: se va el hamburguesa y entra la flecha */
-    body:has(#profileModal.is-open) .hamburger-label { display: none; }
+    body:has(#profileModal.is-open) .hamburger-label { display: none !important; }
     body:has(#profileModal.is-open) header nav { width: 40px; margin-right: 0.6rem; }
     body:has(#profileModal.is-open) .header-back-btn {
-        display: grid; place-items: center;
+        display: grid !important; place-items: center;
         width: 40px; height: 40px; padding: 0; flex: none;
         border-radius: 50%; cursor: pointer;
         color: var(--blanco); font-size: 1rem;
