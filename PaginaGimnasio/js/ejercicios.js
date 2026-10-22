@@ -25,6 +25,11 @@
         'Pecho', 'Espalda', 'Hombros', 'Brazos',
         'Abdomen', 'Piernas', 'Cuello', 'Cuerpo completo'
     ];
+    // Orden de pestañas en la biblioteca de mujeres (Glúteos primero).
+    const ORDEN_PARTES_M = [
+        'Glúteos', 'Piernas', 'Espalda', 'Pecho', 'Hombros',
+        'Brazos', 'Abdomen', 'Cuerpo completo', 'Movilidad'
+    ];
 
     // Iconos de img/iconos/ (torso con el músculo resaltado).
     const ICONOS_IMG = {
@@ -74,6 +79,37 @@
         'Hombro completo': 'img/iconos/hombros.png'
     };
 
+    // Iconos femeninos (img/iconos/mujer/): mismo estilo, cuerpo de mujer.
+    const M = 'img/iconos/mujer/';
+    const ICONOS_IMG_M = {
+        'Glúteos': M + 'gluteos.png', 'Piernas': M + 'piernas.png', 'Espalda': M + 'espalda.png',
+        'Pecho': M + 'pecho.png', 'Hombros': M + 'hombros.png', 'Brazos': M + 'brazos.png',
+        'Abdomen': M + 'abdomen.png', 'Cuerpo completo': M + 'todos.png',
+        'Movilidad': 'img/iconos/cardio.png', 'Todos': M + 'todos.png'
+    };
+    const ICONOS_SUB_M = {
+        'Glúteo mayor': M + 'gluteos.png', 'Glúteo medio': M + 'gluteo_medio.png', 'Rutina de glúteos': M + 'gluteos.png',
+        'Cuádriceps': M + 'cuadriceps.png', 'Isquiotibiales': M + 'femorales.png', 'Aductores': M + 'aductores.png',
+        'Pantorrillas': M + 'pantorrillas.png', 'Piernas completas': M + 'piernas.png', 'Rutina de piernas': M + 'piernas.png',
+        'Dorsales': M + 'dorsales.png', 'Espalda media': M + 'espalda.png', 'Espalda baja': M + 'espalda_baja.png',
+        'Trapecio': M + 'trapecio.png', 'Rutina de espalda': M + 'espalda.png',
+        'Pecho completo': M + 'pecho.png', 'Pecho superior': M + 'pecho_sup.png',
+        'Deltoide frontal': M + 'hombros.png', 'Deltoide lateral': M + 'hombros.png', 'Deltoide posterior': M + 'deltoide_post.png', 'Hombro completo': M + 'hombros.png',
+        'Bíceps': M + 'biceps.png', 'Tríceps': M + 'triceps.png', 'Antebrazo': M + 'antebrazo.png', 'Brazos completos': M + 'brazos.png',
+        'Abdomen superior': M + 'abdomen_sup.png', 'Oblicuos': M + 'oblicuos.png', 'Core y estabilidad': M + 'abdomen.png',
+        'Cuerpo completo': M + 'todos.png', 'Tren superior': M + 'pecho.png',
+        'Cardio': 'img/iconos/cardio.png', 'Movilidad': 'img/iconos/cardio.png'
+    };
+    const ORDEN_SUB_M = {
+        'Glúteos': ['Glúteo mayor', 'Glúteo medio', 'Rutina de glúteos'],
+        'Piernas': ['Piernas completas', 'Cuádriceps', 'Isquiotibiales', 'Aductores', 'Pantorrillas', 'Rutina de piernas'],
+        'Espalda': ['Dorsales', 'Espalda media', 'Espalda baja', 'Trapecio', 'Rutina de espalda'],
+        'Pecho': ['Pecho completo', 'Pecho superior'],
+        'Hombros': ['Deltoide frontal', 'Deltoide lateral', 'Deltoide posterior', 'Hombro completo'],
+        'Brazos': ['Bíceps', 'Tríceps', 'Antebrazo', 'Brazos completos'],
+        'Abdomen': ['Abdomen superior', 'Oblicuos', 'Core y estabilidad']
+    };
+
     const ORDEN_SUB = {
         'Pecho': ['Pecho superior', 'Pecho medio', 'Pecho inferior', 'Serrato', 'Pecho completo'],
         'Espalda': ['Dorsales', 'Espalda alta', 'Espalda baja', 'Trapecio', 'Espalda completa'],
@@ -83,7 +119,21 @@
         'Piernas': ['Cuádriceps', 'Femorales', 'Glúteos', 'Aductores', 'Flexores de cadera', 'Pantorrillas y tibial', 'Piernas completas']
     };
 
-    let generoActual = DATOS_H.length ? 'hombre' : 'mujer';
+    // Género de la sesión (socio). 'femenino' => solo biblioteca de mujeres;
+    // 'masculino' => solo hombres; sin dato => selector con ambas.
+    function generoSesion() {
+        try {
+            const u = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            return u && u.genero ? u.genero : '';
+        } catch (e) { return ''; }
+    }
+    function generoInicial() {
+        const g = generoSesion();
+        if (g === 'femenino' && DATOS_M.length) return 'mujer';
+        if (g === 'masculino' && DATOS_H.length) return 'hombre';
+        return DATOS_H.length ? 'hombre' : 'mujer';
+    }
+    let generoActual = generoInicial();
     let datos = [];
     let categorias = [];
     let subcategoriasPorParte = {};
@@ -111,7 +161,8 @@
     function prepararDatos() {
         datos = generoActual === 'mujer' ? DATOS_M : DATOS_H;
         const presentes = new Set(datos.map(function (e) { return e.parte_es; }));
-        categorias = ['Todos'].concat(ORDEN_PARTES.filter(function (p) { return presentes.has(p); }));
+        const ordenP = generoActual === 'mujer' ? ORDEN_PARTES_M : ORDEN_PARTES;
+        categorias = ['Todos'].concat(ordenP.filter(function (p) { return presentes.has(p); }));
         subcategoriasPorParte = {};
         categorias.forEach(function (cat) {
             if (cat === 'Todos') return;
@@ -120,7 +171,7 @@
                 if (e.parte_es === cat && e.objetivo_es) objetivos.add(e.objetivo_es);
             });
             if (objetivos.size > 1) {
-                const orden = ORDEN_SUB[cat] || [];
+                const orden = (generoActual === 'mujer' ? ORDEN_SUB_M : ORDEN_SUB)[cat] || [];
                 subcategoriasPorParte[cat] = Array.from(objetivos).sort(function (a, b) {
                     const ia = orden.indexOf(a), ib = orden.indexOf(b);
                     if (ia === -1 && ib === -1) return a.localeCompare(b);
@@ -138,7 +189,8 @@
     // Selector Hombres/Mujeres: solo si ya hay ejercicios de ambos.
     function renderGenero() {
         let el = document.getElementById('ejerciciosGenero');
-        if (!(DATOS_H.length && DATOS_M.length)) { if (el) el.remove(); return; }
+        // El selector solo aparece si no se conoce el género de la cuenta.
+        if (!(DATOS_H.length && DATOS_M.length) || generoSesion()) { if (el) el.remove(); return; }
         if (!el) {
             el = document.createElement('div');
             el.id = 'ejerciciosGenero';
@@ -162,7 +214,8 @@
     }
 
     function iconoTab(cat) {
-        const src = ICONOS_IMG[cat] || ICONOS_IMG['Todos'];
+        const mapa = generoActual === 'mujer' ? ICONOS_IMG_M : ICONOS_IMG;
+        const src = mapa[cat] || mapa['Todos'];
         return '<span class="ejercicios-tab__icono-wrap"><img class="ejercicios-tab__icono" src="' + src + '" alt="" aria-hidden="true"></span>';
     }
 
@@ -204,7 +257,7 @@
         const chips = ['<button class="ejercicios-subtab' + (subFiltroActual ? '' : ' active') + '" data-sub="">Todos</button>'];
         lista.forEach(function (musculo) {
             const activa = musculo === subFiltroActual ? ' active' : '';
-            const icono = ICONOS_SUB[musculo];
+            const icono = (generoActual === 'mujer' ? ICONOS_SUB_M : ICONOS_SUB)[musculo];
             const iconoHtml = icono ? '<img class="ejercicios-subtab__icono" src="' + icono + '" alt="" aria-hidden="true">' : '';
             chips.push(
                 '<button class="ejercicios-subtab' + activa + '" data-sub="' + escaparHtml(musculo) + '">' +
@@ -293,9 +346,15 @@
         });
     }
 
-    prepararDatos();
-    renderGenero();
-    renderTabs();
-    renderSubtabs();
-    renderGrid();
+    function refrescar() {
+        generoActual = generoInicial();
+        prepararDatos();
+        renderGenero();
+        renderTabs();
+        renderSubtabs();
+        renderGrid();
+    }
+    // funciones.js llama a esto al iniciar o cambiar de sesión.
+    window.ejerciciosRefrescar = refrescar;
+    refrescar();
 })();

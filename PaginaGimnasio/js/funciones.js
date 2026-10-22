@@ -866,6 +866,7 @@ document.addEventListener('DOMContentLoaded', function() {
             name: `${perfil.nombres || ''} ${perfil.apellidos || ''}`.trim() || perfil.email,
             email: perfil.email,
             dni: perfil.dni || '',
+            genero: perfil.genero || '',
             fechaRegistro: perfil.fecha_registro || '',
             role: 'user',
             membership: {
@@ -876,6 +877,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
         updateUI();
+        if (window.ejerciciosRefrescar) window.ejerciciosRefrescar();
 
         // Datos que no vienen en /me ni en /me/plan: asistencia real (huella)
         // y casillero asignado. No bloquean el resto del perfil si fallan.

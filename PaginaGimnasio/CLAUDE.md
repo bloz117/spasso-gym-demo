@@ -72,3 +72,11 @@ Diseño móvil/tablet del panel de entrenador (js/entrenador-portal.js + css/ent
 - Rutinas viejas con ids antiguos ("0001"…) ya no resuelven: se muestran con ícono + nombre guardado (los renderers son null-safe).
 - Pipeline de compresión/portadas/títulos: `Animaciones_Spasso/_herramientas/` (`enc.py`, `repick.py`, `titulos_hombre_gym.py`). Encode: 540x960, H.264 CRF 31, sin audio, faststart.
 - Los videos originales traen marca FITONOMY y algunos avisos/promos dentro del propio video.
+
+## Biblioteca de mujeres (oct 2026)
+- `data/exercises-data-mujer.js` → `window.EJERCICIOS_DATA_MUJER` (98 ejercicios, ids `mg-NNN`, 269 videos en `vid/ejercicios/mujer/gym/`, portadas en `img/ejercicios/mujer/gym/`).
+- Cada ejercicio: video principal + `tecnica:[{video,gif}]` + `variantes:[{video,gif}]`; `gif:true` = video ≤6.5 s (bucle sin controles).
+- Reproductor `ejercicio-video.js`: pestañas Ejercicio / Técnica / Variantes (solo las que existan) y modo GIF.
+- Género de la sesión: `/api/portal/me` devuelve `genero` ('femenino'/'masculino') → `currentUser.genero` → `ejercicios.js` muestra solo la biblioteca que corresponde (sin dato: selector Hombres/Mujeres). El generador de rutinas del entrenador usa la biblioteca de mujeres si el socio es 'femenino'.
+- Iconos femeninos: `img/iconos/mujer/*.png` (generados con `Animaciones_Spasso/_herramientas/mujer/iconos_mujer.py`, SVG→PNG).
+- Pipeline: `_herramientas/mujer/` (mrules → mclas → sel → encm). Tamaño: videos ≈ 113 MB; total vid ≈ 430 MB.

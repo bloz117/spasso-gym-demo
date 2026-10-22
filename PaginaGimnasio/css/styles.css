@@ -5967,3 +5967,15 @@ html.ejv-abierto { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
     .ejv, .ejv__card { transition: none; }
 }
+
+/* ===== Reproductor: pestañas Ejercicio/Técnica/Variantes y modo GIF ===== */
+.ejv--gif .ejv__barra,.ejv--gif .ejv__centro{display:none!important}
+.ejv--gif .ejv__video{cursor:default}
+.ejv__tabs{display:flex;gap:6px;padding:10px 14px 0;justify-content:center}
+.ejv__tab{flex:1;max-width:150px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#fff;font:600 14px/1 inherit;padding:10px 8px;border-radius:999px;cursor:pointer;transition:background .2s,color .2s,transform .15s}
+.ejv__tab:active{transform:scale(.96)}
+.ejv__tab.on{background:#fff;color:#111;border-color:#fff}
+.ejv__clips{display:flex;gap:6px;padding:8px 14px 0;justify-content:center}
+.ejv__clip{border:1px solid rgba(255,255,255,.2);background:transparent;color:#ddd;font:500 12px/1 inherit;padding:6px 12px;border-radius:999px;cursor:pointer}
+.ejv__clip.on{background:rgba(255,255,255,.2);color:#fff}
+.ejv__tabs[hidden],.ejv__clips[hidden]{display:none}

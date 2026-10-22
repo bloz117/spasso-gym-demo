@@ -34,6 +34,8 @@
     // Bibliotecas: hombres = window.EJERCICIOS_DATA; mujeres = window.EJERCICIOS_DATA_MUJER
     // (archivo opcional con las mismas columnas y ids distintos, ej. "m-0001").
     function bibliotecaPara(genero) {
+        var m = window.EJERCICIOS_DATA_MUJER || [];
+        if (genero === 'femenino' && m.length) return m;
         return window.EJERCICIOS_DATA || [];
     }
     function ejercicio(id) {
@@ -760,13 +762,21 @@
         return out;
     }
 
-    function divisionSemanal(dias, nivel) {
+    function divisionSemanal(dias, nivel, mujer) {
         var FB1 = ['Pecho', 'Espalda', 'Piernas', 'Hombros', 'Abdomen'];
         var FB2 = ['Piernas', 'Espalda', 'Pecho', 'Brazos', 'Abdomen'];
         var FB3 = ['Espalda', 'Pecho', 'Piernas', 'Hombros', 'Brazos'];
         var UP = ['Pecho', 'Espalda', 'Hombros', 'Brazos'];
         var LOW = ['Piernas', 'Piernas', 'Piernas', 'Abdomen'];
         var PUSH = ['Pecho', 'Hombros', 'Brazos'], PULL = ['Espalda', 'Brazos', 'Abdomen'];
+        if (mujer) {
+            // Biblioteca de mujeres: más glúteo y pierna, sin pestaña Cardio.
+            FB1 = ['Glúteos', 'Espalda', 'Piernas', 'Pecho', 'Abdomen'];
+            FB2 = ['Piernas', 'Glúteos', 'Espalda', 'Hombros', 'Abdomen'];
+            FB3 = ['Glúteos', 'Espalda', 'Pecho', 'Piernas', 'Brazos'];
+            LOW = ['Glúteos', 'Glúteos', 'Piernas', 'Piernas', 'Abdomen'];
+            PUSH = ['Pecho', 'Hombros', 'Brazos']; PULL = ['Espalda', 'Brazos', 'Abdomen'];
+        }
         var mapa = {
             1: { dias: ['Lunes'], sesiones: [['Cuerpo completo', FB1]] },
             2: { dias: ['Lunes', 'Jueves'], sesiones: [['Cuerpo completo A', FB1], ['Cuerpo completo B', FB2]] },
@@ -798,7 +808,7 @@
         var nivel = p.actividad === 'muy_activo' ? 'avanzado' : (p.actividad === 'activo' ? 'intermedio' : 'principiante');
         var objetivo = p.objetivo || 'salud';
         var par = parametros(objetivo, nivel);
-        var plan = divisionSemanal(p.dias_semana || 3, nivel);
+        var plan = divisionSemanal(p.dias_semana || 3, nivel, estado.socio.genero === 'femenino' && lib === (window.EJERCICIOS_DATA_MUJER || []));
         var porSesion = nivel === 'avanzado' ? 7 : (nivel === 'intermedio' ? 6 : 5);
         var prefEq = nivel === 'principiante'
             ? ['Máquina de palanca', 'Mancuerna', 'Peso corporal', 'Polea', 'Máquina Smith', 'Banda elástica', 'Kettlebell', 'Barra Z', 'Barra']

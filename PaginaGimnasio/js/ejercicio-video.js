@@ -2,7 +2,8 @@
  * ejercicio-video.js - Reproductor compartido de ejercicios (video en bucle).
  *
  * API: window.EjVideo.abrir(ref) / window.EjVideo.cerrar()
- *   ref = { nombre, video, poster|imagen, parte_es, objetivo_es, detalle }
+ *   ref = { nombre, video, poster|imagen, parte_es, objetivo_es, detalle,
+ *           gif?:bool (video muy corto: bucle sin controles), tecnica?:[{video,gif}], variantes?:[{video,gif}] }
  *
  * - Bucle infinito, sin sonido, playsinline (no salta a pantalla completa en iOS).
  * - Tocar el video = pausar / reanudar (icono central).
@@ -13,6 +14,7 @@
 (function () {
     if (window.EjVideo) return;
 
+    var tabsEl, clipsEl, actual, tabSel = 0, clipSel = 0;
     var overlay, video, titulo, chips, playBtn, seek, tiempo, velBtn, centro, cargando;
     var VELS = [1, 0.5, 0.25];
     var velIdx = 0;
@@ -51,6 +53,8 @@
                         '<button class="ejv__vel" type="button" aria-label="Velocidad">1x</button>' +
                     '</div>' +
                 '</div>' +
+                '<div class="ejv__tabs" hidden></div>' +
+                '<div class="ejv__clips" hidden></div>' +
                 '<div class="ejv__info">' +
                     '<h3 class="ejv__titulo"></h3>' +
                     '<div class="ejv__chips"></div>' +
@@ -67,6 +71,16 @@
         velBtn = overlay.querySelector('.ejv__vel');
         centro = overlay.querySelector('.ejv__centro');
         cargando = overlay.querySelector('.ejv__cargando');
+        tabsEl = overlay.querySelector('.ejv__tabs');
+        clipsEl = overlay.querySelector('.ejv__clips');
+        tabsEl.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-tab]'); if (!b) return;
+            tabSel = +b.getAttribute('data-tab'); clipSel = 0; pintarTabs(); cargarClip();
+        });
+        clipsEl.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-clip]'); if (!b) return;
+            clipSel = +b.getAttribute('data-clip'); pintarTabs(); cargarClip();
+        });
 
         overlay.addEventListener('click', function (e) { if (e.target === overlay) cerrar(); });
         overlay.querySelector('.ejv__cerrar').addEventListener('click', cerrar);
@@ -135,6 +149,7 @@
     }
 
     function alternar() {
+        if (overlay.classList.contains('ejv--gif')) return; // modo GIF: sin pausa
         if (video.paused) reproducir(); else video.pause();
     }
 
@@ -146,20 +161,48 @@
         centro.innerHTML = pausado ? ICON_PLAY.replace(/30/g, '40') : '';
     }
 
+    // Pestañas: Ejercicio / Técnica / Variantes (solo las que existan)
+    function armarTabs(ref) {
+        var t = [{ nombre: 'Ejercicio', clips: [{ video: ref.video, gif: !!ref.gif }] }];
+        if (ref.tecnica && ref.tecnica.length) t.push({ nombre: 'Técnica', clips: ref.tecnica });
+        if (ref.variantes && ref.variantes.length) t.push({ nombre: 'Variantes', clips: ref.variantes });
+        return t;
+    }
+    function pintarTabs() {
+        if (actual.tabs.length < 2) { tabsEl.hidden = true; clipsEl.hidden = true; return; }
+        tabsEl.hidden = false;
+        tabsEl.innerHTML = actual.tabs.map(function (t, i) {
+            return '<button type="button" class="ejv__tab' + (i === tabSel ? ' on' : '') + '" data-tab="' + i + '">' + esc(t.nombre) + '</button>';
+        }).join('');
+        var cl = actual.tabs[tabSel].clips;
+        if (cl.length > 1) {
+            clipsEl.hidden = false;
+            clipsEl.innerHTML = cl.map(function (c, i) {
+                return '<button type="button" class="ejv__clip' + (i === clipSel ? ' on' : '') + '" data-clip="' + i + '">' + actual.tabs[tabSel].nombre + ' ' + (i + 1) + '</button>';
+            }).join('');
+        } else { clipsEl.hidden = true; }
+    }
+    function cargarClip() {
+        var c = actual.tabs[tabSel].clips[clipSel];
+        if (!c || !c.video) return;
+        velIdx = 0; aplicarVel();
+        seek.value = 0; tiempo.textContent = '0:00';
+        overlay.classList.toggle('ejv--gif', !!c.gif);
+        overlay.classList.add('ejv--carga');
+        video.poster = (tabSel === 0 && clipSel === 0) ? (actual.ref.poster || actual.ref.imagen || '') : '';
+        video.removeAttribute('src');
+        video.src = c.video;
+        video.load();
+        refrescarEstado();
+        reproducir();
+    }
+
     function abrir(ref) {
         if (!ref) return;
         if (!overlay) construir();
-        var src = ref.video;
-        if (!src) return; // sin video no hay nada que reproducir
-        velIdx = 0;
-        aplicarVel();
-        seek.value = 0;
-        tiempo.textContent = '0:00';
-        overlay.classList.add('ejv--carga');
-        video.poster = ref.poster || ref.imagen || '';
-        video.removeAttribute('src');
-        video.src = src;
-        video.load();
+        if (!ref.video) return; // sin video no hay nada que reproducir
+        actual = { ref: ref, tabs: armarTabs(ref) };
+        tabSel = 0; clipSel = 0;
         titulo.textContent = ref.nombre || '';
         var c = [];
         if (ref.parte_es) c.push(ref.parte_es);
@@ -168,8 +211,8 @@
         chips.innerHTML = c.map(function (t) { return '<span class="ejv__chip">' + esc(t) + '</span>'; }).join('');
         overlay.classList.add('ejv--activo');
         document.documentElement.classList.add('ejv-abierto');
-        refrescarEstado();
-        reproducir();
+        pintarTabs();
+        cargarClip();
     }
 
     function cerrar() {

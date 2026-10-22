@@ -319,7 +319,8 @@ def obtener_perfil_socio(socio=Depends(get_current_socio)):
             """
             SELECT s.id_socio, s.nombres, s.apellidos, s.email, s.dni, s.fecha_registro,
                    (SELECT COUNT(*) FROM asistencias_log WHERE id_socio = s.id_socio) as total_visitas,
-                   (SELECT MAX(fecha_entrada) FROM asistencias_log WHERE id_socio = s.id_socio) as ultima_visita
+                   (SELECT MAX(fecha_entrada) FROM asistencias_log WHERE id_socio = s.id_socio) as ultima_visita,
+                   s.genero
             FROM socios s
             WHERE s.id_socio = %s
             """,
@@ -338,7 +339,8 @@ def obtener_perfil_socio(socio=Depends(get_current_socio)):
         "dni": row[4],
         "fecha_registro": row[5].isoformat() if row[5] else None,
         "total_visitas": row[6] or 0,
-        "ultima_visita": row[7].isoformat() if row[7] else None
+        "ultima_visita": row[7].isoformat() if row[7] else None,
+        "genero": row[8]
     }
 
 
