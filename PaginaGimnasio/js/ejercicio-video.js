@@ -29,8 +29,8 @@
         return m + ':' + (x < 10 ? '0' : '') + x;
     }
 
-    var ICON_PLAY = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg>';
-    var ICON_PAUSE = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>';
+    var ICON_PLAY = '<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg>';
+    var ICON_PAUSE = '<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>';
 
     function construir() {
         overlay = document.createElement('div');
@@ -39,7 +39,7 @@
         overlay.setAttribute('aria-modal', 'true');
         overlay.innerHTML =
             '<div class="ejv__card">' +
-                '<button class="ejv__cerrar" type="button" aria-label="Cerrar">&times;</button>' +
+                '<button class="ejv__cerrar" type="button" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none"/></svg></button>' +
                 '<div class="ejv__stage">' +
                     '<video class="ejv__video" playsinline loop muted preload="auto" disablepictureinpicture></video>' +
                     '<div class="ejv__cargando" aria-hidden="true"></div>' +
@@ -143,7 +143,7 @@
         overlay.classList.toggle('ejv--pausa', pausado);
         playBtn.innerHTML = pausado ? ICON_PLAY : ICON_PAUSE;
         playBtn.setAttribute('aria-label', pausado ? 'Reproducir' : 'Pausar');
-        centro.innerHTML = pausado ? ICON_PLAY.replace(/22/g, '34') : '';
+        centro.innerHTML = pausado ? ICON_PLAY.replace(/30/g, '40') : '';
     }
 
     function abrir(ref) {

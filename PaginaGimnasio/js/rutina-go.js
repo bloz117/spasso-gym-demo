@@ -90,7 +90,8 @@
         ov.innerHTML =
             '<div class="go__top"><button type="button" class="go__x" aria-label="Salir"><i class="fas fa-xmark"></i></button>' +
             '<div class="go__tit"><strong>' + esc(ej.nombre) + '</strong><small>' + esc(ej.series) + '×' + esc(ej.repeticiones) + ' · descanso ' + desc + 's</small></div></div>' +
-            (vid ? '<video class="go__img go__video" src="' + esc(vid) + '" poster="' + esc(img) + '" autoplay loop muted playsinline preload="auto"></video>'
+            (vid ? '<div class="go__media"><video class="go__video" src="' + esc(vid) + '" poster="' + esc(img) + '" autoplay loop muted playsinline preload="auto"></video>' +
+                   '<input class="go__seek" type="range" min="0" max="1000" value="0" aria-label="Adelantar o retroceder"></div>'
                  : (img ? '<img class="go__img" src="' + esc(img) + '" alt="">' : '')) +
             '<div class="go__dots">' + dots + '</div>' +
             '<div class="go__stage" data-fase="idle">' +
@@ -106,14 +107,34 @@
         var stage = $('.go__stage'), label = $('.go__label'), num = $('.go__num'), sub = $('.go__sub'), btn = $('.go__btn');
         var fg = $('.go__ring-fg'), dotEls = ov.querySelectorAll('.go__dot');
         var CIRC = 2 * Math.PI * 54; fg.style.strokeDasharray = CIRC;
-        // Tocar la miniatura abre el reproductor grande (pausa, barra, velocidad).
-        var gv = $('.go__video');
-        if (gv && ref) gv.addEventListener('click', function () { if (window.EjVideo) window.EjVideo.abrir(ref); });
+        // Video del ejercicio: bucle; tocar = pausa/reanuda; la barra permite adelantar/retroceder.
+        var gv = $('.go__video'), gs = $('.go__seek'), arrastra = false;
+        if (gv) {
+            gv.addEventListener('click', function () { if (gv.paused) { var p = gv.play(); if (p && p.catch) p.catch(function () {}); } else gv.pause(); });
+            gv.addEventListener('timeupdate', function () { if (!arrastra && gv.duration) gs.value = Math.round(gv.currentTime / gv.duration * 1000); });
+            gs.addEventListener('pointerdown', function () { arrastra = true; });
+            gs.addEventListener('input', function () { if (gv.duration) gv.currentTime = gs.value / 1000 * gv.duration; });
+            var finArr = function () { arrastra = false; };
+            gs.addEventListener('pointerup', finArr); gs.addEventListener('pointercancel', finArr); gs.addEventListener('change', finArr);
+        }
+        // Animación "salto" del número (cuenta regresiva)
+        function pop(txt, ya) {
+            num.textContent = txt;
+            num.classList.remove('pop', 'pop--ya'); stage.classList.remove('tick');
+            void num.offsetWidth;
+            num.classList.add(ya ? 'pop--ya' : 'pop'); stage.classList.add('tick');
+        }
+        // Alarma de los últimos segundos del descanso: "ti-ti" que sube de tono + vibración
+        function alarma(r) {
+            var f = 760 + (5 - r) * 90;
+            beep(f, 0.11, 0.5); setTimeout(function () { beep(f, 0.11, 0.5); }, 150);
+            vib([90, 60, 90]);
+        }
 
         var serie = 1, fase = 'idle', fin = 0, dur = 0, ini = 0, ultimo = -1, timer = null;
 
         function anillo(frac) { fg.style.strokeDashoffset = CIRC * (1 - Math.max(0, Math.min(1, frac))); }
-        function setFase(f) { fase = f; stage.setAttribute('data-fase', f); ultimo = -1; }
+        function setFase(f) { fase = f; stage.setAttribute('data-fase', f); ultimo = -1; num.classList.remove('pop', 'pop--ya'); if (f !== 'rest') stage.classList.remove('urgente'); }
         function paraTimer() { if (timer) { clearInterval(timer); timer = null; } }
 
         function pintaIdle() {
@@ -137,18 +158,20 @@
             setFase('prep'); btn.hidden = true;
             label.textContent = 'Prepárate'; sub.textContent = 'Acomódate bien';
             cuenta(PREP, function (r) {
-                num.textContent = r;
-                if (r <= 3) { beep(660, 0.14); vib(40); }
+                pop(r);
+                beep(r <= 3 ? 660 + (3 - r) * 110 : 520, 0.16, 0.45); vib(r <= 3 ? 70 : 35);
             }, trabajo);
         }
         function trabajo() {
             setFase('work');
+            stage.classList.remove('urgente');
             beep(1040, 0.35, 0.45); vib([180]);
             label.textContent = '¡Ya! · Serie ' + serie + ' de ' + total;
             sub.textContent = repsTxt ? repsTxt + ' · toca al terminar' : 'Toca al terminar';
             btn.textContent = 'TERMINÉ'; btn.hidden = false; anillo(1);
             ini = Date.now(); paraTimer();
-            function t() { num.textContent = fmt(Math.floor((Date.now() - ini) / 1000)); }
+            pop('¡YA!', true);
+            function t() { if (Date.now() - ini < 1100) return; num.classList.remove('pop--ya'); num.textContent = fmt(Math.floor((Date.now() - ini) / 1000)); }
             t(); timer = setInterval(t, 250);
         }
         function serieHecha() {
@@ -161,11 +184,12 @@
         function descanso() {
             setFase('rest'); btn.hidden = true;
             label.textContent = '¡Bien! Descanso'; sub.textContent = 'Respira y recupérate';
+            stage.classList.remove('urgente');
             cuenta(desc, function (r) {
-                num.textContent = r;
+                if (r <= 5) { pop(r); stage.classList.add('urgente'); alarma(r); }
+                else num.textContent = r;
                 if (r <= 10) { label.textContent = 'Prepárate'; sub.textContent = r <= 5 ? 'Serie ' + (serie + 1) + ' en…' : 'Ya casi'; }
                 if (r === 10) { beep(520, 0.18, 0.25); vib(60); }
-                if (r <= 3) { beep(700, 0.16); vib(50); }
             }, function () { serie++; trabajo(); });
         }
         function completado() {

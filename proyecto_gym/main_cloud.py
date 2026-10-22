@@ -202,6 +202,15 @@ def media_music(nombre: str, request: Request):
     return _servir_media("music", nombre, request)
 
 
+from rutina_util import servir_con_rango  # noqa: E402
+
+
+@app.get("/portal-static/vid/{ruta:path}", include_in_schema=False)
+def media_video(ruta: str, request: Request):
+    # Videos de ejercicios con soporte de Range (adelantar/retroceder)
+    return servir_con_rango(os.path.join(PORTAL_DIR, "vid"), ruta, request)
+
+
 if os.path.isdir(PORTAL_DIR):
     app.mount("/portal-static", StaticFiles(directory=PORTAL_DIR), name="portal-static")
 

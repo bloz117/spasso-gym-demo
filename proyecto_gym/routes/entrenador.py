@@ -50,6 +50,9 @@ def _entero(v, defecto, minimo=1, maximo=99):
         return defecto
 
 
+from rutina_util import id_valido, solo_ejercicios_nuevos  # noqa: E402
+
+
 def limpiar_rutina(data: dict) -> dict:
     """Valida y normaliza la rutina que manda el entrenador."""
     dias_in = data.get("dias") or []
@@ -63,6 +66,8 @@ def limpiar_rutina(data: dict) -> dict:
         ejercicios = []
         for e in (d.get("ejercicios") or [])[:30]:
             if not isinstance(e, dict) or not _texto(e.get("nombre"), 120):
+                continue
+            if not id_valido(e.get("id")):      # solo biblioteca nueva (con video)
                 continue
             ejercicios.append({
                 "id": _texto(e.get("id"), 20),
@@ -198,7 +203,7 @@ def obtener_rutina(id_socio: int, usuario=Depends(require_rol(["Entrenador"]))):
             "actualizado": pf[6].isoformat() if pf[6] else None,
             "peso_inicial_kg": float(pf[7]) if pf[7] is not None else None,
         }
-    rutina = json.loads(fila[0]) if fila else {"nombre": "Rutina semanal", "notas": "", "dias": []}
+    rutina = solo_ejercicios_nuevos(json.loads(fila[0])) if fila else {"nombre": "Rutina semanal", "notas": "", "dias": []}
     return {
         "perfil": perfil,
         "socio": {"id_socio": id_socio, "nombre": f"{r[1] or ''} {r[2] or ''}".strip(), "plan": r[3], "genero": r[8]},

@@ -5922,11 +5922,12 @@ html.ejv-abierto { overflow: hidden; }
 }
 .ejv--activo .ejv__card { transform: none; }
 .ejv__cerrar {
-    position: absolute; top: 10px; right: 10px; z-index: 5; width: 34px; height: 34px; border-radius: 50%;
-    border: 0; background: rgba(0,0,0,.5); color: #fff; font-size: 22px; line-height: 1; cursor: pointer;
-    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    position: absolute; top: 12px; right: 12px; z-index: 5; width: 46px; height: 46px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.9); background: #e11d48; color: #fff; cursor: pointer; display: grid; place-items: center;
+    box-shadow: 0 6px 18px rgba(225,29,72,.55); transition: transform .15s ease;
 }
-.ejv__stage { position: relative; background: #000; aspect-ratio: 9 / 16; max-height: 70vh; width: 100%; margin: 0 auto; cursor: pointer; }
+.ejv__cerrar:active { transform: scale(.9); }
+.ejv__stage { position: relative; background: #000; aspect-ratio: 9 / 16; width: min(100%, calc((100vh - 170px) * 9 / 16)); width: min(100%, calc((100dvh - 170px) * 9 / 16)); margin: 0 auto; cursor: pointer; }
 .ejv__video { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
 .ejv__centro {
     position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
@@ -5943,26 +5944,25 @@ html.ejv-abierto { overflow: hidden; }
 @keyframes ejv-giro { to { transform: rotate(360deg); } }
 .ejv__barra {
     position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 10px;
-    padding: 22px 12px 10px; background: linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,0)); cursor: default;
+    padding: 30px 12px 12px; background: linear-gradient(to top, rgba(0,0,0,.8), rgba(0,0,0,0)); cursor: default;
 }
 .ejv__play, .ejv__vel { border: 0; background: transparent; color: #fff; cursor: pointer; display: grid; place-items: center; flex: none; }
-.ejv__play { width: 32px; height: 32px; }
-.ejv__vel { font: 700 .75rem/1 inherit; padding: 6px 8px; border-radius: 8px; background: rgba(255,255,255,.16); min-width: 42px; }
-.ejv__tiempo { font-size: .72rem; color: rgba(255,255,255,.85); font-variant-numeric: tabular-nums; flex: none; }
-.ejv__seek { flex: 1; min-width: 0; height: 24px; margin: 0; background: transparent; -webkit-appearance: none; appearance: none; touch-action: none; cursor: pointer; }
-.ejv__seek::-webkit-slider-runnable-track { height: 4px; border-radius: 4px; background: rgba(255,255,255,.3); }
-.ejv__seek::-moz-range-track { height: 4px; border-radius: 4px; background: rgba(255,255,255,.3); }
-.ejv__seek::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6px; border-radius: 50%; background: #fff; border: 0; }
-.ejv__seek::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 0; }
-.ejv__info { padding: 14px 18px 18px; }
-.ejv__titulo { margin: 0 0 8px; font-size: 1.05rem; line-height: 1.25; font-weight: 700; color: #fff; }
+.ejv__play { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,.16); }
+.ejv__vel { font: 800 .9rem/1 inherit; padding: 0 10px; height: 40px; border-radius: 12px; background: rgba(255,255,255,.2); min-width: 54px; }
+.ejv__tiempo { font-size: .85rem; font-weight: 600; color: rgba(255,255,255,.85); font-variant-numeric: tabular-nums; flex: none; }
+.ejv__seek { flex: 1; min-width: 0; height: 32px; margin: 0; background: transparent; -webkit-appearance: none; appearance: none; touch-action: none; cursor: pointer; }
+.ejv__seek::-webkit-slider-runnable-track { height: 6px; border-radius: 6px; background: rgba(255,255,255,.3); }
+.ejv__seek::-moz-range-track { height: 6px; border-radius: 6px; background: rgba(255,255,255,.3); }
+.ejv__seek::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -8px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+.ejv__seek::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 0; }
+.ejv__info { padding: 14px 18px 16px; }
+.ejv__titulo { margin: 0 0 10px; font-size: 1.15rem; line-height: 1.25; font-weight: 700; color: #fff; }
 .ejv__chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.ejv__chip { font-size: .72rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.12); color: #d8f6fb; }
+.ejv__chip { font-size: .8rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.12); color: #d8f6fb; }
 .go__video { cursor: pointer; }
 @media (max-width: 640px) {
-    .ejv { align-items: flex-end; }
-    .ejv__card { width: 100%; max-height: 96vh; border-radius: 22px 22px 0 0; }
-    .ejv__stage { max-height: 66vh; }
+    .ejv { align-items: center; padding: 8px; box-sizing: border-box; }
+    .ejv__card { width: 100%; max-height: 100%; border-radius: 22px; }
 }
 @media (prefers-reduced-motion: reduce) {
     .ejv, .ejv__card { transition: none; }

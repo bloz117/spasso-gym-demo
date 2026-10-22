@@ -329,6 +329,9 @@ def obtener_locker_asignado(socio=Depends(get_current_socio)):
     }
 
 
+from rutina_util import solo_ejercicios_nuevos  # noqa: E402
+
+
 @router.get("/me/rutina-entrenador")
 def obtener_rutina_entrenador(socio=Depends(get_current_socio)):
     """Rutina semanal publicada por el entrenador, si el plan del socio la incluye."""
@@ -351,7 +354,7 @@ def obtener_rutina_entrenador(socio=Depends(get_current_socio)):
         return {"incluida": True, "rutina": None}
     return {
         "incluida": True,
-        "rutina": json.loads(fila[1]),
+        "rutina": solo_ejercicios_nuevos(json.loads(fila[1])),
         "actualizada": fila[3].isoformat() if fila[3] else None,
     }
 
