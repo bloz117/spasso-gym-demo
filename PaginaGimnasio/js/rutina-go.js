@@ -81,7 +81,8 @@
         var reps = String(ej.repeticiones || '').trim();
         var repsTxt = reps ? (/^[\d\-–\s]+$/.test(reps) ? reps + ' reps' : reps) : '';
         var ref = (window.ejercicioPorId && window.ejercicioPorId(ej.id)) || null;
-        var img = ref ? (ref.gif || ref.imagen) : '';
+        var img = ref ? (ref.poster || ref.imagen || '') : '';
+        var vid = ref && ref.video ? ref.video : '';
 
         var ov = document.createElement('div');
         ov.className = 'go';
@@ -89,7 +90,8 @@
         ov.innerHTML =
             '<div class="go__top"><button type="button" class="go__x" aria-label="Salir"><i class="fas fa-xmark"></i></button>' +
             '<div class="go__tit"><strong>' + esc(ej.nombre) + '</strong><small>' + esc(ej.series) + '×' + esc(ej.repeticiones) + ' · descanso ' + desc + 's</small></div></div>' +
-            (img ? '<img class="go__img" src="' + esc(img) + '" alt="">' : '') +
+            (vid ? '<video class="go__img go__video" src="' + esc(vid) + '" poster="' + esc(img) + '" autoplay loop muted playsinline preload="auto"></video>'
+                 : (img ? '<img class="go__img" src="' + esc(img) + '" alt="">' : '')) +
             '<div class="go__dots">' + dots + '</div>' +
             '<div class="go__stage" data-fase="idle">' +
               '<svg class="go__ring" viewBox="0 0 120 120"><circle class="go__ring-bg" cx="60" cy="60" r="54"/><circle class="go__ring-fg" cx="60" cy="60" r="54"/></svg>' +
@@ -104,6 +106,9 @@
         var stage = $('.go__stage'), label = $('.go__label'), num = $('.go__num'), sub = $('.go__sub'), btn = $('.go__btn');
         var fg = $('.go__ring-fg'), dotEls = ov.querySelectorAll('.go__dot');
         var CIRC = 2 * Math.PI * 54; fg.style.strokeDasharray = CIRC;
+        // Tocar la miniatura abre el reproductor grande (pausa, barra, velocidad).
+        var gv = $('.go__video');
+        if (gv && ref) gv.addEventListener('click', function () { if (window.EjVideo) window.EjVideo.abrir(ref); });
 
         var serie = 1, fase = 'idle', fin = 0, dur = 0, ini = 0, ultimo = -1, timer = null;
 

@@ -694,14 +694,8 @@
     }
 
     function abrirDetalle(ref) {
-        var ov = document.createElement('div');
-        ov.className = 'trn__detalle';
-        ov.innerHTML = '<div class="trn__detalle-card"><button class="trn__btn trn__btn--ghost trn__detalle-x"><i class="fas fa-xmark"></i></button>' +
-            '<img src="' + esc(ref.gif || ref.imagen) + '" alt="' + esc(ref.nombre) + '"><h4>' + esc(ref.nombre) + '</h4>' +
-            '<ol>' + (ref.pasos || []).map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ol></div>';
-        function cerrarD() { ov.remove(); }
-        ov.addEventListener('click', function (e) { if (e.target === ov || e.target.closest('.trn__detalle-x')) cerrarD(); });
-        document.body.appendChild(ov);
+        // Reproductor compartido (js/ejercicio-video.js): video en bucle, sin pasos.
+        if (ref && window.EjVideo) window.EjVideo.abrir(ref);
     }
 
     document.addEventListener('click', function (e) {
@@ -747,16 +741,17 @@
     // Generador por reglas (sin API): usa SOLO ejercicios de la biblioteca del gimnasio.
     function semilla(n) { var s = n || 1; return function () { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; }; }
 
-    var EQUIPO_OK = ['Peso corporal', 'Mancuerna', 'Barra', 'Barra Z', 'Máquina de palanca', 'Polea', 'Máquina Smith', 'Kettlebell', 'Banda elástica', 'Con peso', 'Asistido'];
-    var LES_ESP = ['deadlift', 'good morning', 'bent over', 'bent-over', 'hyperextension', 'clean', 'snatch', 'peso muerto'];
+    var EQUIPO_OK = ['Peso corporal', 'Mancuerna', 'Barra', 'Barra Z', 'Máquina de palanca', 'Polea', 'Máquina Smith', 'Kettlebell', 'Banda elástica', 'Con peso', 'Asistido', 'Gimnasio'];
+    var LES_ESP = ['deadlift', 'good morning', 'bent over', 'bent-over', 'hyperextension', 'clean', 'snatch', 'peso muerto', 'remo', 'hiperextensi', 'lumbar'];
+    var LES_MUN = ['wrist', 'push-up', 'push up', 'handstand', 'front squat', 'muñeca', 'flexiones', 'curl'];
     var LESION_PALABRAS = {
-        rodilla: ['jump', 'lunge', 'squat', 'sentadilla', 'zancada', 'pistol', 'box', 'plyo', 'burpee', 'leg extension'],
-        hombro: ['overhead', 'military', 'arnold', 'upright', 'behind', 'snatch', 'push press', 'handstand', 'dip'],
+        rodilla: ['jump', 'lunge', 'squat', 'sentadilla', 'zancada', 'pistol', 'box', 'plyo', 'burpee', 'leg extension', 'rodilla', 'prensa', 'búlgara', 'extensión de pierna', 'salto'],
+        hombro: ['overhead', 'military', 'arnold', 'upright', 'behind', 'snatch', 'push press', 'handstand', 'dip', 'hombro', 'press militar', 'remo al mentón', 'fondos'],
         espalda: LES_ESP, lumbar: LES_ESP,
-        'muñeca': ['wrist', 'push-up', 'push up', 'handstand', 'front squat'],
-        muneca: ['wrist', 'push-up', 'push up', 'handstand', 'front squat'],
-        codo: ['skull', 'close grip', 'dip', 'tricep extension', 'preacher'],
-        cuello: ['neck', 'shrug', 'behind']
+        'muñeca': LES_MUN,
+        muneca: LES_MUN,
+        codo: ['skull', 'close grip', 'dip', 'tricep extension', 'preacher', 'codo', 'predicador', 'press jm', 'francés', 'fondos', 'jalón de tríceps', 'extensión de tríceps'],
+        cuello: ['neck', 'shrug', 'behind', 'cuello', 'encogimiento', 'trapecio']
     };
 
     function palabrasProhibidas(lesiones) {
@@ -770,7 +765,7 @@
         var FB2 = ['Piernas', 'Espalda', 'Pecho', 'Brazos', 'Abdomen'];
         var FB3 = ['Espalda', 'Pecho', 'Piernas', 'Hombros', 'Brazos'];
         var UP = ['Pecho', 'Espalda', 'Hombros', 'Brazos'];
-        var LOW = ['Piernas', 'Piernas', 'Pantorrillas', 'Abdomen'];
+        var LOW = ['Piernas', 'Piernas', 'Piernas', 'Abdomen'];
         var PUSH = ['Pecho', 'Hombros', 'Brazos'], PULL = ['Espalda', 'Brazos', 'Abdomen'];
         var mapa = {
             1: { dias: ['Lunes'], sesiones: [['Cuerpo completo', FB1]] },
@@ -1004,7 +999,7 @@
                 return '<div class="trn__rv-ej" data-i="' + i + '">' +
                     '<div class="trn__rv-img">' + img + '</div>' +
                     '<div class="trn__rv-info"><strong>' + esc(e.nombre) + '</strong>' +
-                        '<small>' + esc(ref ? (ref.parte_es + ' · ' + ref.equipo_es) : '') + '</small></div>' +
+                        '<small>' + esc(ref ? (ref.objetivo_es && ref.objetivo_es !== ref.parte_es ? ref.parte_es + ' · ' + ref.objetivo_es : ref.parte_es) : '') + '</small></div>' +
                     '<label class="trn__rv-mini"><span>Series</span><input data-c="series" type="number" inputmode="numeric" min="1" max="99" value="' + esc(e.series) + '"></label>' +
                     '<label class="trn__rv-mini"><span>Reps</span><input data-c="repeticiones" maxlength="20" value="' + esc(e.repeticiones) + '"></label>' +
                     '<button type="button" class="trn__rv-del" data-del="' + i + '" aria-label="Quitar"><i class="fas fa-trash"></i></button>' +

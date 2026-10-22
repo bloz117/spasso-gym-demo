@@ -1,117 +1,92 @@
 /**
  * ejercicios.js - Biblioteca general de ejercicios para "Mi Cuenta"
  *
- * Lee window.EJERCICIOS_DATA (ver data/exercises-data.js, generado desde
- * exercises-dataset-main) y pinta la pestaña "Ejercicios" del perfil:
- * tabs por parte del cuerpo + buscador + grid de tarjetas + detalle con
- * pasos en español. Es independiente de "Rutinas" (planes ya armados);
- * acá se ve TODO el catálogo de ejercicios sueltos.
+ * Lee window.EJERCICIOS_DATA (hombres, data/exercises-data.js) y
+ * window.EJERCICIOS_DATA_MUJER (mujeres, data/exercises-data-mujer.js; vacía
+ * hasta que lleguen esos videos). Cada ejercicio es un VIDEO en bucle con una
+ * portada (poster) capturada del propio video; sin instrucciones de texto.
  *
- * Se carga después de funciones.js: reutiliza el mismo mecanismo de tabs
- * del perfil (data-panel="ejercicios" ya wireado por cambiarPanelPerfil),
- * así que este archivo solo se encarga del contenido de ese panel.
+ * Pinta tabs por parte del cuerpo + subtabs por músculo + buscador + grid de
+ * tarjetas. Al tocar una tarjeta se abre el reproductor compartido
+ * (js/ejercicio-video.js: bucle, pausa al tocar, barra para retroceder).
+ * El selector Hombres/Mujeres solo aparece cuando ya hay ejercicios de mujeres.
  */
 (function () {
-    const datos = window.EJERCICIOS_DATA || [];
-    if (!datos.length) {
+    const DATOS_H = window.EJERCICIOS_DATA || [];
+    const DATOS_M = window.EJERCICIOS_DATA_MUJER || [];
+    if (!DATOS_H.length && !DATOS_M.length) {
         console.warn('EJERCICIOS_DATA no está disponible; revisa data/exercises-data.js');
         return;
     }
 
     const PAGE_SIZE = 36;
 
-    // Orden fijo de categorías (más natural que el orden de aparición en
-    // el dataset), "Todos" primero.
     const ORDEN_PARTES = [
-        'Pecho', 'Espalda', 'Hombros', 'Brazos', 'Antebrazos',
-        'Abdomen', 'Piernas', 'Pantorrillas', 'Cardio', 'Cuello'
+        'Pecho', 'Espalda', 'Hombros', 'Brazos',
+        'Abdomen', 'Piernas', 'Cuello', 'Cuerpo completo'
     ];
-    const partesPresentes = new Set(datos.map(function (e) { return e.parte_es; }));
-    const categorias = ['Todos'].concat(ORDEN_PARTES.filter(function (p) { return partesPresentes.has(p); }));
 
-    // Iconos reales (recorte de torso con el músculo resaltado en rojo,
-    // mismo estilo en las 11 categorías) - ver img/iconos/. "Cardio" y
-    // "Todos" no vienen del pack original de músculos (no son un músculo
-    // puntual), así que esos dos se generaron aparte con el mismo estilo
-    // visual (torso/cuerpo gris-azulado + resalte rojo) y se recortaron
-    // igual que el resto.
+    // Iconos de img/iconos/ (torso con el músculo resaltado).
     const ICONOS_IMG = {
         'Pecho': 'img/iconos/pecho.png',
         'Espalda': 'img/iconos/espalda.png',
         'Hombros': 'img/iconos/hombros.png',
         'Brazos': 'img/iconos/brazos.png',
-        'Antebrazos': 'img/iconos/antebrazos.png',
         'Abdomen': 'img/iconos/abdomen.png',
         'Piernas': 'img/iconos/piernas.png',
-        'Pantorrillas': 'img/iconos/pantorrillas.png',
         'Cuello': 'img/iconos/cuello.png',
-        'Cardio': 'img/iconos/cardio.png',
+        'Cuerpo completo': 'img/iconos/todos.png',
         'Todos': 'img/iconos/todos.png'
     };
 
-    // Subcategorías por músculo específico dentro de cada parte grande
-    // (2do nivel de filtro). Salen directo de los datos reales -campo
-    // "objetivo_es" de cada ejercicio-, no son inventadas: si mañana el
-    // dataset trae un músculo nuevo para una parte, aparece solo. El
-    // icono es del mismo pack de imágenes que mandó el usuario (recorte
-    // de torso con ESE músculo puntual resaltado); cuando el pack no
-    // trae uno específico para ese músculo, se cae de vuelta al icono
-    // de la parte grande (mejor eso que mostrar el músculo equivocado).
+    // Icono por subgrupo; si no hay uno específico se usa el de la parte.
     const ICONOS_SUB = {
         'Bíceps': 'img/iconos/biceps.png',
         'Tríceps': 'img/iconos/brazos.png',
+        'Antebrazo': 'img/iconos/antebrazos.png',
+        'Braquial': 'img/iconos/brazos.png',
+        'Brazos completos': 'img/iconos/brazos.png',
         'Cuádriceps': 'img/iconos/cuadriceps.png',
         'Glúteos': 'img/iconos/gluteos.png',
-        'Isquiotibiales': 'img/iconos/piernas.png',
+        'Femorales': 'img/iconos/piernas.png',
         'Aductores': 'img/iconos/aductores.png',
-        'Abductores': 'img/iconos/piernas.png',
-        'Columna': 'img/iconos/columna.png',
+        'Flexores de cadera': 'img/iconos/piernas.png',
+        'Pantorrillas y tibial': 'img/iconos/pantorrillas.png',
+        'Piernas completas': 'img/iconos/piernas.png',
         'Dorsales': 'img/iconos/dorsales.png',
         'Espalda alta': 'img/iconos/espalda.png',
-        'Trapecios': 'img/iconos/trapecios.png',
-        'Pectorales': 'img/iconos/pecho.png',
-        'Serrato anterior': 'img/iconos/serrato.png'
+        'Espalda baja': 'img/iconos/columna.png',
+        'Espalda completa': 'img/iconos/espalda.png',
+        'Trapecio': 'img/iconos/trapecios.png',
+        'Serrato': 'img/iconos/serrato.png',
+        'Pecho superior': 'img/iconos/pecho.png',
+        'Pecho medio': 'img/iconos/pecho.png',
+        'Pecho inferior': 'img/iconos/pecho.png',
+        'Pecho completo': 'img/iconos/pecho.png',
+        'Abdomen inferior': 'img/iconos/abdomen.png',
+        'Abdomen superior': 'img/iconos/abdomen.png',
+        'Oblicuos': 'img/iconos/abdomen.png',
+        'Core completo': 'img/iconos/abdomen.png',
+        'Deltoide anterior': 'img/iconos/hombros.png',
+        'Deltoide lateral': 'img/iconos/hombros.png',
+        'Deltoide posterior': 'img/iconos/hombros.png',
+        'Manguito rotador': 'img/iconos/hombros.png',
+        'Hombro completo': 'img/iconos/hombros.png'
     };
 
-    // Orden de subcategorías por parte (para que no salgan en el orden
-    // random en que aparece cada músculo en el dataset).
     const ORDEN_SUB = {
-        'Piernas': ['Cuádriceps', 'Isquiotibiales', 'Glúteos', 'Aductores', 'Abductores'],
-        'Brazos': ['Bíceps', 'Tríceps'],
-        'Espalda': ['Dorsales', 'Trapecios', 'Espalda alta', 'Columna'],
-        'Pecho': ['Pectorales', 'Serrato anterior']
+        'Pecho': ['Pecho superior', 'Pecho medio', 'Pecho inferior', 'Serrato', 'Pecho completo'],
+        'Espalda': ['Dorsales', 'Espalda alta', 'Espalda baja', 'Trapecio', 'Espalda completa'],
+        'Hombros': ['Deltoide anterior', 'Deltoide lateral', 'Deltoide posterior', 'Manguito rotador', 'Hombro completo'],
+        'Brazos': ['Bíceps', 'Braquial', 'Tríceps', 'Antebrazo', 'Brazos completos'],
+        'Abdomen': ['Abdomen superior', 'Abdomen inferior', 'Oblicuos', 'Core completo'],
+        'Piernas': ['Cuádriceps', 'Femorales', 'Glúteos', 'Aductores', 'Flexores de cadera', 'Pantorrillas y tibial', 'Piernas completas']
     };
 
-    // Mapa parte -> lista de músculos objetivo distintos que realmente
-    // aparecen en los datos para esa parte. Solo se muestran subtabs si
-    // hay más de uno (si solo hay uno, "toda la parte" ya es ese músculo).
-    const subcategoriasPorParte = {};
-    categorias.forEach(function (cat) {
-        if (cat === 'Todos') return;
-        const objetivos = new Set();
-        datos.forEach(function (e) {
-            if (e.parte_es === cat && e.objetivo_es) objetivos.add(e.objetivo_es);
-        });
-        if (objetivos.size > 1) {
-            const orden = ORDEN_SUB[cat] || [];
-            const lista = Array.from(objetivos).sort(function (a, b) {
-                const ia = orden.indexOf(a), ib = orden.indexOf(b);
-                if (ia === -1 && ib === -1) return a.localeCompare(b);
-                if (ia === -1) return 1;
-                if (ib === -1) return -1;
-                return ia - ib;
-            });
-            subcategoriasPorParte[cat] = lista;
-        }
-    });
-
-    function iconoTab(cat) {
-        const src = ICONOS_IMG[cat] || ICONOS_IMG['Todos'];
-        const interno = '<img class="ejercicios-tab__icono" src="' + src + '" alt="" aria-hidden="true">';
-        // Círculo "placa" detrás (ver .ejercicios-tab__icono-wrap en CSS):
-        // uniforma el peso visual entre las 11 fotos del pack.
-        return '<span class="ejercicios-tab__icono-wrap">' + interno + '</span>';
-    }
+    let generoActual = DATOS_H.length ? 'hombre' : 'mujer';
+    let datos = [];
+    let categorias = [];
+    let subcategoriasPorParte = {};
 
     let categoriaActual = 'Todos';
     let subFiltroActual = null;
@@ -124,23 +99,71 @@
     const buscarEl = document.getElementById('ejerciciosBuscar');
     const cargarMasEl = document.getElementById('ejerciciosCargarMas');
 
-    // Ventana flotante (lightbox) con el gif del ejercicio - vive fuera de
-    // #profileModal, ver index.html (mismo patrón que .gym-lightbox).
-    const lightboxEl = document.getElementById('ejercicioLightbox');
-    const lightboxCerrarEl = document.getElementById('ejercicioLightboxCerrar');
-    const lightboxGifEl = document.getElementById('ejercicioLightboxGif');
-    const lightboxNombreEl = document.getElementById('ejercicioLightboxNombre');
-    const lightboxParteEl = document.getElementById('ejercicioLightboxParte');
-    const lightboxEquipoEl = document.getElementById('ejercicioLightboxEquipo');
-    const lightboxObjetivoEl = document.getElementById('ejercicioLightboxObjetivo');
-    const lightboxPasosEl = document.getElementById('ejercicioLightboxPasos');
-
     if (!tabsEl || !gridEl) return;
 
     function escaparHtml(texto) {
         const div = document.createElement('div');
         div.textContent = texto == null ? '' : String(texto);
         return div.innerHTML;
+    }
+
+    // Recalcula categorías y subgrupos según la biblioteca activa.
+    function prepararDatos() {
+        datos = generoActual === 'mujer' ? DATOS_M : DATOS_H;
+        const presentes = new Set(datos.map(function (e) { return e.parte_es; }));
+        categorias = ['Todos'].concat(ORDEN_PARTES.filter(function (p) { return presentes.has(p); }));
+        subcategoriasPorParte = {};
+        categorias.forEach(function (cat) {
+            if (cat === 'Todos') return;
+            const objetivos = new Set();
+            datos.forEach(function (e) {
+                if (e.parte_es === cat && e.objetivo_es) objetivos.add(e.objetivo_es);
+            });
+            if (objetivos.size > 1) {
+                const orden = ORDEN_SUB[cat] || [];
+                subcategoriasPorParte[cat] = Array.from(objetivos).sort(function (a, b) {
+                    const ia = orden.indexOf(a), ib = orden.indexOf(b);
+                    if (ia === -1 && ib === -1) return a.localeCompare(b);
+                    if (ia === -1) return 1;
+                    if (ib === -1) return -1;
+                    return ia - ib;
+                });
+            }
+        });
+        categoriaActual = 'Todos';
+        subFiltroActual = null;
+        visibles = PAGE_SIZE;
+    }
+
+    // Selector Hombres/Mujeres: solo si ya hay ejercicios de ambos.
+    function renderGenero() {
+        let el = document.getElementById('ejerciciosGenero');
+        if (!(DATOS_H.length && DATOS_M.length)) { if (el) el.remove(); return; }
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'ejerciciosGenero';
+            el.className = 'ejercicios-genero';
+            subtabsEl.parentNode.insertBefore(el, subtabsEl);
+        }
+        el.innerHTML = ['hombre', 'mujer'].map(function (g) {
+            return '<button type="button" class="ejercicios-genero__btn' + (g === generoActual ? ' active' : '') +
+                '" data-g="' + g + '">' + (g === 'hombre' ? 'Hombres' : 'Mujeres') + '</button>';
+        }).join('');
+        el.querySelectorAll('button').forEach(function (b) {
+            b.addEventListener('click', function () {
+                generoActual = b.getAttribute('data-g');
+                prepararDatos();
+                renderGenero();
+                renderTabs();
+                renderSubtabs();
+                renderGrid();
+            });
+        });
+    }
+
+    function iconoTab(cat) {
+        const src = ICONOS_IMG[cat] || ICONOS_IMG['Todos'];
+        return '<span class="ejercicios-tab__icono-wrap"><img class="ejercicios-tab__icono" src="' + src + '" alt="" aria-hidden="true"></span>';
     }
 
     function renderTabs() {
@@ -168,10 +191,6 @@
         });
     }
 
-    // Fila de chips por músculo específico (2do nivel), solo si la parte
-    // elegida tiene más de un objetivo_es distinto en los datos - ver
-    // subcategoriasPorParte más arriba. Incluye un chip "Todos" propio de
-    // esa parte para volver a ver el catálogo completo de la categoría.
     function renderSubtabs() {
         if (!subtabsEl) return;
         const lista = subcategoriasPorParte[categoriaActual];
@@ -213,7 +232,10 @@
         return datos.filter(function (ej) {
             if (categoriaActual !== 'Todos' && ej.parte_es !== categoriaActual) return false;
             if (subFiltroActual && ej.objetivo_es !== subFiltroActual) return false;
-            if (term && ej.nombre.toLowerCase().indexOf(term) === -1) return false;
+            if (term) {
+                const texto = (ej.nombre + ' ' + (ej.objetivo_es || '') + ' ' + (ej.detalle || '')).toLowerCase();
+                if (texto.indexOf(term) === -1) return false;
+            }
             return true;
         });
     }
@@ -223,19 +245,24 @@
         const mostrar = filtrados.slice(0, visibles);
 
         if (!mostrar.length) {
-            gridEl.innerHTML = '<div class="ejercicios-vacio">No se encontraron ejercicios con ese filtro.</div>';
+            gridEl.innerHTML = '<div class="ejercicios-vacio">' +
+                (datos.length ? 'No se encontraron ejercicios con ese filtro.' : 'Pronto habrá ejercicios en esta sección.') + '</div>';
             cargarMasEl.hidden = true;
             return;
         }
 
         gridEl.innerHTML = mostrar.map(function (ej) {
             const indiceReal = datos.indexOf(ej);
+            const sub = ej.objetivo_es && ej.objetivo_es !== ej.parte_es ? ej.objetivo_es : ej.parte_es;
             return (
                 '<button class="ejercicio-card" data-idx="' + indiceReal + '">' +
-                    '<img loading="lazy" src="' + escaparHtml(ej.imagen) + '" alt="' + escaparHtml(ej.nombre) + '">' +
+                    '<span class="ejercicio-card__media">' +
+                        '<img loading="lazy" decoding="async" src="' + escaparHtml(ej.poster || ej.imagen) + '" alt="' + escaparHtml(ej.nombre) + '">' +
+                        '<span class="ejercicio-card__play" aria-hidden="true"></span>' +
+                    '</span>' +
                     '<div class="ejercicio-card__info">' +
                         '<span class="ejercicio-card__nombre">' + escaparHtml(ej.nombre) + '</span>' +
-                        '<span class="ejercicio-card__equipo">' + escaparHtml(ej.equipo_es) + '</span>' +
+                        '<span class="ejercicio-card__equipo">' + escaparHtml(sub) + '</span>' +
                     '</div>' +
                 '</button>'
             );
@@ -244,71 +271,12 @@
         gridEl.querySelectorAll('.ejercicio-card').forEach(function (card) {
             card.addEventListener('click', function () {
                 const idx = parseInt(card.getAttribute('data-idx'), 10);
-                abrirLightbox(datos[idx]);
+                if (window.EjVideo) window.EjVideo.abrir(datos[idx]);
             });
         });
 
         cargarMasEl.hidden = visibles >= filtrados.length;
     }
-
-    // Resumen corto de la técnica: máx. 3 pasos, cada uno recortado a su
-    // primera frase (~85 caracteres), para que todos los ejercicios tengan
-    // casi la misma cantidad de texto (la imagen ya explica el movimiento).
-    function resumirPasos(pasos) {
-        return (pasos || []).slice(0, 3).map(function (p) {
-            var t = String(p || '').replace(/\s+/g, ' ').trim();
-            var m = t.match(/^(.+?[.!?])(\s|$)/);
-            if (m) t = m[1];
-            if (t.length > 85) {
-                t = t.slice(0, 85);
-                var i = t.lastIndexOf(' ');
-                if (i > 50) t = t.slice(0, i);
-                t = t.replace(/[,;:\s]+$/, '') + '…';
-            }
-            return t;
-        }).filter(Boolean);
-    }
-
-    // Abre la ventana flotante con el gif del ejercicio (toda la ejecución
-    // del movimiento, no solo una foto fija) y sus datos/pasos.
-    function abrirLightbox(ej) {
-        if (!ej || !lightboxEl) return;
-        // Truco para que el gif siempre arranque desde el primer frame al
-        // abrir (si el navegador ya lo tenía cacheado, reasignar el mismo
-        // src no lo reinicia): se limpia el src antes de ponerlo de nuevo.
-        lightboxGifEl.src = '';
-        lightboxGifEl.src = ej.gif || ej.imagen;
-        lightboxGifEl.alt = ej.nombre;
-        lightboxNombreEl.textContent = ej.nombre;
-        lightboxParteEl.textContent = ej.parte_es;
-        lightboxEquipoEl.textContent = ej.equipo_es;
-        lightboxObjetivoEl.textContent = ej.objetivo_es;
-        lightboxPasosEl.innerHTML = resumirPasos(ej.pasos).map(function (paso) {
-            return '<li>' + escaparHtml(paso) + '</li>';
-        }).join('') || '<li>Sin instrucciones detalladas para este ejercicio.</li>';
-
-        lightboxEl.classList.add('activo');
-    }
-
-    function cerrarLightbox() {
-        lightboxEl.classList.remove('activo');
-        lightboxGifEl.src = '';
-    }
-
-    if (lightboxCerrarEl) {
-        lightboxCerrarEl.addEventListener('click', cerrarLightbox);
-    }
-    if (lightboxEl) {
-        // Clic en el fondo oscuro (fuera de la tarjeta) también cierra.
-        lightboxEl.addEventListener('click', function (e) {
-            if (e.target === lightboxEl) cerrarLightbox();
-        });
-    }
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && lightboxEl && lightboxEl.classList.contains('activo')) {
-            cerrarLightbox();
-        }
-    });
 
     if (buscarEl) {
         buscarEl.addEventListener('input', function () {
@@ -325,6 +293,8 @@
         });
     }
 
+    prepararDatos();
+    renderGenero();
     renderTabs();
     renderSubtabs();
     renderGrid();
