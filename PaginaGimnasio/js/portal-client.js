@@ -120,13 +120,10 @@ async function getSocioProfile() {
   return await portalFetch('/api/portal/me');
 }
 
-async function changePassword(currentPassword, newPassword) {
+async function changePassword(_actual, newPassword) {
   return await portalFetch('/api/portal/change-password', {
     method: 'POST',
-    body: JSON.stringify({
-      password_actual: currentPassword,
-      password_nuevo: newPassword
-    })
+    body: JSON.stringify({ password_nuevo: newPassword })
   });
 }
 
@@ -347,9 +344,6 @@ async function loadDashboard() {
 }
 
 function showChangePassword() {
-  const currentPassword = prompt('Contraseña actual:');
-  if (!currentPassword) return;
-  
   const newPassword = prompt('Nueva contraseña:');
   if (!newPassword) return;
   
@@ -359,7 +353,7 @@ function showChangePassword() {
     return;
   }
   
-  changePassword(currentPassword, newPassword)
+  changePassword(null, newPassword)
     .then(() => {
       showNotification('✅ Contraseña actualizada correctamente', 'success');
     })

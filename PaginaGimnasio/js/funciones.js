@@ -1129,17 +1129,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
-            const actual = document.getElementById('passActual').value;
             const nueva = document.getElementById('passNueva').value;
             const nueva2 = document.getElementById('passNueva2').value;
             if (nueva.length < 8) { showNotification('La nueva contraseña debe tener al menos 8 caracteres', 'error'); return; }
             if (nueva !== nueva2) { showNotification('Las contraseñas nuevas no coinciden', 'error'); return; }
             if (!/[A-Za-z]/.test(nueva) || !/\d/.test(nueva)) { showNotification('La contraseña nueva debe combinar letras y números', 'error'); return; }
-            if (nueva === actual) { showNotification('La nueva contraseña debe ser distinta a la actual', 'error'); return; }
             const btn = document.getElementById('btnCambiarPass');
             btn.disabled = true;
             try {
-                await changePassword(actual, nueva);
+                await changePassword(null, nueva);
                 cerrarPassModal();
                 showNotification('Contraseña actualizada correctamente', 'success');
             } catch (err) {

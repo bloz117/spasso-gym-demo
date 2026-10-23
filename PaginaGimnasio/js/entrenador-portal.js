@@ -1100,6 +1100,33 @@
             ? '<i class="fas fa-circle-check"></i> <span>Datos enviados</span><span class="bd-edit"><i class="fas fa-pen"></i> Editar</span>'
             : '<i class="fas fa-pen-to-square"></i> <span>Añadir mis datos</span>';
         btn.title = lleno ? 'Toca para editar tus datos (por ejemplo, tu peso)' : 'Envía tus datos a tu entrenador';
+        btn.classList.toggle('btn-datos--llamar', !lleno);
+        avisoDatosRutina(!lleno);
+    }
+
+    // Aviso visible en "Mi rutina" mientras el miembro no haya enviado sus datos:
+    // explica para qué sirve y apunta con una flecha al botón de enviar datos.
+    function avisoDatosRutina(mostrar) {
+        var panel = document.querySelector('.profile-panel[data-panel="rutinas"]');
+        if (!panel) return;
+        var aviso = document.getElementById('avisoDatosRutina');
+        if (!mostrar) { if (aviso) aviso.remove(); return; }
+        if (aviso) return;
+        aviso = document.createElement('button');
+        aviso.type = 'button';
+        aviso.id = 'avisoDatosRutina';
+        aviso.className = 'aviso-datos';
+        aviso.innerHTML =
+            '<span class="aviso-datos__ico"><i class="fas fa-dumbbell"></i></span>' +
+            '<span class="aviso-datos__txt"><b>¿Quieres una rutina hecha para ti?</b>' +
+            '<span>Para tener una rutina especializada con tu entrenador, rellena tus datos y envíalos.</span></span>' +
+            '<span class="aviso-datos__flecha" aria-hidden="true"><i class="fas fa-arrow-up"></i><em>Enviar datos</em></span>';
+        aviso.addEventListener('click', function () {
+            var b = document.getElementById('btnAbrirDatos');
+            if (b) b.click();
+        });
+        var ref = document.getElementById('miPuntoPartida') || document.getElementById('miRutinaEntrenador');
+        if (ref) ref.insertAdjacentElement('beforebegin', aviso); else panel.appendChild(aviso);
     }
 
     function fechaLarga(iso) {

@@ -207,7 +207,7 @@ class PortalLoginRequest(BaseModel):
 
 
 class PortalChangePasswordRequest(BaseModel):
-    password_actual: str = Field(..., min_length=1, max_length=72)
+    password_actual: Optional[str] = Field(default=None, max_length=72)  # ya no se pide
     password_nuevo: str = Field(..., min_length=8, max_length=72)
 
     @field_validator('password_nuevo')
@@ -220,7 +220,7 @@ class PortalChangePasswordRequest(BaseModel):
 
     @model_validator(mode='after')
     def _distinta(self):
-        if self.password_actual == self.password_nuevo:
+        if self.password_actual and self.password_actual == self.password_nuevo:
             raise ValueError('La contraseña nueva debe ser distinta a la actual')
         return self
 

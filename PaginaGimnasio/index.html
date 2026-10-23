@@ -6,7 +6,7 @@
     <title>Spasso - Sauna & Gym Premium</title>
     <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
     <link href="vendor/fonts/fonts.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=20261213">
+    <link rel="stylesheet" href="css/styles.css?v=20261214">
     <link rel="stylesheet" href="css/fondos-portal.css?v=20261105">
     <link rel="stylesheet" href="css/entrenador-portal.css?v=20261213">
     <script>
@@ -1122,11 +1122,10 @@
     <!-- Cambiar contraseña: ventana flotante (se abre desde Mi Perfil > Seguridad) -->
     <div class="modal" id="passModal">
         <div class="modal-content pass-modal">
-            <span class="close-modal" id="passModalCerrar">&times;</span>
+            <button type="button" class="close-modal pass-cerrar" id="passModalCerrar" aria-label="Cerrar">&times;</button>
             <h2 class="pass-modal__titulo">Cambiar contraseña</h2>
-            <p class="pass-modal__hint">Mínimo 8 caracteres, con letras y números.</p>
+            <p class="pass-modal__hint">Escribe tu nueva contraseña y repítela. Mínimo 8 caracteres, con letras y números.</p>
             <form class="perfil-pass" id="formCambiarPass" autocomplete="off">
-                <input type="password" id="passActual" placeholder="Contraseña actual" autocomplete="current-password" required>
                 <input type="password" id="passNueva" placeholder="Nueva contraseña" maxlength="72" minlength="8" autocomplete="new-password" required>
                 <input type="password" id="passNueva2" placeholder="Repite la nueva contraseña" minlength="8" autocomplete="new-password" required>
                 <button type="submit" class="perfil-pass__btn" id="btnCambiarPass"><i class="fas fa-key"></i> Guardar contraseña</button>
@@ -1294,14 +1293,14 @@
     <script src="data/exercises-data.js?v=20261213"></script>
     <script src="data/exercises-data-mujer.js?v=20261213"></script>
     <script src="js/fondos-animados.js?v=20260924-fondoglobal"></script>
-    <script src="js/funciones.js?v=20261127"></script>
-    <script src="js/portal-client.js?v=20261119"></script>
+    <script src="js/funciones.js?v=20261128"></script>
+    <script src="js/portal-client.js?v=20261120"></script>
     <script src="js/perfil-movil.js?v=20261205"></script>
     <script src="js/ejercicio-video.js?v=20261213"></script>
     <script src="js/ejercicios.js?v=20261213"></script>
     <script src="js/fondos-portal.js?v=20261010"></script>
     <script src="js/contenido-portal.js?v=20261014"></script>
-    <script src="js/entrenador-portal.js?v=20261213"></script>
+    <script src="js/entrenador-portal.js?v=20261214"></script>
     <script src="js/rutina-go.js?v=20261213"></script>
     
 </body>

@@ -5983,3 +5983,36 @@ html.ejv-abierto { overflow: hidden; }
 /* La flecha "volver" tiene fondo oscuro fijo: en tema claro --blanco se vuelve negro, se fuerza blanca */
 body:has(#profileModal.is-open) .header-back-btn,
 body:has(#profileModal.is-open) .header-back-btn i { color: #fff !important; }
+
+/* Cambiar contraseña: botón de cerrar bien visible (rojo) */
+#passModal .pass-modal { position: relative; }
+#passModal .close-modal.pass-cerrar {
+  position: absolute; top: .7rem; right: .7rem; width: 38px; height: 38px; padding: 0;
+  display: flex; align-items: center; justify-content: center; line-height: 1;
+  font-size: 1.7rem; font-weight: 700; color: #fff; opacity: 1;
+  background: #ef4444; border: 0; border-radius: 50%; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(239,68,68,.45); transition: transform .15s, background .15s;
+}
+#passModal .close-modal.pass-cerrar:hover { background: #dc2626; transform: scale(1.08); }
+#passModal .close-modal.pass-cerrar:active { transform: scale(.94); }
+#passModal .pass-modal__titulo { padding: 0 2.6rem; }
+
+/* Aviso "rellena tus datos" en Mi rutina (miembros nuevos / sin datos enviados) */
+.aviso-datos {
+  width: 100%; display: flex; align-items: center; gap: .9rem; text-align: left; cursor: pointer;
+  margin: .2rem 0 1rem; padding: .9rem 1rem; border-radius: 16px; font-family: inherit; color: var(--blanco);
+  background: linear-gradient(135deg, rgba(139,92,246,.22), rgba(34,211,238,.16));
+  border: 1px solid rgba(34,211,238,.45); box-shadow: 0 6px 22px rgba(34,211,238,.15);
+  animation: avisoDatosEntra .45s ease both;
+}
+.aviso-datos__ico { flex: 0 0 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(34,211,238,.25); color: #22d3ee; font-size: 1.1rem; }
+.aviso-datos__txt { flex: 1; display: flex; flex-direction: column; gap: .15rem; font-size: .8rem; line-height: 1.35; }
+.aviso-datos__txt b { font-size: .92rem; }
+.aviso-datos__txt span { opacity: .85; }
+.aviso-datos__flecha { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: .1rem; color: #22d3ee; font-size: 1.25rem; animation: avisoDatosFlecha 1s ease-in-out infinite; }
+.aviso-datos__flecha em { font-style: normal; font-size: .62rem; font-weight: 700; letter-spacing: .02em; white-space: nowrap; }
+.btn-datos--llamar { border-color: #22d3ee !important; background: rgba(34,211,238,.18) !important; animation: btnDatosLatido 1.6s ease-in-out infinite; }
+@keyframes avisoDatosFlecha { 0%,100% { transform: translateY(2px); } 50% { transform: translateY(-6px); } }
+@keyframes btnDatosLatido { 0%,100% { box-shadow: 0 0 0 0 rgba(34,211,238,.55); } 60% { box-shadow: 0 0 0 10px rgba(34,211,238,0); } }
+@keyframes avisoDatosEntra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .aviso-datos, .aviso-datos__flecha, .btn-datos--llamar { animation: none; } }

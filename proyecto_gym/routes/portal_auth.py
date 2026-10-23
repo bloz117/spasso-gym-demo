@@ -224,7 +224,7 @@ def cambiar_contrasena(
 ):
     """
     Permite que el socio cambie su contraseña del portal.
-    Requiere proporcionar la contraseña actual para verificación.
+    La sesión ya identifica al socio, así que no se pide la contraseña actual.
     """
     id_socio = socio.get("id_socio")
 
@@ -240,13 +240,6 @@ def cambiar_contrasena(
         raise HTTPException(status_code=404, detail="Cuenta del portal no encontrada")
 
     password_hash = row[0]
-
-    # Verificar contraseña actual
-    if not verify_password(data.password_actual, password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Contraseña actual incorrecta"
-        )
 
     # Hashear nueva contraseña
     new_hash = hash_password(data.password_nuevo)
