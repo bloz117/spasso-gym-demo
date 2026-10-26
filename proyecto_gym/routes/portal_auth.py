@@ -4,7 +4,9 @@ routes/portal_auth.py - Endpoints de autenticación del Portal Público (Socio)
 El Portal Público permite que los socios accedan a su dashboard personal
 con credenciales diferentes del sistema de recepción.
 """
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Body
+from datetime import timedelta
+from routes import verificacion as _ver
 from database import get_db
 from schemas import PortalLoginRequest, PortalChangePasswordRequest, TokenResponse
 from auth import verify_password, create_access_token, hash_password, decode_token
@@ -38,7 +40,7 @@ def get_current_socio(credentials: HTTPAuthorizationCredentials = Depends(securi
     if "id_socio" not in payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token no válido para portal de socio"
+            detail="Token no válido para portal de miembro"
         )
 
     return payload
@@ -73,14 +75,14 @@ def _limpiar_fallos_cuenta(clave: str):
         _fallos_cuenta.pop(clave, None)
 
 
-def _login_entrenador(usuario: str, password: str):
+def _login_entrenador(usuario: str, password: str, dispositivo=None, recordar=False):
     """Devuelve la respuesta de login si usuario/contraseña son de un
     Entrenador; None si no corresponde (para seguir con el error normal)."""
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT u.id_usuario, u.username, u.password_hash
+            SELECT u.id_usuario, u.username, u.password_hash, u.correo
             FROM usuarios_sistema u
             JOIN roles_permisos r ON u.id_rol = r.id_rol
             WHERE (lower(u.username) = %s OR lower(u.correo) = %s)
@@ -91,16 +93,23 @@ def _login_entrenador(usuario: str, password: str):
         fila = cur.fetchone()
     if not fila:
         return None
-    id_usuario, username, password_hash = fila
+    id_usuario, username, password_hash, correo_ent = fila
     if not (password_hash.startswith("$2b$") or password_hash.startswith("$2a$")):
         return None
     if not verify_password(password, password_hash):
         return None
+    d = _ver.exigir_codigo(f"ent:{id_usuario}", id_usuario, "Entrenador", password_hash, correo_ent, dispositivo, username)
+    if d:
+        return d
+    return _respuesta_entrenador(id_usuario, username, recordar)
+
+
+def _respuesta_entrenador(id_usuario, username, recordar=False):
     token = create_access_token({
         "sub": str(id_usuario),
         "username": username,
         "rol": "Entrenador",
-    })
+    }, expires_delta=timedelta(days=30) if recordar else None)
     return {
         "access_token": token,
         "token_type": "bearer",
@@ -108,7 +117,7 @@ def _login_entrenador(usuario: str, password: str):
     }
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login")
 def portal_login(data: PortalLoginRequest, _=Depends(limitar_intentos_login(max_intentos=60, ventana_segundos=60))):
     """
     Autentica a un socio con su correo O su usuario del portal (sin
@@ -140,7 +149,7 @@ def portal_login(data: PortalLoginRequest, _=Depends(limitar_intentos_login(max_
     if not account:
         # ¿Es una cuenta de Entrenador? (se identifican con su usuario en el
         # mismo campo del formulario; no entran a Recepción, solo al portal).
-        entrenador = _login_entrenador(data.email, data.password)
+        entrenador = _login_entrenador(data.email, data.password, data.dispositivo, bool(data.recordar))
         if entrenador:
             _limpiar_fallos_cuenta(identificador)
             return entrenador
@@ -190,6 +199,14 @@ def portal_login(data: PortalLoginRequest, _=Depends(limitar_intentos_login(max_
         )
     _limpiar_fallos_cuenta(identificador)
 
+    # Verificación por correo una sola vez por dispositivo
+    _d = _ver.exigir_codigo(f"socio:{id_socio}", id_socio, "Cliente", password_hash, email, data.dispositivo, nombres)
+    if _d:
+        return _d
+    return _respuesta_socio(id_socio, nombres, apellidos, email, bool(data.recordar))
+
+
+def _respuesta_socio(id_socio, nombres, apellidos, email, recordar=False):
     # Último ingreso (se muestra en Configuración > Página Web > Usuarios del Portal)
     with get_db() as conn:
         cur = conn.cursor()
@@ -202,7 +219,7 @@ def portal_login(data: PortalLoginRequest, _=Depends(limitar_intentos_login(max_
         "email": email,
         "nombres": nombres,
         "rol": "Cliente"
-    })
+    }, expires_delta=timedelta(days=30) if recordar else None)
 
     return {
         "access_token": token,
@@ -215,6 +232,42 @@ def portal_login(data: PortalLoginRequest, _=Depends(limitar_intentos_login(max_
             "rol": "Cliente"
         }
     }
+
+
+@router.post("/verificar")
+def verificar_codigo_portal(data: dict = Body(...), _=Depends(limitar_intentos_login(12, 60))):
+    """Paso 2 del ingreso al portal (solo en un dispositivo nuevo): el código que llegó al correo."""
+    from auth import decode_token
+    ch = decode_token(str(data.get("desafio") or ""))
+    if not ch or ch.get("typ") != "chal":
+        raise HTTPException(status_code=401, detail="El código venció. Vuelve a iniciar sesión.")
+    recordar = bool(data.get("recordar"))
+    if ch.get("rol") == "Entrenador":
+        with get_db() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT username, password_hash FROM usuarios_sistema WHERE id_usuario = %s", (ch["id"],))
+            f = cur.fetchone()
+        if not f:
+            raise HTTPException(status_code=401, detail="Cuenta no disponible")
+        clave, _id, _rol = _ver.validar_codigo(data.get("desafio"), data.get("codigo"), f[1])
+        resp = _respuesta_entrenador(ch["id"], f[0], recordar)
+        ph = f[1]
+    elif ch.get("rol") == "Cliente":
+        with get_db() as conn:
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT s.nombres, s.apellidos, s.email, pa.password_hash, pa.is_active, COALESCE(s.activo, TRUE) "
+                "FROM portal_accounts pa JOIN socios s ON pa.id_socio = s.id_socio WHERE pa.id_socio = %s", (ch["id"],))
+            f = cur.fetchone()
+        if not f or not f[4] or not f[5]:
+            raise HTTPException(status_code=403, detail="Esta cuenta no está habilitada. Contacta a recepción.")
+        clave, _id, _rol = _ver.validar_codigo(data.get("desafio"), data.get("codigo"), f[3])
+        resp = _respuesta_socio(ch["id"], f[0], f[1], f[2], recordar)
+        ph = f[3]
+    else:
+        raise HTTPException(status_code=401, detail="Código incorrecto")
+    resp["dispositivo"] = _ver.token_dispositivo(clave, ph)
+    return resp
 
 
 @router.post("/change-password")
@@ -322,7 +375,7 @@ def obtener_perfil_socio(socio=Depends(get_current_socio)):
         row = cur.fetchone()
 
     if not row:
-        raise HTTPException(status_code=404, detail="Socio no encontrado")
+        raise HTTPException(status_code=404, detail="Miembro no encontrado")
 
     return {
         "id_socio": row[0],
@@ -400,7 +453,7 @@ def restablecer_contrasena_socio(
         cur = conn.cursor()
         cur.execute("SELECT id_socio FROM portal_accounts WHERE id_socio = %s", (id_socio,))
         if not cur.fetchone():
-            raise HTTPException(status_code=404, detail="Este socio no tiene cuenta de portal")
+            raise HTTPException(status_code=404, detail="Este miembro no tiene cuenta de portal")
 
         nueva_password = secrets.token_urlsafe(12)
         nuevo_hash = hash_password(nueva_password)
@@ -434,7 +487,7 @@ def alternar_estado_cuenta(
         cur.execute("SELECT is_active FROM portal_accounts WHERE id_socio = %s", (id_socio,))
         row = cur.fetchone()
         if not row:
-            raise HTTPException(status_code=404, detail="Este socio no tiene cuenta de portal")
+            raise HTTPException(status_code=404, detail="Este miembro no tiene cuenta de portal")
 
         nuevo_estado = not row[0]
         cur.execute(

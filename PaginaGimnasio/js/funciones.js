@@ -1652,6 +1652,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (forgotPasswordLink) {
         forgotPasswordLink.addEventListener('click', function(e) {
             e.preventDefault();
+            // Recuperación con código al correo (js/recuperar-portal.js)
+            if (typeof window.abrirRecuperarPortal === 'function') { window.abrirRecuperarPortal(); return; }
             const email = document.getElementById('loginEmail').value.trim();
             const mensaje = email
                 ? `Olvidé mi contraseña. Mi correo registrado es: ${email}. ¿Me ayudan a restablecerla?`
@@ -1728,6 +1730,69 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target === whatsappPopup) whatsappPopup.style.display = 'none';
     });
     
+    // Termina el ingreso del socio/entrenador (después de la contraseña, o del código si el dispositivo es nuevo)
+    async function finalizarLoginSocio(respLogin) {
+
+        // Cuenta de Entrenador: no tiene perfil de socio, abre su panel.
+        if (respLogin && respLogin.usuario && respLogin.usuario.rol === 'Entrenador') {
+            window.aplicarSesionEntrenador(respLogin.usuario.username);
+            hideModal(loginModal);
+            return;
+        }
+
+        // Traer los datos reales del socio y su plan actual
+        const perfil = await getSocioProfile();
+        let plan = null;
+        try {
+            const planResp = await getSocioPlan();
+            plan = planResp.plan || null;
+        } catch (e) {
+            console.warn('No se pudo obtener el plan del socio:', e);
+        }
+
+        window.aplicarSesionSocio(perfil, plan);
+
+        showNotification('Bienvenido ' + currentUser.name, 'success');
+        hideModal(loginModal);
+        showModal(profileModal);
+    }
+
+    // Paso del código enviado al correo (solo se pide una vez por dispositivo)
+    function mostrarCodigoPortal(resp, rememberMe, alTerminar) {
+        let box = document.getElementById('loginCodigoBox');
+        const campos = loginForm.querySelectorAll('input.login-card__input, button[type="submit"], .login-card__remember');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'loginCodigoBox';
+            box.style.cssText = 'text-align:center;';
+            box.innerHTML = '<p id="loginCodigoMsg" style="margin:0 0 10px;font-size:14px;opacity:.85"></p>' +
+                '<input class="login-card__input" type="text" id="loginCodigoPortal" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="Código de 6 dígitos" style="text-align:center;letter-spacing:6px;font-weight:700">' +
+                '<button type="button" class="login-card__button" id="loginCodigoOk" style="margin-top:10px;width:100%">Verificar</button>' +
+                '<a href="#" id="loginCodigoVolver" style="display:block;margin-top:10px;font-size:13px;opacity:.7">Volver</a>';
+            loginForm.appendChild(box);
+        }
+        document.getElementById('loginCodigoMsg').textContent = 'Te enviamos un código a ' + (resp.correo || 'tu correo') + '. Solo se pide una vez en este dispositivo.';
+        campos.forEach(c => c.style.display = 'none');
+        box.style.display = 'block';
+        const input = document.getElementById('loginCodigoPortal');
+        input.value = ''; input.focus();
+        const cerrar = () => { box.style.display = 'none'; campos.forEach(c => c.style.display = ''); };
+        document.getElementById('loginCodigoVolver').onclick = (ev) => { ev.preventDefault(); cerrar(); };
+        const enviar = async () => {
+            const codigo = input.value.replace(/\D/g, '');
+            if (codigo.length !== 6) { showNotification('Escribe los 6 dígitos del código', 'error'); return; }
+            try {
+                const r = await verificarCodigoPortal(resp.desafio, codigo, rememberMe);
+                cerrar();
+                await alTerminar(r);
+            } catch (err) {
+                showNotification(err.message || 'Código incorrecto', 'error');
+            }
+        };
+        document.getElementById('loginCodigoOk').onclick = enviar;
+        input.onkeydown = (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); enviar(); } };
+    }
+
     loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value;
@@ -1759,29 +1824,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Login de socio via API (backend real de recepción, puerto 7000)
             try {
                 const respLogin = await loginSocio(email, password, rememberMe);
-
-                // Cuenta de Entrenador: no tiene perfil de socio, abre su panel.
-                if (respLogin && respLogin.usuario && respLogin.usuario.rol === 'Entrenador') {
-                    window.aplicarSesionEntrenador(respLogin.usuario.username);
-                    hideModal(loginModal);
+                if (respLogin && respLogin.requiere_codigo) {
+                    mostrarCodigoPortal(respLogin, rememberMe, finalizarLoginSocio);
                     return;
                 }
-
-                // Traer los datos reales del socio y su plan actual
-                const perfil = await getSocioProfile();
-                let plan = null;
-                try {
-                    const planResp = await getSocioPlan();
-                    plan = planResp.plan || null;
-                } catch (e) {
-                    console.warn('No se pudo obtener el plan del socio:', e);
-                }
-
-                window.aplicarSesionSocio(perfil, plan);
-
-                showNotification('Bienvenido ' + currentUser.name, 'success');
-                hideModal(loginModal);
-                showModal(profileModal);
+                await finalizarLoginSocio(respLogin);
 
             } catch (error) {
                 showNotification(error.message || 'Error al iniciar sesión', 'error');

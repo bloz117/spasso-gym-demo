@@ -62,6 +62,7 @@ from routes.cms import router as cms_router
 from routes.entrenador import router as entrenador_router
 from routes.portal_auth import router as portal_auth_router
 from routes.portal_client import router as portal_client_router
+from routes.recuperacion import router_portal as recuperacion_portal_router
 
 app = FastAPI(
     title="Spasso — Portal (nube)",
@@ -147,7 +148,7 @@ async def _error_generico(request, exc: Exception):
     return JSONResponse(status_code=500, content={"detail": "Error interno del servidor"})
 
 
-for r in (portal_auth_router, portal_client_router, entrenador_router, cms_router, sync_routes.router):
+for r in (portal_auth_router, recuperacion_portal_router, portal_client_router, entrenador_router, cms_router, sync_routes.router):
     app.include_router(r)
 
 

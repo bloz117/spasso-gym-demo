@@ -6,8 +6,8 @@
     <title>Spasso - Sauna & Gym Premium</title>
     <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
     <link href="vendor/fonts/fonts.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=20261214">
-    <link rel="stylesheet" href="css/fondos-portal.css?v=20261105">
+    <link rel="stylesheet" href="css/styles.css?v=20261108">
+    <link rel="stylesheet" href="css/fondos-portal.css?v=20261106">
     <link rel="stylesheet" href="css/entrenador-portal.css?v=20261213">
     <script>
         /* Fondo elegido por el visitante (claro-tenue | liso | movimiento).
@@ -782,6 +782,26 @@
                 <button type="submit" class="login-card__submit">Entrar</button>
             </form>
             <span class="login-card__toggle">¿Olvidaste tu contraseña? <a href="#" id="forgotPasswordLink">Cambiar</a></span>
+
+            <!-- Recuperar contraseña con código al correo -->
+            <div id="recuperarPanel" class="login-card__form recuperar" style="display:none;">
+                <div class="login-card__heading">Cambiar contraseña</div>
+                <div id="recPaso1">
+                    <p class="recuperar__txt">Escribe tu correo (o usuario). Te enviamos un código de 6 dígitos al correo que diste en el gimnasio.</p>
+                    <input class="login-card__input" type="text" id="recIdent" placeholder="Correo o usuario" autocomplete="username">
+                    <button type="button" class="login-card__submit" id="recBtnEnviar">Enviarme el código</button>
+                </div>
+                <div id="recPaso2" style="display:none;">
+                    <p class="recuperar__txt" id="recTxt2">Escribe el código que te llegó.</p>
+                    <input class="login-card__input recuperar__codigo" type="text" id="recCodigo" inputmode="numeric" maxlength="6" placeholder="• • • • • •" autocomplete="one-time-code">
+                    <input class="login-card__input" type="password" id="recNueva" placeholder="Contraseña nueva (8+, letras y números)" autocomplete="new-password">
+                    <input class="login-card__input" type="password" id="recNueva2" placeholder="Repite la contraseña nueva" autocomplete="new-password">
+                    <button type="button" class="login-card__submit" id="recBtnGuardar">Guardar contraseña</button>
+                    <a href="#" class="recuperar__link" id="recReenviar">No me llegó, enviar otro código</a>
+                </div>
+                <div id="recMsg" class="recuperar__msg" role="status"></div>
+                <a href="#" class="recuperar__link" id="recVolver">← Volver a iniciar sesión</a>
+            </div>
             <a href="#" id="showRegister" hidden aria-hidden="true"></a>
         </div>
     </div>
@@ -1293,13 +1313,15 @@
     <script src="data/exercises-data.js?v=20261213"></script>
     <script src="data/exercises-data-mujer.js?v=20261213"></script>
     <script src="js/fondos-animados.js?v=20260924-fondoglobal"></script>
-    <script src="js/funciones.js?v=20261128"></script>
-    <script src="js/portal-client.js?v=20261120"></script>
+    <script src="js/funciones.js?v=20261160"></script>
+    <script src="js/ui-dialog.js?v=1"></script>
+    <script src="js/portal-client.js?v=20261168"></script>
+    <script src="js/recuperar-portal.js?v=1"></script>
     <script src="js/perfil-movil.js?v=20261205"></script>
     <script src="js/ejercicio-video.js?v=20261213"></script>
     <script src="js/ejercicios.js?v=20261213"></script>
     <script src="js/fondos-portal.js?v=20261010"></script>
-    <script src="js/contenido-portal.js?v=20261014"></script>
+    <script src="js/contenido-portal.js?v=20261015"></script>
     <script src="js/entrenador-portal.js?v=20261214"></script>
     <script src="js/rutina-go.js?v=20261213"></script>
     

@@ -187,3 +187,22 @@ html[data-fondo="claro-tenue"] .gym-lightbox {
     font: 700 15px 'Montserrat', sans-serif; text-decoration: none;
     color: #fff; background: linear-gradient(135deg, var(--rosa-fucsia), #b8128a);
 }
+
+/* ---- Promoción: colores, esquina y barra de cierre automático ---- */
+.promo-alerta{--p1:var(--rosa-fucsia);--p2:var(--celeste);--pbtn:#b8128a}
+.promo-alerta.promo-c-celeste{--p1:#22b8e8;--p2:#6366f1;--pbtn:#0b87b5}
+.promo-alerta.promo-c-dorado{--p1:#f5b301;--p2:#ff7a1a;--pbtn:#c98a00}
+.promo-alerta.promo-c-verde{--p1:#22c55e;--p2:#06b6d4;--pbtn:#15803d}
+.promo-alerta__caja{background-image:linear-gradient(var(--gris-claro),var(--gris-claro)),linear-gradient(135deg,var(--p1),var(--p2))}
+.promo-alerta__badge{background:linear-gradient(135deg,var(--p1),var(--p2))}
+.promo-alerta__btn{background:linear-gradient(135deg,var(--p1),var(--pbtn))}
+.promo-alerta__cerrar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;top:10px;right:10px;font-size:22px;opacity:.85;background:rgba(255,255,255,.1);transition:background .2s,transform .2s,opacity .2s}
+.promo-alerta__cerrar:hover{background:#e11d48;opacity:1;transform:rotate(90deg)}
+.promo-alerta__barra{position:absolute;left:18px;right:18px;bottom:8px;height:3px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
+.promo-alerta__barra i{display:block;height:100%;width:100%;transform-origin:left;background:linear-gradient(90deg,var(--p1),var(--p2))}
+.promo-alerta--esquina{inset:auto 22px 22px auto;padding:0;background:none;backdrop-filter:none;display:block;pointer-events:none}
+.promo-alerta--esquina .promo-alerta__caja{pointer-events:auto;width:min(340px,calc(100vw - 44px));padding:26px 22px 22px;transform:translateX(40px) scale(.95)}
+.promo-alerta--esquina.visible .promo-alerta__caja{transform:none}
+.promo-alerta--esquina .promo-alerta__caja h3{font-size:21px}
+.promo-alerta--esquina .promo-alerta__texto{font-size:15px}
+@media (prefers-reduced-motion:reduce){.promo-alerta__barra i{transition:none!important}}

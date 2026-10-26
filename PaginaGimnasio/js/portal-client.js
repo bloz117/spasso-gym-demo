@@ -103,16 +103,41 @@ async function portalFetch(endpoint, options = {}) {
 
 // ==================== AUTH ====================
 
+const _CLAVE_DISP_PORTAL = 'spasso_dispositivos_portal';
+function _dispositivosPortal() {
+  try { const l = JSON.parse(localStorage.getItem(_CLAVE_DISP_PORTAL) || '[]'); return Array.isArray(l) ? l : []; }
+  catch (e) { return []; }
+}
+function _guardarDispositivoPortal(t) {
+  try {
+    if (!t) return;
+    const l = _dispositivosPortal().filter(x => x !== t); l.push(t);
+    localStorage.setItem(_CLAVE_DISP_PORTAL, JSON.stringify(l.slice(-5)));
+  } catch (e) { /* noop */ }
+}
+
 async function loginSocio(email, password, remember = false) {
+  const dispositivo = _dispositivosPortal().join(',');
   const response = await portalFetch('/api/portal/login', {
     method: 'POST',
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password, recordar: !!remember, ...(dispositivo ? { dispositivo } : {}) })
   });
 
   if (response.access_token) {
     setPortalToken(response.access_token, remember);
   }
 
+  return response;
+}
+
+// Paso 2 (solo en un dispositivo nuevo): código que llegó al correo. Después este dispositivo queda recordado.
+async function verificarCodigoPortal(desafio, codigo, remember = false) {
+  const response = await portalFetch('/api/portal/verificar', {
+    method: 'POST',
+    body: JSON.stringify({ desafio, codigo, recordar: !!remember })
+  });
+  if (response.dispositivo) _guardarDispositivoPortal(response.dispositivo);
+  if (response.access_token) setPortalToken(response.access_token, remember);
   return response;
 }
 
@@ -343,11 +368,11 @@ async function loadDashboard() {
   }
 }
 
-function showChangePassword() {
-  const newPassword = prompt('Nueva contraseña:');
+async function showChangePassword() {
+  const newPassword = await uiPrompt('Escribe tu nueva contraseña', {titulo:'Cambiar contraseña', icono:'fa-key', tipo:'password', aceptar:'Siguiente'});
   if (!newPassword) return;
   
-  const confirmPassword = prompt('Confirmar nueva contraseña:');
+  const confirmPassword = await uiPrompt('Repite la nueva contraseña', {titulo:'Cambiar contraseña', icono:'fa-key', tipo:'password', aceptar:'Guardar'});
   if (newPassword !== confirmPassword) {
     showNotification('Las contraseñas no coinciden', 'error');
     return;

@@ -328,8 +328,18 @@ header {
     }
 
     .membership-tiers {
-        max-width: 880px;               /* >= 3*270px + 2*gap, para no perder la 3ra columna */
-    }
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;                /* cualquier cantidad de planes queda centrada y balanceada */
+    gap: 1.5rem;
+    max-width: 1020px;
+    margin: 2rem auto 0;
+    align-items: stretch;                   /* todas las tarjetas de una fila con la misma altura */
+}
+.membership-tiers > .plan-card {
+    flex: 1 1 280px;
+    max-width: 320px;
+}
 }
 
 /* Tras el primer scroll, el vidrio se vuelve un poco más opaco (más
@@ -6016,3 +6026,14 @@ body:has(#profileModal.is-open) .header-back-btn i { color: #fff !important; }
 @keyframes btnDatosLatido { 0%,100% { box-shadow: 0 0 0 0 rgba(34,211,238,.55); } 60% { box-shadow: 0 0 0 10px rgba(34,211,238,0); } }
 @keyframes avisoDatosEntra { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .aviso-datos, .aviso-datos__flecha, .btn-datos--llamar { animation: none; } }
+
+/* Recuperar contraseña con código */
+.recuperar{display:flex;flex-direction:column;gap:12px;width:100%}
+.recuperar .login-card__heading{margin-bottom:2px}
+.recuperar > div{display:flex;flex-direction:column;gap:12px}
+.recuperar__txt{margin:0;font-size:14px;line-height:1.45;opacity:.8;text-align:center}
+.recuperar__codigo{text-align:center;font-size:24px;letter-spacing:10px;font-weight:800}
+.recuperar__link{align-self:center;font-size:13px;opacity:.75;text-decoration:none;color:inherit}
+.recuperar__link:hover{opacity:1;text-decoration:underline}
+.recuperar__msg{min-height:18px;font-size:13.5px;text-align:center;opacity:.9}
+.recuperar__msg--error{color:#ef4444;opacity:1}

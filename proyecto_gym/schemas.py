@@ -19,6 +19,7 @@ import validadores as V
 class LoginRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=1)
+    dispositivo: Optional[str] = Field(default=None, max_length=2000)  # token de "dispositivo de confianza" (acceso remoto)
 
 
 class TokenResponse(BaseModel):
@@ -204,6 +205,8 @@ class LockerResponse(BaseModel):
 class PortalLoginRequest(BaseModel):
     email: str
     password: str = Field(..., min_length=1)
+    dispositivo: Optional[str] = Field(default=None, max_length=2000)  # token de "dispositivo de confianza"
+    recordar: Optional[bool] = False  # "Recuérdame": sesión de 30 días
 
 
 class PortalChangePasswordRequest(BaseModel):
@@ -332,6 +335,7 @@ class GymConfigUpdate(BaseModel):
     ticket_registro_config: Optional[dict] = None
     ticket_renovacion_config: Optional[dict] = None
     ticket_venta_config: Optional[dict] = None
+    motivo_cambio_ticket: Optional[str] = None
     tarjeta_socio_config_default: Optional[dict] = None
     hardware_config: Optional[dict] = None
 
