@@ -30,7 +30,7 @@
         $('acctIslCorreo').textContent = d.correo;
         vista('menu');
         const hd = document.querySelector('body > header, header');
-        const card = isl.querySelector('.acct-isl__card');
+        const card = isl.querySelector('.acct-isl__pos');
         if (hd && card) card.style.top = Math.round(hd.getBoundingClientRect().bottom + 8) + 'px';
         isl.hidden = false;
         void isl.offsetWidth;                 // reflow para que arranque la animación
@@ -67,7 +67,70 @@
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') cerrar(); });
 
+
+    /* ---------- Tour interactivo ---------- */
+    const PASOS = [
+        { panel: 'resumen', t: 'Resumen', p: 'Aquí ves tu plan, los días que te quedan, tu casillero y tu asistencia del mes con la racha de días seguidos.' },
+        { panel: 'perfil', t: 'Perfil', p: 'Tus datos personales, tu membresía y la opción para cambiar tu contraseña.' },
+        { panel: 'ejercicios', t: 'Ejercicios', p: 'Videos de cada ejercicio por músculo. Con "Crear mi rutina" armas tu propia rutina.' },
+        { panel: 'rutinas', t: 'Mi rutina', p: 'La rutina que te asignó tu entrenador o la que creaste tú. Puedes cambiar entre las dos.' },
+        { panel: 'promociones', t: 'Promociones', p: 'Las ofertas vigentes del gimnasio. Cuando haya una nueva, la verás aquí.' }
+    ];
+    let paso = 0, enTour = false;
+
+    function objetivo(panel) {
+        const nav = document.querySelector('.profile-bottomnav');
+        const movil = nav && getComputedStyle(nav).display !== 'none';
+        return document.querySelector((movil ? '.profile-bottomnav__item' : '.profile-nav__item') + '[data-panel="' + panel + '"]');
+    }
+
+    function pintarPaso() {
+        const d = PASOS[paso], el = objetivo(d.panel);
+        if (!el) return cerrarTour();
+        el.click();                                  // muestra la sección explicada
+        const r = el.getBoundingClientRect(), sp = $('acctTourSpot'), card = $('acctTourCard');
+        sp.style.left = (r.left - 4) + 'px'; sp.style.top = (r.top - 4) + 'px';
+        sp.style.width = (r.width + 8) + 'px'; sp.style.height = (r.height + 8) + 'px';
+        const ult = paso === PASOS.length - 1;
+        card.innerHTML = '<button class="acct-tour__x" data-t="x" aria-label="Cerrar">&times;</button>' +
+            '<div class="acct-tour__paso">Paso ' + (paso + 1) + ' de ' + PASOS.length + '</div>' +
+            '<h4>' + d.t + '</h4><p>' + d.p + '</p>' +
+            '<div class="acct-tour__fila"><div class="acct-tour__pts">' + PASOS.map(function (_, i) { return '<i class="' + (i === paso ? 'on' : '') + '"></i>'; }).join('') + '</div>' +
+            (paso > 0 ? '<button class="acct-tour__b" data-t="ant">Atrás</button>' : '') +
+            '<button class="acct-tour__b acct-tour__b--sig" data-t="sig">' + (ult ? '¡Listo!' : 'Siguiente') + '</button></div>';
+        card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
+        // Tarjeta arriba del objetivo si es la barra inferior; al costado si es el menú lateral
+        const arriba = r.top > window.innerHeight / 2;
+        card.style.top = arriba ? 'auto' : (r.bottom + 14) + 'px';
+        card.style.bottom = arriba ? (window.innerHeight - r.top + 14) + 'px' : 'auto';
+    }
+
+    function iniciarTour() {
+        if (!enMiCuenta()) return;
+        cerrar();
+        enTour = true; paso = 0;
+        const t = $('acctTour'); t.hidden = false;
+        setTimeout(pintarPaso, 250);
+    }
+    function cerrarTour() {
+        enTour = false;
+        const t = $('acctTour'); if (t) t.hidden = true;
+        const first = objetivo('resumen'); if (first) first.click();
+    }
+    document.addEventListener('click', function (e) {
+        if (!enTour) return;
+        const b = e.target.closest && e.target.closest('[data-t]');
+        if (!b) return;
+        const k = b.getAttribute('data-t');
+        if (k === 'x') cerrarTour();
+        else if (k === 'ant') { paso = Math.max(0, paso - 1); pintarPaso(); }
+        else if (paso >= PASOS.length - 1) cerrarTour();
+        else { paso++; pintarPaso(); }
+    });
+    window.addEventListener('resize', function () { if (enTour) pintarPaso(); });
+
     function iniciar() {
+        const tb = $('acctIslTour'); if (tb) tb.addEventListener('click', iniciarTour);
         const ay = $('acctIslAyuda'), vo = $('acctIslVolver'), sa = $('acctIslSalir');
         if (ay) ay.addEventListener('click', function () { vista('ayuda'); });
         if (vo) vo.addEventListener('click', function () { vista('menu'); });
@@ -78,7 +141,7 @@
         });
         // Si Mi cuenta se cierra (flecha volver) o se cierra la sesión, la isla se cierra
         const pm = $('profileModal');
-        if (pm) new MutationObserver(function () { if (!enMiCuenta()) cerrar(); })
+        if (pm) new MutationObserver(function () { if (!enMiCuenta()) { cerrar(); if (enTour) cerrarTour(); } })
             .observe(pm, { attributes: true, attributeFilter: ['class'] });
         const link = $('headerProfileLink');
         if (link) {

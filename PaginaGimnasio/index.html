@@ -8,7 +8,7 @@
     <link href="vendor/fonts/fonts.css" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css?v=20261230">
     <link rel="stylesheet" href="css/fondos-portal.css?v=20261106">
-    <link rel="stylesheet" href="css/entrenador-portal.css?v=20261231">
+    <link rel="stylesheet" href="css/entrenador-portal.css?v=20261233">
     <script>
         /* Fondo elegido por el visitante (claro-tenue | liso | movimiento).
            Se aplica antes de pintar para evitar parpadeo. */
@@ -168,7 +168,7 @@
         <span class="musica-toggle-btn__disco">
             <span class="musica-toggle-btn__hoyo"></span>
         </span>
-        <i class="fas fa-pause musica-toggle-btn__icono"></i>
+        <i class="fas fa-music musica-toggle-btn__icono"></i>
     </button>
 
     <!-- Header -->
@@ -1306,7 +1306,7 @@
     <script src="data/exercises-data.js?v=20261213"></script>
     <script src="data/exercises-data-mujer.js?v=20261213"></script>
     <script src="js/fondos-animados.js?v=20260924-fondoglobal"></script>
-    <script src="js/funciones.js?v=20261230"></script>
+    <script src="js/funciones.js?v=20261232"></script>
     <script src="js/ui-dialog.js?v=1"></script>
     <script src="js/portal-client.js?v=20261168"></script>
     <script src="js/recuperar-portal.js?v=1"></script>
@@ -1318,13 +1318,14 @@
     <script src="js/entrenador-portal.js?v=20261216"></script>
     <script src="js/rutina-go.js?v=20261213"></script>
     <script src="js/rutina-propia.js?v=20261220"></script>
-    <script src="js/cuenta-isla.js?v=20261230"></script>
+    <script src="js/cuenta-isla.js?v=20261232"></script>
 
     <!-- Menú de cuenta (isla dinámica): se abre al tocar el nombre del header estando en Mi cuenta.
          Solo <div>/<button>: los tags header/nav/footer heredan estilos globales. -->
+    <div class="acct-tour" id="acctTour" hidden><div class="acct-tour__spot" id="acctTourSpot"></div><div class="acct-tour__card" id="acctTourCard"></div></div>
     <div class="acct-isl" id="acctIsl" hidden>
         <div class="acct-isl__scrim" data-isl-cerrar></div>
-        <div class="acct-isl__card" role="dialog" aria-label="Mi cuenta">
+        <div class="acct-isl__pos"><div class="acct-isl__card" role="dialog" aria-label="Mi cuenta">
             <div class="acct-isl__top">
                 <span class="acct-isl__avatar"><i class="fas fa-user"></i></span>
                 <div class="acct-isl__who">
@@ -1333,6 +1334,7 @@
                 </div>
             </div>
             <div class="acct-isl__vista" id="acctIslMenu">
+                <button type="button" class="acct-isl__btn acct-isl__btn--tour" id="acctIslTour"><i class="fas fa-hand-pointer"></i> Tour interactivo</button>
                 <button type="button" class="acct-isl__btn acct-isl__btn--ayuda" id="acctIslAyuda"><i class="fas fa-circle-question"></i> Ayuda</button>
                 <button type="button" class="acct-isl__btn acct-isl__btn--salir" id="acctIslSalir"><i class="fas fa-right-from-bracket"></i> Cerrar sesión</button>
             </div>
@@ -1349,7 +1351,7 @@
                 <p class="acct-isl__ayuda-p">Para salir de Mi cuenta toca la flecha de arriba a la izquierda.</p>
                 <button type="button" class="acct-isl__btn acct-isl__btn--volver" id="acctIslVolver"><i class="fas fa-arrow-left"></i> Volver</button>
             </div>
-        </div>
+        </div></div>
     </div>
 
 </body>

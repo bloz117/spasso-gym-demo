@@ -181,8 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
             btnMusica.classList.toggle('reproduciendo', reproduciendo);
             const icono = btnMusica.querySelector('.musica-toggle-btn__icono');
             if (icono) {
-                icono.classList.toggle('fa-pause', reproduciendo);
-                icono.classList.toggle('fa-play', !reproduciendo);
+                icono.classList.add('fa-music'); /* siempre nota musical; el estado lo marca .reproduciendo */
             }
             btnMusica.setAttribute('aria-label', reproduciendo ? 'Pausar música' : 'Reproducir música');
             btnMusica.title = reproduciendo ? 'Pausar música' : 'Reproducir música';
