@@ -102,7 +102,7 @@
         // Tarjeta arriba del objetivo si es la barra inferior; al costado si es el menú lateral
         const arriba = r.top > window.innerHeight / 2;
         card.style.top = arriba ? 'auto' : (r.bottom + 14) + 'px';
-        card.style.bottom = arriba ? (window.innerHeight - r.top + 14) + 'px' : 'auto';
+        card.style.bottom = arriba ? (window.innerHeight - r.top + 62) + 'px' : 'auto';
     }
 
     function iniciarTour() {

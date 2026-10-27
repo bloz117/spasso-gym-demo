@@ -9,6 +9,7 @@
         'movimiento': 'En movimiento'
     };
     var raiz = document.documentElement;
+    var previo = null;
 
     function aplicar(fondo, guardar) {
         if (fondo === 'claro') fondo = 'claro-tenue';
@@ -46,9 +47,17 @@
         var btn = document.getElementById('fondoSelectorBtn');
         if (!btn) return;
         aplicar(raiz.getAttribute('data-fondo'), false);
+        // En "Mi cuenta" no existe "En movimiento" (no se ve): se usa Liso oscuro
+        // temporalmente y al salir se devuelve el fondo que tenía la persona.
+        var pm = document.getElementById('profileModal');
+        if (pm) new MutationObserver(function () {
+            if (pm.classList.contains('is-open')) {
+                if (raiz.getAttribute('data-fondo') === 'movimiento') { previo = 'movimiento'; aplicar('liso', false); }
+            } else if (previo) { aplicar(previo, false); previo = null; }
+        }).observe(pm, { attributes: true, attributeFilter: ['class'] });
         btn.addEventListener('click', alternar);
         document.querySelectorAll('#fondoSelectorMenu .fondo-opt').forEach(function (op) {
-            function elegir() { aplicar(op.getAttribute('data-fondo'), true); cerrar(); }
+            function elegir() { previo = null; aplicar(op.getAttribute('data-fondo'), true); cerrar(); }
             op.addEventListener('click', elegir);
             op.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); elegir(); }

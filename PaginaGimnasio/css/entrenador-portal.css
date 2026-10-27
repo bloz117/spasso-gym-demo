@@ -1221,3 +1221,28 @@ body:has(#acctIsl.is-open) .header-profile-link { background: rgba(var(--rgb-sup
     html[data-fondo="claro-tenue"] body:has(#profileModal.is-open) .header-back-btn,
     html[data-fondo="claro-tenue"] body:has(#profileModal.is-open) .header-back-btn i { color: #1D1D1F !important; }
 }
+
+/* ===== Ajustes ronda 3 ===== */
+/* En Mi cuenta no existe "En movimiento" */
+body:has(#profileModal.is-open) .fondo-opt[data-fondo="movimiento"] { display: none; }
+
+/* Música: sin raya encima de la nota. Pausa = nota atenuada; reproduciendo = nota que late + aro de luz girando */
+.musica-toggle-btn:not(.reproduciendo)::after { content: none; display: none; }
+.musica-toggle-btn:not(.reproduciendo) .musica-toggle-btn__icono { opacity: .5; }
+.musica-toggle-btn.reproduciendo::after {
+    content: ''; position: absolute; inset: -3px; border-radius: 50%; padding: 2.5px; pointer-events: none;
+    background: conic-gradient(from var(--ang), var(--rosa-fucsia), var(--celeste), transparent 60%, var(--rosa-fucsia));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    animation: cuentaGiro 1.6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) { .musica-toggle-btn.reproduciendo::after { animation: none; } }
+
+/* Tour: botón cerrar rojo y visible */
+.acct-tour__x {
+    top: .6rem; right: .6rem; width: 30px; height: 30px; display: grid; place-items: center;
+    background: #e5383b; color: #fff; border-radius: 50%; font-size: 1.2rem; font-weight: 700;
+    box-shadow: 0 3px 10px rgba(229, 56, 59, .45);
+}
+.acct-tour__x:active { transform: scale(.9); }
+.acct-tour__card h4 { padding-right: 2.2rem; }
