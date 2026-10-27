@@ -8,7 +8,7 @@
     <link href="vendor/fonts/fonts.css" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css?v=20261230">
     <link rel="stylesheet" href="css/fondos-portal.css?v=20261106">
-    <link rel="stylesheet" href="css/entrenador-portal.css?v=20261222">
+    <link rel="stylesheet" href="css/entrenador-portal.css?v=20261231">
     <script>
         /* Fondo elegido por el visitante (claro-tenue | liso | movimiento).
            Se aplica antes de pintar para evitar parpadeo. */
@@ -845,15 +845,6 @@
 
             <h2 class="profile-page-heading"><i class="fas fa-user-circle"></i> Mi Cuenta</h2>
 
-            <!-- Solo celular: nombre real + correo (en PC lo muestra el sidebar) -->
-            <div class="profile-mhead">
-                <span class="profile-mhead__avatar"><i class="fas fa-user"></i></span>
-                <div class="profile-mhead__txt">
-                    <strong id="profileMobName">Mi cuenta</strong>
-                    <span id="profileMobEmail"></span>
-                </div>
-            </div>
-
             <div class="profile-shell">
                 <!-- Sidebar en PC/tablet; se convierte en barra inferior en celular (ver .profile-bottomnav) -->
                 <div class="profile-sidebar">
@@ -963,7 +954,6 @@
                     <div class="profile-panel" data-panel="perfil">
                         <div class="perfil-head">
                             <h3>Mi Perfil</h3>
-                            <button type="button" class="perfil-logout" id="btnPerfilLogout"><i class="fas fa-right-from-bracket"></i> Cerrar sesión</button>
                         </div>
 
                         <p class="resumen-section-title" style="margin-top:0">Datos personales</p>
@@ -1328,6 +1318,39 @@
     <script src="js/entrenador-portal.js?v=20261216"></script>
     <script src="js/rutina-go.js?v=20261213"></script>
     <script src="js/rutina-propia.js?v=20261220"></script>
-    
+    <script src="js/cuenta-isla.js?v=20261230"></script>
+
+    <!-- Menú de cuenta (isla dinámica): se abre al tocar el nombre del header estando en Mi cuenta.
+         Solo <div>/<button>: los tags header/nav/footer heredan estilos globales. -->
+    <div class="acct-isl" id="acctIsl" hidden>
+        <div class="acct-isl__scrim" data-isl-cerrar></div>
+        <div class="acct-isl__card" role="dialog" aria-label="Mi cuenta">
+            <div class="acct-isl__top">
+                <span class="acct-isl__avatar"><i class="fas fa-user"></i></span>
+                <div class="acct-isl__who">
+                    <strong id="acctIslNombre">Mi cuenta</strong>
+                    <span id="acctIslCorreo"></span>
+                </div>
+            </div>
+            <div class="acct-isl__vista" id="acctIslMenu">
+                <button type="button" class="acct-isl__btn acct-isl__btn--ayuda" id="acctIslAyuda"><i class="fas fa-circle-question"></i> Ayuda</button>
+                <button type="button" class="acct-isl__btn acct-isl__btn--salir" id="acctIslSalir"><i class="fas fa-right-from-bracket"></i> Cerrar sesión</button>
+            </div>
+            <div class="acct-isl__vista acct-isl__ayuda" id="acctIslAyudaVista" hidden>
+                <p class="acct-isl__ayuda-t">¿Cómo uso mi cuenta?</p>
+                <p class="acct-isl__ayuda-p">Abajo tienes una barra con 5 botones. <b>Tócalos</b> para cambiar de sección:</p>
+                <ul>
+                    <li><i class="fas fa-house"></i><span><b>Resumen</b> Tu membresía, días restantes y asistencia.</span></li>
+                    <li><i class="fas fa-id-card"></i><span><b>Perfil</b> Tus datos y cambiar tu contraseña.</span></li>
+                    <li><i class="fas fa-list-check"></i><span><b>Ejercicios</b> Videos de cada ejercicio. Aquí puedes crear tu propia rutina.</span></li>
+                    <li><i class="fas fa-dumbbell"></i><span><b>Mi rutina</b> La rutina de tu entrenador o la tuya.</span></li>
+                    <li><i class="fas fa-tags"></i><span><b>Promos</b> Ofertas vigentes del gimnasio.</span></li>
+                </ul>
+                <p class="acct-isl__ayuda-p">Para salir de Mi cuenta toca la flecha de arriba a la izquierda.</p>
+                <button type="button" class="acct-isl__btn acct-isl__btn--volver" id="acctIslVolver"><i class="fas fa-arrow-left"></i> Volver</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

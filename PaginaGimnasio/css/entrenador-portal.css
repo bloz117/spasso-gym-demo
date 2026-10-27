@@ -1035,3 +1035,136 @@ html[data-fondo="claro-tenue"] .rp__ctr .rp__val { background: rgba(0,0,0,.06); 
 .mirutina__tag { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; white-space: nowrap; }
 .mirutina__head small { flex: 0 1 auto; min-width: 0; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
 @media (max-width: 360px) { .mirutina__head small { font-size: 11px; } .mirutina__tag { font-size: 12px; } }
+
+/* ================================================================
+   CUENTA: nombre del header animado + isla dinámica + barra inferior
+   ================================================================ */
+@property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes cuentaGiro { to { --ang: 360deg; } }
+
+/* Botón con el nombre: borde que gira para que se note que se toca */
+.header-profile-link:not([hidden]) {
+    position: relative; isolation: isolate;
+    border-radius: 999px;
+    padding: 0.42rem 0.95rem;
+    background: rgba(var(--rgb-superficie), 0.08);
+    cursor: pointer;
+    text-decoration: none !important;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .18s ease, background .2s ease;
+}
+.header-profile-link:not([hidden])::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    border-radius: inherit; padding: 2px;
+    background: conic-gradient(from var(--ang), var(--rosa-fucsia), var(--celeste), var(--rosa-fucsia));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    animation: cuentaGiro 3.2s linear infinite;
+}
+.header-profile-link:not([hidden]):active { transform: scale(.94); }
+body:has(#acctIsl.is-open) .header-profile-link { background: rgba(var(--rgb-superficie), 0.16); }
+
+/* Isla dinámica */
+.acct-isl { position: fixed; inset: 0; z-index: 3000; pointer-events: none; }
+.acct-isl[hidden] { display: none; }
+.acct-isl__scrim {
+    position: absolute; inset: 0; background: rgba(0, 0, 0, .38);
+    opacity: 0; transition: opacity .3s ease;
+}
+.acct-isl.is-open .acct-isl__scrim { opacity: 1; pointer-events: auto; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.acct-isl__card {
+    position: absolute; top: 4.4rem; right: .7rem;
+    width: min(calc(100vw - 1.4rem), 330px);
+    background: #0a0a0c; color: #fff;
+    border: 1px solid rgba(255, 255, 255, .16);
+    box-shadow: 0 22px 50px rgba(0, 0, 0, .55), 0 0 0 1px rgba(0, 0, 0, .4);
+    padding: .95rem; border-radius: 999px;
+    transform-origin: 85% 0; transform: scale(.28, .14); opacity: 0;
+    transition: transform .55s cubic-bezier(.32, 1.25, .5, 1), border-radius .45s ease, opacity .18s ease;
+    pointer-events: none; font-family: 'Montserrat', system-ui, sans-serif;
+}
+.acct-isl.is-open .acct-isl__card { transform: none; opacity: 1; border-radius: 30px; pointer-events: auto; }
+.acct-isl__top, .acct-isl__vista { opacity: 0; transform: translateY(-6px); transition: opacity .25s ease, transform .35s ease; }
+.acct-isl.is-open .acct-isl__top { opacity: 1; transform: none; transition-delay: .12s; }
+.acct-isl.is-open .acct-isl__vista { opacity: 1; transform: none; transition-delay: .2s; }
+.acct-isl__top { display: flex; align-items: center; gap: .75rem; padding: .15rem .1rem .8rem; border-bottom: 1px solid rgba(255, 255, 255, .1); margin-bottom: .75rem; }
+.acct-isl__avatar {
+    flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+    color: var(--celeste); font-size: 1.05rem;
+    background: linear-gradient(#0a0a0c, #0a0a0c) padding-box, linear-gradient(135deg, var(--rosa-fucsia), var(--celeste)) border-box;
+    border: 2px solid transparent;
+}
+.acct-isl__who { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.acct-isl__who strong { font-size: 1rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+.acct-isl__who span { font-size: .78rem; color: rgba(255, 255, 255, .62); overflow-wrap: anywhere; }
+.acct-isl__vista { display: flex; flex-direction: column; gap: .5rem; }
+.acct-isl__vista[hidden] { display: none; }
+.acct-isl__btn {
+    display: flex; align-items: center; justify-content: center; gap: .55rem;
+    width: 100%; min-height: 46px; border: 0; border-radius: 16px; cursor: pointer;
+    font: inherit; font-size: .9rem; font-weight: 700; color: #fff;
+    -webkit-tap-highlight-color: transparent; transition: transform .15s ease, filter .15s ease;
+}
+.acct-isl__btn:active { transform: scale(.96); }
+.acct-isl__btn--ayuda { background: rgba(255, 255, 255, .1); }
+.acct-isl__btn--ayuda i { color: var(--celeste); }
+.acct-isl__btn--salir { background: #e5383b; }
+.acct-isl__btn--volver { background: rgba(255, 255, 255, .1); }
+.acct-isl__ayuda-t { margin: 0; font-size: .95rem; font-weight: 800; }
+.acct-isl__ayuda-p { margin: 0; font-size: .78rem; line-height: 1.45; color: rgba(255, 255, 255, .75); }
+.acct-isl__ayuda ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .4rem; }
+.acct-isl__ayuda li { display: flex; gap: .6rem; align-items: flex-start; font-size: .76rem; line-height: 1.35; color: rgba(255, 255, 255, .8); background: rgba(255, 255, 255, .06); border-radius: 12px; padding: .5rem .6rem; }
+.acct-isl__ayuda li i { flex: none; width: 1.2rem; text-align: center; color: var(--celeste); margin-top: 2px; }
+.acct-isl__ayuda li b { display: block; color: #fff; font-size: .8rem; }
+.acct-isl__ayuda { max-height: calc(100dvh - 8rem); overflow-y: auto; }
+
+/* Móvil: Mi cuenta sin tarjeta de nombre → sube el contenido */
+@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+    .profile-page-content { padding-top: calc(5.35rem + env(safe-area-inset-top)); }
+    .profile-panels { padding-top: .85rem; }
+
+    /* Barra inferior: se ve como botones de verdad */
+    .profile-bottomnav { gap: .3rem; padding-top: .55rem; border-top: 0; overflow: visible; }
+    .profile-bottomnav::before {
+        content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px; pointer-events: none;
+        background: linear-gradient(90deg, transparent, var(--celeste), var(--rosa-fucsia), var(--celeste), transparent);
+        background-size: 200% 100%; animation: cuentaBarra 4s linear infinite;
+    }
+    .profile-bottomnav__item {
+        position: relative; isolation: isolate; opacity: 1 !important;
+        border: 1.5px solid rgba(var(--rgb-superficie), .24);
+        background: rgba(var(--rgb-superficie), .07);
+        box-shadow: 0 3px 0 rgba(0, 0, 0, .28), inset 0 1px 0 rgba(var(--rgb-superficie), .1);
+        color: var(--blanco);
+        transition: transform .15s ease, background .2s ease, box-shadow .2s ease;
+    }
+    .profile-bottomnav__item:active { transform: translateY(2px) scale(.96); box-shadow: 0 1px 0 rgba(0, 0, 0, .28); }
+    .profile-bottomnav__item.active {
+        color: var(--celeste); background: rgba(20, 198, 222, .16); border-color: transparent;
+        box-shadow: 0 0 14px rgba(20, 198, 222, .35);
+    }
+    .profile-bottomnav__item.active::before {
+        content: ''; position: absolute; inset: -1.5px; z-index: -1; pointer-events: none;
+        border-radius: inherit; padding: 2px;
+        background: conic-gradient(from var(--ang), var(--rosa-fucsia), var(--celeste), var(--rosa-fucsia));
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+        animation: cuentaGiro 3s linear infinite;
+    }
+    /* Al entrar a Mi cuenta, los botones "saltan" uno a uno */
+    body:has(#profileModal.is-open) .profile-bottomnav__item { animation: cuentaSalto .6s cubic-bezier(.3, 1.5, .5, 1) both; }
+    body:has(#profileModal.is-open) .profile-bottomnav__item:nth-child(2) { animation-delay: .07s; }
+    body:has(#profileModal.is-open) .profile-bottomnav__item:nth-child(3) { animation-delay: .14s; }
+    body:has(#profileModal.is-open) .profile-bottomnav__item:nth-child(4) { animation-delay: .21s; }
+    body:has(#profileModal.is-open) .profile-bottomnav__item:nth-child(5) { animation-delay: .28s; }
+}
+@keyframes cuentaBarra { to { background-position: -200% 0; } }
+@keyframes cuentaSalto { from { opacity: 0; transform: translateY(14px) scale(.9); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .header-profile-link::before, .profile-bottomnav::before, .profile-bottomnav__item.active::before { animation: none !important; }
+    .profile-bottomnav__item { animation: none !important; }
+    .acct-isl__card { transition: opacity .2s ease; transform: none; }
+}
