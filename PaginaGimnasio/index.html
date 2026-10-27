@@ -8,7 +8,7 @@
     <link href="vendor/fonts/fonts.css" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css?v=20261230">
     <link rel="stylesheet" href="css/fondos-portal.css?v=20261106">
-    <link rel="stylesheet" href="css/entrenador-portal.css?v=20261213">
+    <link rel="stylesheet" href="css/entrenador-portal.css?v=20261218">
     <script>
         /* Fondo elegido por el visitante (claro-tenue | liso | movimiento).
            Se aplica antes de pintar para evitar parpadeo. */
@@ -1013,7 +1013,10 @@
                          organizados por parte del cuerpo). Distinto de "Rutinas",
                          que son planes ya armados usando estos mismos ejercicios. -->
                     <div class="profile-panel" data-panel="ejercicios">
-                        <h3>Ejercicios</h3>
+                        <div class="perfil-head">
+                            <h3>Ejercicios</h3>
+                            <button type="button" class="btn-datos btn-crear-rutina" data-rutina-propia="nueva" title="Arma tu propia rutina con estos ejercicios"><i class="fas fa-pen-ruler"></i> <span>Crear mi rutina</span></button>
+                        </div>
 
                         <!-- Sidebar vertical (parte del cuerpo) + contenido a la
                              derecha (subcategoría de músculo si aplica + buscador
@@ -1322,8 +1325,9 @@
     <script src="js/ejercicios.js?v=20261213"></script>
     <script src="js/fondos-portal.js?v=20261010"></script>
     <script src="js/contenido-portal.js?v=20261015"></script>
-    <script src="js/entrenador-portal.js?v=20261214"></script>
+    <script src="js/entrenador-portal.js?v=20261216"></script>
     <script src="js/rutina-go.js?v=20261213"></script>
+    <script src="js/rutina-propia.js?v=20261218"></script>
     
 </body>
 </html>

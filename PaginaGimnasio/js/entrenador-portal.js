@@ -605,44 +605,78 @@
         return el;
     }
 
+    var vistaRutina = null;   // 'ent' | 'propia' (cuando el miembro tiene ambas)
+
+    function enlazarRutina(el) {
+        el.querySelectorAll('.mirutina__tab').forEach(function (t) {
+            t.addEventListener('click', function () {
+                var d = t.getAttribute('data-dia');
+                el.querySelectorAll('.mirutina__tab').forEach(function (x) { x.classList.toggle('active', x === t); });
+                el.querySelectorAll('.mirutina__dia').forEach(function (p) { p.hidden = p.getAttribute('data-dia') !== d; });
+            });
+        });
+        el.querySelectorAll('.mirutina__go').forEach(function (b) {
+            b.addEventListener('click', function () {
+                if (window.RutinaGo) window.RutinaGo.abrir(parseInt(b.getAttribute('data-i'), 10));
+            });
+        });
+        if (window.RutinaGo) window.RutinaGo.refrescar();
+        el.querySelectorAll('.mirutina__ej[data-id]').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var ref = ejercicio(b.getAttribute('data-id'));
+                if (ref) abrirDetalle(ref);
+            });
+        });
+        el.querySelectorAll('.mirutina__sw button').forEach(function (b) {
+            b.addEventListener('click', function () { vistaRutina = b.getAttribute('data-v'); pintarMiRutina(el); });
+        });
+    }
+
+    var ultimaDelEntrenador = null;   // {incluida, rutina, actualizada}
+
+    function pintarMiRutina(el) {
+        var r = ultimaDelEntrenador || { incluida: false };
+        var propia = window.RutinaPropia ? window.RutinaPropia.obtener() : null;
+        var hayEnt = !!(r.incluida && r.rutina);
+        var btnCrear = '<button type="button" class="mirutina__crear" data-rutina-propia="nueva"><i class="fas fa-pen-ruler"></i> Crear mi rutina</button>';
+
+        if (!hayEnt && !propia) {
+            if (!r.incluida) {
+                el.innerHTML = '<div class="mirutina__aviso"><i class="fas fa-lock"></i><div><strong>Sin entrenador asignado</strong>' +
+                    '<p>Aún no tienes un entrenador asignado. Consulta en recepción para recibir una rutina personalizada, o arma la tuya.</p>' + btnCrear + '</div></div>';
+            } else {
+                el.innerHTML = '<div class="mirutina__aviso"><i class="fas fa-hourglass-half"></i><div><strong>Tu rutina está en preparación</strong>' +
+                    '<p>Tu entrenador aún no publicó tu rutina semanal. Aparecerá aquí en cuanto la publique.</p></div></div>';
+            }
+            window.__rutinaSocio = null;
+            return;
+        }
+        var ver = (hayEnt && propia) ? (vistaRutina || 'ent') : (hayEnt ? 'ent' : 'propia');
+        var rut = ver === 'ent' ? r.rutina : propia;
+        var fecha = ver === 'ent' ? r.actualizada : propia.actualizada;
+        window.__rutinaSocio = rut;
+        var sw = (hayEnt && propia)
+            ? '<div class="mirutina__sw" role="tablist"><button type="button" data-v="ent" class="' + (ver === 'ent' ? 'active' : '') + '"><i class="fas fa-user-check"></i> Mi entrenador</button>' +
+              '<button type="button" data-v="propia" class="' + (ver === 'propia' ? 'active' : '') + '"><i class="fas fa-pen-ruler"></i> Mi rutina</button></div>'
+            : '';
+        var acciones = ver === 'propia'
+            ? '<div class="mirutina__acc"><button type="button" data-rutina-propia="editar"><i class="fas fa-pen"></i> Editar</button>' +
+              '<button type="button" data-rutina-propia="borrar" class="peligro"><i class="fas fa-trash"></i> Borrar</button></div>'
+            : (!propia ? '<div class="mirutina__acc">' + btnCrear + '</div>' : '');
+        el.innerHTML = sw + renderRutinaSocio(rut, fecha, ver === 'propia') + acciones;
+        enlazarRutina(el);
+    }
+    window.recargarMiRutina = function () { var el = bloqueSocio(); if (el) pintarMiRutina(el); };
+
     function cargarMiRutina() {
         if (typeof getPortalToken !== 'function' || !getPortalToken()) return;
         var el = bloqueSocio();
         if (!el) return;
         refrescarPerfilSocio();
         portalFetch('/api/portal/me/rutina-entrenador').then(function (r) {
-            if (!r.incluida) {
-                el.innerHTML = '<div class="mirutina__aviso"><i class="fas fa-lock"></i><div><strong>Sin entrenador asignado</strong>' +
-                    '<p>Aún no tienes un entrenador asignado. Consulta en recepción para recibir una rutina personalizada.</p></div></div>';
-                return;
-            }
-            if (!r.rutina) {
-                el.innerHTML = '<div class="mirutina__aviso"><i class="fas fa-hourglass-half"></i><div><strong>Tu rutina está en preparación</strong>' +
-                    '<p>Tu entrenador aún no publicó tu rutina semanal. Aparecerá aquí en cuanto la publique.</p></div></div>';
-                return;
-            }
-            window.__rutinaSocio = r.rutina;
-            el.innerHTML = renderRutinaSocio(r.rutina, r.actualizada);
-            el.querySelectorAll('.mirutina__tab').forEach(function (t) {
-                t.addEventListener('click', function () {
-                    var d = t.getAttribute('data-dia');
-                    el.querySelectorAll('.mirutina__tab').forEach(function (x) { x.classList.toggle('active', x === t); });
-                    el.querySelectorAll('.mirutina__dia').forEach(function (p) { p.hidden = p.getAttribute('data-dia') !== d; });
-                });
-            });
-            el.querySelectorAll('.mirutina__go').forEach(function (b) {
-                b.addEventListener('click', function () {
-                    if (window.RutinaGo) window.RutinaGo.abrir(parseInt(b.getAttribute('data-i'), 10));
-                });
-            });
-            if (window.RutinaGo) window.RutinaGo.refrescar();
-            el.querySelectorAll('.mirutina__ej[data-id]').forEach(function (b) {
-                b.addEventListener('click', function () {
-                    var ref = ejercicio(b.getAttribute('data-id'));
-                    if (ref) abrirDetalle(ref);
-                });
-            });
-        }).catch(function () { el.innerHTML = ''; });
+            ultimaDelEntrenador = r;
+            pintarMiRutina(el);
+        }).catch(function () { ultimaDelEntrenador = null; pintarMiRutina(el); });
     }
 
     // Descanso en segundos (el entrenador lo escribe como "60 s", "90", "1:30", "2 min"); vacío = 60
@@ -659,14 +693,13 @@
 
     var DIAS_SEM = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
-    function renderRutinaSocio(rut, actualizada) {
+    function renderRutinaSocio(rut, actualizada, propia) {
         var porDia = {};
         var diasConf = {};
         (rut.dias || []).forEach(function (d) { porDia[d.dia] = d.ejercicios || []; diasConf[d.dia] = true; });
         var fecha = actualizada ? new Date(actualizada).toLocaleDateString('es-CL') : '';
         var hoy = DIAS_SEM[(new Date().getDay() + 6) % 7];
-        var head = '<div class="mirutina__head"><div><span class="mirutina__tag"><i class="fas fa-user-check"></i> Tu entrenador</span>' +
-            '<h4>' + esc(rut.nombre || 'Mi rutina') + '</h4>' +
+        var head = '<div class="mirutina__head"><div><span class="mirutina__tag"><i class="fas ' + (propia ? 'fa-pen-ruler' : 'fa-user-check') + '"></i> ' + (propia ? 'Mi rutina personal' : 'Tu entrenador') + '</span>' +
             '</div>' +
             (fecha ? '<small>Actualizada ' + esc(fecha) + '</small>' : '') + '</div>';
         var tabs = '<div class="mirutina__tabs" role="tablist">' + DIAS_SEM.map(function (d) {
@@ -689,7 +722,7 @@
                 return '<div class="mirutina__fila">' + fila +
                     '<button type="button" class="mirutina__go" data-i="' + i + '" aria-label="Empezar ' + esc(e.nombre) + '"><i class="fas fa-play"></i><span>GO</span></button></div>';
             }).join('') : '<div class="mirutina__descanso"><i class="fas fa-bed"></i><strong>Día de descanso</strong>' +
-                '<p>Tu entrenador no asignó ejercicios para este día.</p></div>';
+                '<p>' + (propia ? 'No agregaste ejercicios para este día.' : 'Tu entrenador no asignó ejercicios para este día.') + '</p></div>';
             return '<div class="mirutina__dia" data-dia="' + d + '"' + (d === hoy ? '' : ' hidden') + '><h5>' + d + (d === hoy ? ' · hoy' : '') + '</h5>' + cuerpo + '</div>';
         }).join('');
         return head + tabs + '<div class="mirutina__paneles">' + paneles + '</div>';
