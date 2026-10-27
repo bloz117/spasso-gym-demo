@@ -635,6 +635,7 @@
     var ultimaDelEntrenador = null;   // {incluida, rutina, actualizada}
 
     function pintarMiRutina(el) {
+        setTimeout(function () { document.dispatchEvent(new Event('rutina-cargada')); }, 0);
         var r = ultimaDelEntrenador || { incluida: false };
         var propia = window.RutinaPropia ? window.RutinaPropia.obtener() : null;
         var hayEnt = !!(r.incluida && r.rutina);
@@ -667,6 +668,18 @@
         enlazarRutina(el);
     }
     window.recargarMiRutina = function () { var el = bloqueSocio(); if (el) pintarMiRutina(el); };
+    // Días de la semana programados (0 = lunes) de la rutina vigente: la del entrenador, o la propia si no hay.
+    window.diasRutinaSocio = function () {
+        var r = ultimaDelEntrenador;
+        var rut = (r && r.incluida && r.rutina) ? r.rutina : (window.RutinaPropia ? window.RutinaPropia.obtener() : null);
+        if (!rut || !rut.dias) return null;
+        var out = [];
+        rut.dias.forEach(function (d) {
+            var i = DIAS_SEM.indexOf(d.dia);
+            if (i >= 0 && d.ejercicios && d.ejercicios.length) out.push(i);
+        });
+        return out;
+    };
 
     function cargarMiRutina() {
         if (typeof getPortalToken !== 'function' || !getPortalToken()) return;

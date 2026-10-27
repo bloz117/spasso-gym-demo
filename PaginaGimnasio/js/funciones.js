@@ -920,6 +920,40 @@ document.addEventListener('DOMContentLoaded', function() {
     // panel "Resumen": mini-calendario del mes actual + racha de días
     // seguidos + total de visitas. Todo viene de /api/portal/me/visits, que
     // ya existe en el backend (asistencias_log) - nada de datos inventados.
+    // Racha de "días seguidos": solo cuentan los días que la rutina (del entrenador
+    // o la propia) tiene programados. Ir en un día programado suma; faltar a uno
+    // programado corta la racha. Los días de descanso no suman ni cortan.
+    let _fechasVisitadas = new Set(), _toClave = null;
+    function pintarRacha() {
+        const rachaEl = document.getElementById('resumenRacha');
+        const rachaTextoEl = document.getElementById('resumenRachaTexto');
+        if (!rachaEl || !rachaTextoEl || !_toClave) return;
+        const prog = typeof window.diasRutinaSocio === 'function' ? window.diasRutinaSocio() : null;
+        let racha = 0;
+        if (prog && prog.length) {
+            const set = new Set(prog);
+            const cursor = new Date();
+            const claveHoy = _toClave(cursor);
+            for (let i = 0; i < 120; i++) {
+                const wd = (cursor.getDay() + 6) % 7;            // 0 = lunes
+                if (set.has(wd)) {
+                    if (_fechasVisitadas.has(_toClave(cursor))) racha++;
+                    else if (_toClave(cursor) !== claveHoy) break; // hoy aún puede ir
+                }
+                cursor.setDate(cursor.getDate() - 1);
+            }
+        }
+        rachaTextoEl.textContent = racha;
+        rachaEl.classList.toggle('activa', racha > 0);
+        rachaEl.hidden = false;
+        const lbl = rachaEl.querySelector('span:not(#resumenRachaTexto)');
+        if (lbl) lbl.textContent = prog && prog.length ? 'Días seguidos' : 'Sin rutina aún';
+        rachaEl.title = prog && prog.length
+            ? 'Cuenta cada día de tu rutina al que asististe, sin faltar a ninguno'
+            : 'Se activa cuando tengas una rutina con días programados';
+    }
+    document.addEventListener('rutina-cargada', pintarRacha);
+
     async function cargarAsistenciaResumen() {
         const calendario = document.getElementById('resumenCalendario');
         if (!calendario || typeof getSocioVisits !== 'function') return;
@@ -946,24 +980,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const hoy = new Date();
             const claveHoy = toClave(hoy);
 
-            // --- Racha: días consecutivos con asistencia terminando hoy o ayer ---
-            let racha = 0;
-            let cursor = new Date(hoy);
-            if (!fechasVisitadas.has(claveHoy)) {
-                cursor.setDate(cursor.getDate() - 1);
-            }
-            while (fechasVisitadas.has(toClave(cursor))) {
-                racha++;
-                cursor.setDate(cursor.getDate() - 1);
-            }
-
-            const rachaEl = document.getElementById('resumenRacha');
-            const rachaTextoEl = document.getElementById('resumenRachaTexto');
-            if (rachaEl && rachaTextoEl) {
-                rachaTextoEl.textContent = racha;
-                rachaEl.classList.toggle('activa', racha > 0);
-                rachaEl.hidden = false;
-            }
+            // --- Racha: se cuenta según los días programados en la rutina ---
+            _fechasVisitadas = fechasVisitadas;
+            _toClave = toClave;
+            pintarRacha();
 
             // --- Visitas este mes / totales ---
             const mesActual = hoy.getMonth();
