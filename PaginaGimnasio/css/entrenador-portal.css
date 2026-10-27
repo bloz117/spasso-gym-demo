@@ -1246,3 +1246,67 @@ body:has(#profileModal.is-open) .fondo-opt[data-fondo="movimiento"] { display: n
 }
 .acct-tour__x:active { transform: scale(.9); }
 .acct-tour__card h4 { padding-right: 2.2rem; }
+
+/* ===== Crear mi rutina: versión de ESCRITORIO (3 columnas: días | rutina del día | biblioteca) ===== */
+@media (min-width: 1025px) and (hover: hover) {
+  .rp.rp--desk {
+    inset: 4vh max(3vw, calc((100vw - 1400px) / 2)); height: auto; border-radius: 26px;
+    border: 1px solid rgba(255,255,255,.14); overflow: hidden;
+    box-shadow: 0 0 0 100vmax rgba(0,0,0,.62), 0 30px 80px rgba(0,0,0,.6);
+    animation: rpDeskIn .35s cubic-bezier(.2,.9,.3,1.1);
+  }
+  @keyframes rpDeskIn { from { opacity: 0; transform: translateY(18px) scale(.98); } }
+  .rp--desk .rp__top { padding: 16px 22px; gap: 16px; }
+  .rp--desk .rp__tit strong { font-size: 21px; }
+  .rp--desk .rp__x { transition: transform .15s, background .15s; }
+  .rp--desk .rp__x:hover { background: rgba(255,255,255,.16); transform: translateX(-2px); }
+  .rp--desk .rp__ok { transition: transform .15s, filter .15s; }
+  .rp--desk .rp__ok:not(:disabled):hover { transform: translateY(-1px); filter: brightness(1.1); }
+
+  .rp--desk .rp__cols { flex: 1; min-height: 0; display: grid; grid-template-columns: 148px minmax(360px, 1fr) minmax(420px, 1.2fr); }
+  .rp--desk .rp__dias { flex-direction: column; overflow-y: auto; padding: 16px 14px; gap: 8px; border-bottom: 0; border-right: 1px solid rgba(255,255,255,.1); }
+  .rp--desk .rp__dia { flex: none; width: 100%; height: 50px; border-radius: 14px; justify-content: space-between; padding: 0 14px; transition: background .2s, transform .15s; }
+  .rp--desk .rp__dia:hover:not(.active) { background: rgba(255,255,255,.08); transform: translateX(2px); }
+  .rp--desk .rp__dia span { font-size: 15px; }
+
+  .rp--desk .rp__izq { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid rgba(255,255,255,.1); }
+  .rp--desk .rp__izq-cab { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 18px 22px 8px; }
+  .rp--desk .rp__h { margin: 0; font-size: 22px; }
+  .rp--desk .rp__h small { font-size: 13px; font-weight: 500; opacity: .6; margin-left: 8px; }
+  .rp--desk .rp__copiar { width: auto; height: 38px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: background .15s; }
+  .rp--desk .rp__copiar:hover { background: rgba(255,255,255,.16); }
+  .rp--desk .rp__main { max-width: none; margin: 0; padding: 8px 22px 22px; }
+  .rp--desk .rp__vacio { margin-top: 8px; padding: 70px 20px; }
+  .rp--desk .rp__vacio i { font-size: 40px; }
+  .rp--desk .rp__ej { transition: border-color .2s, transform .2s; }
+  .rp--desk .rp__ej:hover { border-color: rgba(20,198,222,.5); }
+  .rp--desk .rp__ej-cab img, .rp--desk .rp__ph { width: 64px; height: 64px; }
+  .rp--desk .rp__val:hover { background: rgba(20,198,222,.2); }
+
+  /* Biblioteca siempre visible a la derecha */
+  .rp--desk .rp__picker--inline { position: static; z-index: auto; background: transparent; min-height: 0; min-width: 0; }
+  .rp--desk .rp__pk-top { padding: 18px 22px 10px; }
+  .rp--desk .rp__pk-tit { flex: none; font-size: 16px; display: inline-flex; align-items: center; gap: 8px; }
+  .rp--desk .rp__pk-tit i { color: #14c6de; }
+  .rp--desk .rp__lib { padding: 0 22px 8px; }
+  .rp--desk .rp__chips { flex-wrap: wrap; overflow: visible; padding: 4px 22px 12px; }
+  .rp--desk .rp__chip { min-height: 34px; padding: 0 13px; font-size: 13px; transition: background .15s; }
+  .rp--desk .rp__chip:not(.active):hover { background: rgba(255,255,255,.14); }
+  .rp--desk .rp__res { max-width: none; margin: 0; padding: 0 22px 22px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); grid-auto-rows: max-content; gap: 12px; }
+  .rp--desk .rp__item { position: relative; flex-direction: column; align-items: stretch; gap: 0; padding: 0; overflow: hidden; border-radius: 16px; transition: transform .2s, border-color .2s; }
+  .rp--desk .rp__item:hover { transform: translateY(-3px); border-color: rgba(20,198,222,.6); }
+  .rp--desk .rp__item img { width: 100%; height: 118px; border-radius: 0; }
+  .rp--desk .rp__item-info { padding: 10px 12px 12px; }
+  .rp--desk .rp__item-info strong { font-size: 13.5px; }
+  .rp--desk .rp__item-info small { font-size: 12px; }
+  .rp--desk .rp__item-add { position: absolute; top: 8px; right: 8px; width: 36px; height: 36px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,.4); transition: transform .15s; }
+  .rp--desk .rp__item-add:hover { transform: scale(1.12); }
+
+  html[data-fondo="claro-tenue"] .rp--desk { border-color: rgba(0,0,0,.12); }
+  html[data-fondo="claro-tenue"] .rp--desk .rp__dias, html[data-fondo="claro-tenue"] .rp--desk .rp__izq { border-color: rgba(0,0,0,.1); }
+}
+
+/* ===== Escritorio: Mi cuenta no repite "cerrar sesión" (ya está en el menú del nombre) ===== */
+@media (min-width: 1025px) and (hover: hover) {
+  body:has(#profileModal.is-open) .session-btn-slot { display: none; }
+}

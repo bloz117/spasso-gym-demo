@@ -141,8 +141,12 @@
         document.documentElement.classList.remove('rp-abierto');
     }
 
+    function esDesk() { return window.matchMedia('(min-width: 1025px) and (hover: hover)').matches; }
+
     function pintar() {
         if (!root) return;
+        var desk = esDesk();
+        root.classList.toggle('rp--desk', desk);
         cerrarRueda();
         var antes = root.querySelector('.rp__main'), yMain = antes ? antes.scrollTop : 0;
         var antesRes = document.getElementById('rpRes'), yRes = antesRes ? antesRes.scrollTop : 0;
@@ -163,16 +167,25 @@
                 '<div class="rp__tit"><strong>Crear mi rutina</strong><small>' + tot + ' ejercicio' + (tot === 1 ? '' : 's') + ' en la semana</small></div>' +
                 '<button type="button" class="rp__ok" data-a="guardar"' + (tot ? '' : ' disabled') + '><i class="fas fa-check"></i> Guardar</button>' +
             '</div>' +
-            '<div class="rp__dias" role="tablist">' + tabs + '</div>' +
-            '<div class="rp__main"><h4 class="rp__h">' + esc(st.dia) + '</h4>' + cuerpo + '</div>' +
-            '<div class="rp__pie">' +
-                '<button type="button" class="rp__add" data-a="picker"><i class="fas fa-plus"></i> Añadir ejercicio</button>' +
-                (lista.length ? '<button type="button" class="rp__copiar" data-a="copiar" title="Copiar este día a otros días"><i class="far fa-copy"></i></button>' : '') +
-            '</div>' +
-            (st.picker ? htmlPicker() : '');
+            (desk
+                ? '<div class="rp__cols">' +
+                    '<div class="rp__dias" role="tablist">' + tabs + '</div>' +
+                    '<section class="rp__izq"><div class="rp__izq-cab"><h4 class="rp__h">' + esc(st.dia) + ' <small>' + lista.length + ' ejercicio' + (lista.length === 1 ? '' : 's') + '</small></h4>' +
+                        (lista.length ? '<button type="button" class="rp__copiar" data-a="copiar"><i class="far fa-copy"></i> Copiar a otros días</button>' : '') + '</div>' +
+                        '<div class="rp__main">' + cuerpo + '</div></section>' +
+                    htmlPicker(true) +
+                  '</div>'
+                : '<div class="rp__dias" role="tablist">' + tabs + '</div>' +
+                  '<div class="rp__main"><h4 class="rp__h">' + esc(st.dia) + '</h4>' + cuerpo + '</div>' +
+                  '<div class="rp__pie">' +
+                    '<button type="button" class="rp__add" data-a="picker"><i class="fas fa-plus"></i> Añadir ejercicio</button>' +
+                    (lista.length ? '<button type="button" class="rp__copiar" data-a="copiar" title="Copiar este día a otros días"><i class="far fa-copy"></i></button>' : '') +
+                  '</div>' +
+                  (st.picker ? htmlPicker() : '')
+            );
         enlazar();
         var m = root.querySelector('.rp__main'); if (m) m.scrollTop = yMain;
-        if (st.picker) { pintarResultados(); var r2 = document.getElementById('rpRes'); if (r2) r2.scrollTop = yRes; }
+        if (st.picker || desk) { pintarResultados(); var r2 = document.getElementById('rpRes'); if (r2) r2.scrollTop = yRes; }
     }
 
     function tarjeta(e, i) {
@@ -200,17 +213,17 @@
         bibliotecaActual().forEach(function (e) { if (e.parte_es && !set[e.parte_es]) { set[e.parte_es] = 1; out.push(e.parte_es); } });
         return out;
     }
-    function htmlPicker() {
+    function htmlPicker(inline) {
         var L = libs();
         var chips = partes().map(function (p) {
             return '<button type="button" class="rp__chip' + (p === st.parte ? ' active' : '') + '" data-parte="' + esc(p) + '">' + esc(p) + '</button>';
         }).join('');
         var sel = st.selectorLib ? '<div class="rp__lib"><button type="button" class="rp__chip' + (st.lib === 'H' ? ' active' : '') + '" data-lib="H">Hombres</button>' +
             '<button type="button" class="rp__chip' + (st.lib === 'M' ? ' active' : '') + '" data-lib="M">Mujeres</button></div>' : '';
-        return '<div class="rp__picker" aria-label="Elegir ejercicios">' +
-            '<div class="rp__pk-top"><button type="button" class="rp__x" data-a="cerrarPicker" aria-label="Volver"><i class="fas fa-arrow-left"></i></button>' +
+        return '<div class="rp__picker' + (inline ? ' rp__picker--inline' : '') + '" aria-label="Elegir ejercicios">' +
+            '<div class="rp__pk-top">' + (inline ? '<strong class="rp__pk-tit"><i class="fas fa-list-check"></i> Biblioteca de ejercicios</strong>' : '<button type="button" class="rp__x" data-a="cerrarPicker" aria-label="Volver"><i class="fas fa-arrow-left"></i></button>') +
             '<div class="rp__pk-buscar"><i class="fas fa-search"></i><input id="rpBuscar" type="search" placeholder="Buscar ejercicio…" autocomplete="off" value="' + esc(st.q) + '"></div>' +
-            '<button type="button" class="rp__ok" data-a="cerrarPicker">Listo</button></div>' +
+            (inline ? '' : '<button type="button" class="rp__ok" data-a="cerrarPicker">Listo</button>') + '</div>' +
             sel + '<div class="rp__chips">' + chips + '</div>' +
             '<div class="rp__res" id="rpRes"></div></div>';
     }
@@ -319,6 +332,7 @@
                 if (pos >= 0) { lista.splice(pos, 1); toast('Quitado'); }
                 else if (ref) { lista.push({ id: ref.id, nombre: ref.nombre, series: 3, repeticiones: '12', descanso: '60 s' }); toast('Añadido'); }
                 st.sucio = true;
+                if (esDesk()) { pintar(); return; }   // en escritorio la rutina del día está a la vista: se actualiza
                 var cont = document.getElementById('rpRes'), y = cont ? cont.scrollTop : 0;
                 pintarResultados(); if (cont) cont.scrollTop = y;
                 return;

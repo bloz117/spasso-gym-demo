@@ -74,9 +74,14 @@ Diseño móvil/tablet del panel de entrenador (js/entrenador-portal.js + css/ent
 - Los videos originales traen marca FITONOMY y algunos avisos/promos dentro del propio video.
 
 ## Biblioteca de mujeres (oct 2026)
-- `data/exercises-data-mujer.js` → `window.EJERCICIOS_DATA_MUJER` (98 ejercicios, ids `mg-NNN`, 269 videos en `vid/ejercicios/mujer/gym/`, portadas en `img/ejercicios/mujer/gym/`).
-- Cada ejercicio: video principal + `tecnica:[{video,gif}]` + `variantes:[{video,gif}]`; `gif:true` = video ≤6.5 s (bucle sin controles).
-- Reproductor `ejercicio-video.js`: pestañas Ejercicio / Técnica / Variantes (solo las que existan) y modo GIF.
+- `data/exercises-data-mujer.js` → `window.EJERCICIOS_DATA_MUJER` (167 ejercicios, ids `mg-1000…`, 1 video por ejercicio en `vid/ejercicios/mujer/gym/`, portadas en `img/ejercicios/mujer/gym/`). **Sin tecnica/variantes** (se quitaron en oct 2026): un clip = un ejercicio.
+- Regla (hombres y mujeres): nunca un video con varios ejercicios; se cortan con `Animaciones_Spasso/_herramientas/split/` (ov_h.py / ov_m.py = planes manuales, clips.py → cutclips.py → apply.py). `gif:true` = clip ≤6.5 s (bucle sin controles). Comparativas ✓/✗ y collages se descartan.
+- Los ids de rutinas guardadas con videos cortados desaparecen (el backend filtra ids viejos).
+- Reproductor `ejercicio-video.js`: soporta pestañas si un ejercicio trae tecnica/variantes (hoy ninguno) y modo GIF.
 - Género de la sesión: `/api/portal/me` devuelve `genero` ('femenino'/'masculino') → `currentUser.genero` → `ejercicios.js` muestra solo la biblioteca que corresponde (sin dato: selector Hombres/Mujeres). El generador de rutinas del entrenador usa la biblioteca de mujeres si el socio es 'femenino'.
 - Iconos femeninos: `img/iconos/mujer/*.png` (generados con `Animaciones_Spasso/_herramientas/mujer/iconos_mujer.py`, SVG→PNG).
 - Pipeline: `_herramientas/mujer/` (mrules → mclas → sel → encm). Tamaño: videos ≈ 113 MB; total vid ≈ 430 MB.
+
+## Versión móvil CERRADA (oct 2026)
+La versión responsive del portal (móvil / tablet / iPhone / Android, Mi cuenta, isla de cuenta, tour, barra inferior) está terminada y aprobada. No modificar los estilos móviles
+(`@media (max-width:1024px), (hover:none) and (pointer:coarse)`). Los cambios de escritorio van solo en `@media (min-width:1025px) and (hover:hover)` y en la rama `esDesk()` de `js/rutina-propia.js`.

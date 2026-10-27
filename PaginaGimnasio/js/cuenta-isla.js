@@ -32,6 +32,8 @@
         const hd = document.querySelector('body > header, header');
         const card = isl.querySelector('.acct-isl__pos');
         if (hd && card) card.style.top = Math.round(hd.getBoundingClientRect().bottom + 8) + 'px';
+        const lk = $('headerProfileLink');
+        if (card && lk && window.innerWidth > 1024) { const r = lk.getBoundingClientRect(); card.style.right = Math.max(12, Math.round(window.innerWidth - r.right)) + 'px'; } else if (card) card.style.right = '';
         isl.hidden = false;
         void isl.offsetWidth;                 // reflow para que arranque la animación
         isl.classList.add('is-open');
