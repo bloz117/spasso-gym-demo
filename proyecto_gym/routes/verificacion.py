@@ -74,6 +74,10 @@ def _config_correo():
             return (cfg["smtp_host"], int(cfg["smtp_port"]), cfg["smtp_user"], cfg["smtp_pass"], cfg.get("remitente") or "Spasso Gym")
     except Exception:  # noqa: BLE001  (en Render no existe esa tabla/ruta)
         pass
+    # Render gratis bloquea los puertos SMTP: allí se envía por HTTPS con la API de Brevo.
+    bk, bf = os.getenv("BREVO_API_KEY"), os.getenv("BREVO_FROM")
+    if bk and bf:
+        return ("brevo-api", 443, bf, bk, os.getenv("SMTP_FROM", "Spasso Gym"))
     u, p = os.getenv("SMTP_USER"), os.getenv("SMTP_PASS")
     if u and p:
         return (os.getenv("SMTP_HOST", "smtp.gmail.com"), int(os.getenv("SMTP_PORT", "587")), u, p,
@@ -87,6 +91,19 @@ def correo_listo():
 
 def _enviar(cfg, destino, asunto, texto, html):
     host, puerto, user, clave, remitente = cfg
+    if host == "brevo-api":
+        import json
+        import urllib.error
+        import urllib.request
+        body = json.dumps({"sender": {"name": remitente, "email": user}, "to": [{"email": destino}],
+                           "subject": asunto, "htmlContent": html, "textContent": texto}).encode()
+        req = urllib.request.Request("https://api.brevo.com/v3/smtp/email", data=body, method="POST",
+                                     headers={"api-key": clave, "content-type": "application/json", "accept": "application/json"})
+        try:
+            urllib.request.urlopen(req, timeout=20).read()
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"Brevo {e.code}: {e.read().decode()[:200]}") from None
+        return
     msg = MIMEMultipart("alternative")
     msg.attach(MIMEText(texto, "plain", "utf-8"))
     msg.attach(MIMEText(html, "html", "utf-8"))
