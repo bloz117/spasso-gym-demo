@@ -6037,3 +6037,11 @@ body:has(#profileModal.is-open) .header-back-btn i { color: #fff !important; }
 .recuperar__link:hover{opacity:1;text-decoration:underline}
 .recuperar__msg{min-height:18px;font-size:13.5px;text-align:center;opacity:.9}
 .recuperar__msg--error{color:#ef4444;opacity:1}
+
+/* Paso del código de verificación (login del portal) */
+.codigo-box{display:none;flex-direction:column;gap:12px;width:100%;text-align:center}
+.codigo-box__txt{margin:0;font-size:14px;line-height:1.45;opacity:.85}
+.codigo-box__input{text-align:center;font-size:26px;letter-spacing:10px;font-weight:800;padding-left:1.4rem}
+.codigo-box__link{align-self:center;font-size:13.5px;color:var(--celeste,#22d3ee);text-decoration:none;opacity:.95}
+.codigo-box__link:hover{text-decoration:underline}
+.codigo-box__link--tenue{color:inherit;opacity:.65}

@@ -25,7 +25,7 @@ from auth import SECRET_KEY, create_access_token, decode_token
 
 DISPOSITIVO_DIAS = 30
 VENTANA_SEG = 600          # el código vale entre 10 y 20 minutos
-ESPERA_REENVIO = 60
+ESPERA_REENVIO = 20
 MAX_INTENTOS = 8
 
 _lock = threading.Lock()
@@ -128,7 +128,7 @@ def exigir_codigo(clave, id_cuenta, rol, password_hash, correo, dispositivo, nom
                 f"<p style='font-size:34px;letter-spacing:8px;font-weight:800;margin:14px 0'>{codigo}</p>"
                 f"<p style='color:#666;font-size:13px'>Solo se pide una vez en este dispositivo. Si no fuiste tú, ignora este mensaje.</p></div>")
         try:
-            _enviar(cfg, correo, "Tu código de acceso", texto, html)
+            _enviar(cfg, correo, f"Tu código de acceso: {codigo}", texto, html)
         except Exception as e:  # noqa: BLE001
             with _lock:
                 _ultimo_envio.pop(clave, None)

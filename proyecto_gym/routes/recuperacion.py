@@ -1,136 +1,103 @@
 """
-routes/recuperacion.py - Recuperar la contraseña con un código enviado al correo.
+Recuperar la contraseña del portal con un código enviado al correo (versión nube).
 
-  • Socios del portal público:   /api/portal/recuperar/solicitar  y  /confirmar
-  • Administrador de Recepción:  /api/auth/recuperar/solicitar    y  /confirmar
-        (se pide el carnet de respaldo + el correo de la cuenta)
-
-El código tiene 6 dígitos, vale 10 minutos, se puede intentar 5 veces y nunca se guarda en claro.
-Las respuestas de "solicitar" son siempre iguales exista o no la cuenta (no revelan qué correos existen).
+Sin estado en memoria: el código se calcula con HMAC (cuenta + contraseña actual + ventana de
+10 minutos) y el "desafío" es un token firmado. Así funciona igual desde el celular o la PC, aunque
+Render se reinicie o se duerma entre pedir el código y escribirlo. Al cambiar la contraseña el código
+deja de servir. Los correos llevan el código en el asunto (Gmail no los agrupa ni los esconde).
 """
 import hashlib
+import hmac
 import re
-import secrets
 import threading
 import time
+from datetime import timedelta
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, HTTPException
 
 import validadores as V
-from auth import hash_password
+from auth import SECRET_KEY, create_access_token, decode_token, hash_password
 from database import get_db
 from dependencies import limitar_intentos_login
 from routes import verificacion as _ver
 
 router_portal = APIRouter(prefix="/api/portal/recuperar", tags=["Recuperar contraseña (portal)"])
 
-VIGENCIA = 600
-MAX_INTENTOS = 5
-ESPERA_REENVIO = 45  # segundos entre códigos para la misma cuenta
-
-_pend = {}
-_ultimo_envio = {}
+VENTANA = 600
+ESPERA_REENVIO = 20
+MAX_INTENTOS = 6
 _lock = threading.Lock()
+_ultimo = {}
+_fallos = {}
 
 
-def _mascara(correo):
-    usr, _, dom = (correo or "").partition("@")
-    return (usr[:2] + "•" * max(1, len(usr) - 2) + "@" + dom) if dom else "tu correo"
+def _huella(ph):
+    return hashlib.sha256(("rec:" + (ph or "")).encode()).hexdigest()[:20]
 
 
-def _hash(codigo, sal):
-    return hashlib.sha256((sal + codigo).encode()).hexdigest()
+def _codigo(id_socio, ph, ventana):
+    mac = hmac.new(SECRET_KEY.encode(), f"rec:{id_socio}:{_huella(ph)}:{ventana}".encode(), hashlib.sha256).digest()
+    return f"{int.from_bytes(mac[:4], 'big') % 10**6:06d}"
 
 
-def _crear(tipo, datos):
-    """Devuelve (desafio, codigo). datos=None crea un desafío falso (cuenta inexistente)."""
-    codigo = f"{secrets.randbelow(10**6):06d}"
-    sal = secrets.token_hex(8)
-    desafio = secrets.token_urlsafe(18)
-    with _lock:
-        ahora = time.time()
-        for k in [k for k, v in _pend.items() if v["vence"] < ahora]:
-            _pend.pop(k, None)
-        _pend[desafio] = {"tipo": tipo, "datos": datos, "sal": sal, "h": _hash(codigo, sal),
-                          "vence": ahora + VIGENCIA, "intentos": 0}
-    return desafio, codigo
+def _desafio(id_socio):
+    return create_access_token({"typ": "rec", "id": id_socio}, expires_delta=timedelta(minutes=20))
 
 
-def _consumir(tipo, desafio, codigo):
-    codigo = "".join(c for c in str(codigo or "") if c.isdigit())
-    with _lock:
-        d = _pend.get(str(desafio or ""))
-        if not d or d["tipo"] != tipo or d["vence"] < time.time():
-            _pend.pop(str(desafio or ""), None)
-            raise HTTPException(status_code=401, detail="El código venció. Pide uno nuevo.")
-        d["intentos"] += 1
-        if d["intentos"] > MAX_INTENTOS:
-            _pend.pop(desafio, None)
-            raise HTTPException(status_code=429, detail="Demasiados intentos. Pide un código nuevo.")
-        if not d["datos"] or not secrets.compare_digest(_hash(codigo, d["sal"]), d["h"]):
-            raise HTTPException(status_code=401, detail="Código incorrecto")
-        _pend.pop(desafio, None)
-        return d["datos"]
-
-
-def _puede_enviar(clave):
-    ahora = time.time()
-    with _lock:
-        if ahora - _ultimo_envio.get(clave, 0) < ESPERA_REENVIO:
-            return False
-        if len(_ultimo_envio) > 5000:
-            _ultimo_envio.clear()
-        _ultimo_envio[clave] = ahora
-        return True
-
-
-def _enviar(correo, codigo, titulo, saludo):
-    cfg = _ver._config_correo()
-    if not cfg:
-        raise HTTPException(status_code=503, detail="Por ahora no podemos enviar códigos por correo. Pídelo en recepción.")
-    texto = (f"Hola {saludo},\n\nTu código para {titulo.lower()} es: {codigo}\n\n"
-             f"Vale {VIGENCIA // 60} minutos. Si no lo pediste tú, ignora este mensaje: tu contraseña no cambia.")
-    html = (f"<div style='font-family:Arial,sans-serif;max-width:420px;margin:auto;padding:24px;border:1px solid #ddd;border-radius:14px'>"
-            f"<h2 style='margin:0 0 8px'>{titulo}</h2><p>Hola <b>{saludo}</b>, usa este código:</p>"
-            f"<p style='font-size:34px;letter-spacing:8px;font-weight:800;margin:14px 0'>{codigo}</p>"
-            f"<p style='color:#666;font-size:13px'>Vale {VIGENCIA // 60} minutos. Si no lo pediste tú, ignora este mensaje: "
-            f"tu contraseña no cambia.</p></div>")
-    _ver._enviar(cfg, correo, titulo, texto, html)
+def _falso():
+    return create_access_token({"typ": "rec", "id": 0}, expires_delta=timedelta(minutes=20))
 
 
 def _respuesta(desafio, correo=None):
-    return {"desafio": desafio, "correo": _mascara(correo) if correo else "tu correo",
-            "mensaje": "Si la cuenta existe, te enviamos un código al correo.", "vigencia_min": VIGENCIA // 60}
+    return {"desafio": desafio, "correo": _ver._mascara(correo) if correo else "tu correo",
+            "mensaje": "Si la cuenta existe, te enviamos un código al correo.", "vigencia_min": VENTANA // 60}
 
 
-# ──────────────────────────── Socios del portal ────────────────────────────
 @router_portal.post("/solicitar")
-def portal_solicitar(request: Request, data: dict = Body(...), _=Depends(limitar_intentos_login(6, 60))):
+def portal_solicitar(data: dict = Body(...), _=Depends(limitar_intentos_login(8, 60))):
     ident = str(data.get("identificador") or data.get("email") or "").strip().lower()[:150]
     if not ident:
         raise HTTPException(status_code=422, detail="Escribe tu correo o usuario")
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute(
-            "SELECT pa.id_socio, s.email, s.nombres, COALESCE(s.activo, TRUE), pa.is_active "
+            "SELECT pa.id_socio, s.email, s.nombres, COALESCE(s.activo, TRUE), pa.is_active, pa.password_hash "
             "FROM portal_accounts pa JOIN socios s ON s.id_socio = pa.id_socio "
             "WHERE lower(trim(s.email)) = %s OR lower(pa.username) = %s "
             "ORDER BY (lower(trim(s.email)) = %s) DESC LIMIT 1", (ident, ident, ident))
         f = cur.fetchone()
     if not f or not f[1] or not f[3] or not f[4]:
-        desafio, _c = _crear("portal", None)
-        return _respuesta(desafio)
-    id_socio, correo, nombres = f[0], f[1], f[2]
-    if not _puede_enviar(f"portal:{id_socio}"):
-        desafio, _c = _crear("portal", None)
-        return _respuesta(desafio, correo)
-    desafio, codigo = _crear("portal", {"id_socio": id_socio})
-    _enviar(correo, codigo, "Código para cambiar tu contraseña", (nombres or "").split(" ")[0] or "")
-    return _respuesta(desafio, correo)
+        return _respuesta(_falso())
+    id_socio, correo, nombres, ph = f[0], f[1], f[2], f[5]
+    cfg = _ver._config_correo()
+    if not cfg:
+        raise HTTPException(status_code=503, detail="Por ahora no podemos enviar códigos por correo. Pídelo en recepción.")
+    ahora = time.time()
+    with _lock:
+        espera = ESPERA_REENVIO - (ahora - _ultimo.get(id_socio, 0))
+        if espera > 0:
+            raise HTTPException(status_code=429, detail=f"Ya te enviamos un código. Revisa tu correo (y Spam) o espera {int(espera) + 1} segundos para pedir otro.")
+        _ultimo[id_socio] = ahora
+    codigo = _codigo(id_socio, ph, int(ahora // VENTANA))
+    nombre = (nombres or "").split(" ")[0] or ""
+    texto = (f"Hola {nombre},\n\nTu código para cambiar la contraseña es: {codigo}\n\n"
+             f"Vale unos 10 minutos. Si no lo pediste tú, ignora este mensaje: tu contraseña no cambia.")
+    html = (f"<div style='font-family:Arial,sans-serif;max-width:420px;margin:auto;padding:24px;border:1px solid #ddd;border-radius:14px'>"
+            f"<h2 style='margin:0 0 8px'>Cambiar tu contraseña</h2><p>Hola <b>{nombre}</b>, usa este código:</p>"
+            f"<p style='font-size:34px;letter-spacing:8px;font-weight:800;margin:14px 0'>{codigo}</p>"
+            f"<p style='color:#666;font-size:13px'>Vale unos 10 minutos. Si no lo pediste tú, ignora este mensaje: tu contraseña no cambia.</p></div>")
+    try:
+        _ver._enviar(cfg, correo, f"Código para cambiar tu contraseña: {codigo}", texto, html)
+    except Exception as e:  # noqa: BLE001
+        with _lock:
+            _ultimo.pop(id_socio, None)
+        print(f"❌ correo de recuperación: {type(e).__name__}: {str(e)[:150]}", flush=True)
+        raise HTTPException(status_code=502, detail="No pudimos enviar el correo ahora. Intenta de nuevo en un minuto.")
+    return _respuesta(_desafio(id_socio), correo)
 
 
 @router_portal.post("/confirmar")
-def portal_confirmar(request: Request, data: dict = Body(...), _=Depends(limitar_intentos_login(10, 60))):
+def portal_confirmar(data: dict = Body(...), _=Depends(limitar_intentos_login(10, 60))):
     nueva = str(data.get("password_nuevo") or "")
     try:
         nueva = V.contrasena(nueva, minimo=8)
@@ -138,10 +105,27 @@ def portal_confirmar(request: Request, data: dict = Body(...), _=Depends(limitar
             raise ValueError("La contraseña nueva debe combinar letras y números")
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    datos = _consumir("portal", data.get("desafio"), data.get("codigo"))
+    p = decode_token(str(data.get("desafio") or ""))
+    if not p or p.get("typ") != "rec" or not p.get("id"):
+        raise HTTPException(status_code=401, detail="El código venció. Pide uno nuevo.")
+    id_socio = p["id"]
+    codigo = "".join(c for c in str(data.get("codigo") or "") if c.isdigit())
+    ventana = int(time.time() // VENTANA)
+    with _lock:
+        if _fallos.get((id_socio, ventana), 0) >= MAX_INTENTOS:
+            raise HTTPException(status_code=429, detail="Demasiados intentos. Pide un código nuevo en unos minutos.")
     with get_db() as conn:
         cur = conn.cursor()
+        cur.execute("SELECT password_hash FROM portal_accounts WHERE id_socio = %s AND is_active", (id_socio,))
+        f = cur.fetchone()
+        ok = bool(f) and any(hmac.compare_digest(codigo, _codigo(id_socio, f[0], v)) for v in (ventana, ventana - 1))
+        if not ok:
+            with _lock:
+                _fallos[(id_socio, ventana)] = _fallos.get((id_socio, ventana), 0) + 1
+                for k in [k for k in _fallos if k[1] < ventana - 1]:
+                    _fallos.pop(k, None)
+            raise HTTPException(status_code=401, detail="Código incorrecto")
         cur.execute(
             "UPDATE portal_accounts SET password_hash = %s, must_change_password = FALSE, temp_password = NULL "
-            "WHERE id_socio = %s", (hash_password(nueva), datos["id_socio"]))
+            "WHERE id_socio = %s", (hash_password(nueva), id_socio))
     return {"mensaje": "Listo. Ya puedes entrar con tu contraseña nueva."}

@@ -1758,36 +1758,68 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Paso del código enviado al correo (solo se pide una vez por dispositivo)
-    function mostrarCodigoPortal(resp, rememberMe, alTerminar) {
+    function mostrarCodigoPortal(resp, rememberMe, alTerminar, reenviarLogin) {
         let box = document.getElementById('loginCodigoBox');
-        const campos = loginForm.querySelectorAll('input.login-card__input, button[type="submit"], .login-card__remember');
+        const campos = Array.from(loginForm.children).filter(c => c.id !== 'loginCodigoBox');
         if (!box) {
             box = document.createElement('div');
             box.id = 'loginCodigoBox';
-            box.style.cssText = 'text-align:center;';
-            box.innerHTML = '<p id="loginCodigoMsg" style="margin:0 0 10px;font-size:14px;opacity:.85"></p>' +
-                '<input class="login-card__input" type="text" id="loginCodigoPortal" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="Código de 6 dígitos" style="text-align:center;letter-spacing:6px;font-weight:700">' +
-                '<button type="button" class="login-card__button" id="loginCodigoOk" style="margin-top:10px;width:100%">Verificar</button>' +
-                '<a href="#" id="loginCodigoVolver" style="display:block;margin-top:10px;font-size:13px;opacity:.7">Volver</a>';
+            box.className = 'codigo-box';
+            box.innerHTML = '<p class="codigo-box__txt" id="loginCodigoMsg"></p>' +
+                '<input class="login-card__input codigo-box__input" type="text" id="loginCodigoPortal" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder="• • • • • •">' +
+                '<button type="button" class="login-card__submit" id="loginCodigoOk">Verificar</button>' +
+                '<a href="#" class="codigo-box__link" id="loginCodigoReenviar">No me llegó, enviar otro código</a>' +
+                '<a href="#" class="codigo-box__link codigo-box__link--tenue" id="loginCodigoVolver">← Volver</a>';
             loginForm.appendChild(box);
         }
-        document.getElementById('loginCodigoMsg').textContent = 'Te enviamos un código a ' + (resp.correo || 'tu correo') + '. Solo se pide una vez en este dispositivo.';
+        let actual = resp;
+        const texto = () => 'Te enviamos un código de 6 dígitos a ' + (actual.correo || 'tu correo') + '. Solo se pide una vez en este dispositivo. Revisa también Spam.';
+        document.getElementById('loginCodigoMsg').textContent = texto();
         campos.forEach(c => c.style.display = 'none');
-        box.style.display = 'block';
+        box.style.display = 'flex';
         const input = document.getElementById('loginCodigoPortal');
         input.value = ''; input.focus();
+        input.oninput = () => { input.value = input.value.replace(/\D/g, '').slice(0, 6); };
         const cerrar = () => { box.style.display = 'none'; campos.forEach(c => c.style.display = ''); };
         document.getElementById('loginCodigoVolver').onclick = (ev) => { ev.preventDefault(); cerrar(); };
+        const reenv = document.getElementById('loginCodigoReenviar');
+        reenv.onclick = async (ev) => {
+            ev.preventDefault();
+            if (!reenviarLogin || reenv.dataset.espera) return;
+            reenv.dataset.espera = '1'; reenv.textContent = 'Enviando…';
+            try {
+                const r = await reenviarLogin();
+                if (r && r.requiere_codigo) {
+                    actual = r;
+                    document.getElementById('loginCodigoMsg').textContent = r.ya_enviado
+                        ? 'Ya te enviamos un código hace un momento a ' + (r.correo || 'tu correo') + '. Revisa tu bandeja y Spam; puedes pedir otro en unos segundos.'
+                        : 'Listo, te enviamos un código nuevo a ' + (r.correo || 'tu correo') + '.';
+                    resp = r;
+                } else if (r) {
+                    cerrar(); await alTerminar(r); return;
+                }
+            } catch (err) {
+                showNotification(err.message || 'No se pudo reenviar el código', 'error');
+            }
+            let n = 20;
+            const t = setInterval(() => {
+                n--;
+                if (n <= 0) { clearInterval(t); delete reenv.dataset.espera; reenv.textContent = 'No me llegó, enviar otro código'; }
+                else reenv.textContent = 'Podrás pedir otro en ' + n + ' s';
+            }, 1000);
+            reenv.textContent = 'Podrás pedir otro en ' + n + ' s';
+        };
         const enviar = async () => {
             const codigo = input.value.replace(/\D/g, '');
             if (codigo.length !== 6) { showNotification('Escribe los 6 dígitos del código', 'error'); return; }
+            const ok = document.getElementById('loginCodigoOk'); ok.disabled = true;
             try {
                 const r = await verificarCodigoPortal(resp.desafio, codigo, rememberMe);
                 cerrar();
                 await alTerminar(r);
             } catch (err) {
                 showNotification(err.message || 'Código incorrecto', 'error');
-            }
+            } finally { ok.disabled = false; }
         };
         document.getElementById('loginCodigoOk').onclick = enviar;
         input.onkeydown = (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); enviar(); } };
@@ -1825,7 +1857,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const respLogin = await loginSocio(email, password, rememberMe);
                 if (respLogin && respLogin.requiere_codigo) {
-                    mostrarCodigoPortal(respLogin, rememberMe, finalizarLoginSocio);
+                    mostrarCodigoPortal(respLogin, rememberMe, finalizarLoginSocio, () => loginSocio(email, password, rememberMe));
                     return;
                 }
                 await finalizarLoginSocio(respLogin);
