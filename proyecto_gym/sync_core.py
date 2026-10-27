@@ -38,8 +38,12 @@ SPECS = [
     dict(name="roles_permisos", pk=["id_rol"],
          push=["id_rol", "nombre_rol"],
          filtro="t.nombre_rol = 'Entrenador'"),
-    dict(name="usuarios_sistema", pk=["id_usuario"],
-         push=["id_usuario", "username", "password_hash", "id_rol", "correo"],
+    # Entrenadores: la contraseña también puede cambiarse en la nube (recuperar con código);
+    # de vuelta a Recepción solo viaja password_hash (nunca cuentas de Administrador/Recepcionista)
+    dict(name="usuarios_sistema", pk=["id_usuario"], bidi=True, lww="sync_at",
+         push=["id_usuario", "username", "password_hash", "id_rol", "correo", "sync_at"],
+         pull=["id_usuario", "password_hash", "sync_at"],
+         digest=["id_usuario", "username", "password_hash", "id_rol", "correo"],
          filtro="t.id_rol IN (SELECT id_rol FROM roles_permisos WHERE nombre_rol = 'Entrenador')"),
     dict(name="categorias_planes", pk=["id_categoria"],
          push=["id_categoria", "nombre", "orden", "activo", "creado_en"]),
@@ -163,6 +167,20 @@ BEGIN
     RETURN NEW;
 END
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION sync_usuarios_stamp() RETURNS trigger AS $$
+BEGIN
+    IF current_setting('spasso.sync_apply', true) = '1' THEN
+        RETURN NEW;
+    END IF;
+    IF NEW.password_hash IS DISTINCT FROM OLD.password_hash
+       OR NEW.username IS DISTINCT FROM OLD.username
+       OR NEW.correo IS DISTINCT FROM OLD.correo THEN
+        NEW.sync_at := now();
+    END IF;
+    RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
 """
 
 
@@ -178,6 +196,13 @@ def asegurar_esquema_sync(conn, lado):
         cur.execute("DROP TRIGGER IF EXISTS sync_pa_stamp ON portal_accounts")
         cur.execute("CREATE TRIGGER sync_pa_stamp BEFORE UPDATE ON portal_accounts "
                     "FOR EACH ROW EXECUTE FUNCTION sync_portal_accounts_stamp()")
+    # sync_at en usuarios_sistema (contraseña de Entrenadores cambiada en la nube)
+    cur.execute("SELECT to_regclass('public.usuarios_sistema')")
+    if cur.fetchone()[0]:
+        cur.execute("ALTER TABLE usuarios_sistema ADD COLUMN IF NOT EXISTS sync_at TIMESTAMPTZ NOT NULL DEFAULT now()")
+        cur.execute("DROP TRIGGER IF EXISTS sync_us_stamp ON usuarios_sistema")
+        cur.execute("CREATE TRIGGER sync_us_stamp BEFORE UPDATE ON usuarios_sistema "
+                    "FOR EACH ROW EXECUTE FUNCTION sync_usuarios_stamp()")
     for spec in SPECS:
         if lado == "cloud" and not spec.get("bidi"):
             continue
@@ -270,6 +295,17 @@ def aplicar_item(cur, spec, op, pk, row, direccion):
                     (row.get("id_rol"),))
         if not cur.fetchone():
             raise ValueError("solo se aceptan cuentas de Entrenador")
+    # Contraseña de un Entrenador cambiada en la nube → Recepción: solo password_hash y solo Entrenadores
+    if direccion == "pull" and t == "usuarios_sistema":
+        ph = str(row.get("password_hash") or "")
+        if not (ph.startswith("$2b$") or ph.startswith("$2a$")) or not row.get("sync_at"):
+            raise ValueError("contraseña inválida")
+        cur.execute(
+            "UPDATE usuarios_sistema SET password_hash = %s, sync_at = %s::timestamptz "
+            "WHERE id_usuario = %s AND sync_at <= %s::timestamptz "
+            "AND id_rol IN (SELECT id_rol FROM roles_permisos WHERE nombre_rol = 'Entrenador')",
+            (ph, row["sync_at"], pk["id_usuario"], row["sync_at"]))
+        return
     aparte = set(spec.get("aparte") or [])
     cols = [c for c in permitidas if c in row and c not in aparte]
     for c in pkcols:

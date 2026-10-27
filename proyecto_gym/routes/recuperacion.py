@@ -41,6 +41,7 @@ def _codigo(id_socio, ph, ventana):
 
 
 def _desafio(id_socio):
+    # id_socio puede ser un número (socio) o "ent:<id>" (entrenador)
     return create_access_token({"typ": "rec", "id": id_socio}, expires_delta=timedelta(minutes=20))
 
 
@@ -66,9 +67,23 @@ def portal_solicitar(data: dict = Body(...), _=Depends(limitar_intentos_login(8,
             "WHERE lower(trim(s.email)) = %s OR lower(pa.username) = %s "
             "ORDER BY (lower(trim(s.email)) = %s) DESC LIMIT 1", (ident, ident, ident))
         f = cur.fetchone()
-    if not f or not f[1] or not f[3] or not f[4]:
+        ent = None
+        if not f:
+            # ¿Es un Entrenador? (usuario o correo)
+            cur.execute(
+                "SELECT u.id_usuario, u.correo, u.username, u.password_hash FROM usuarios_sistema u "
+                "JOIN roles_permisos r ON r.id_rol = u.id_rol "
+                "WHERE r.nombre_rol = 'Entrenador' AND (lower(u.username) = %s OR lower(trim(u.correo)) = %s) "
+                "ORDER BY (lower(u.username) = %s) DESC LIMIT 1", (ident, ident, ident))
+            ent = cur.fetchone()
+    if ent:
+        if not ent[1]:
+            return _respuesta(_falso())
+        id_socio, correo, nombres, ph = f"ent:{ent[0]}", ent[1], ent[2], ent[3]
+    elif not f or not f[1] or not f[3] or not f[4]:
         return _respuesta(_falso())
-    id_socio, correo, nombres, ph = f[0], f[1], f[2], f[5]
+    else:
+        id_socio, correo, nombres, ph = f[0], f[1], f[2], f[5]
     cfg = _ver._config_correo()
     if not cfg:
         raise HTTPException(status_code=503, detail="Por ahora no podemos enviar códigos por correo. Pídelo en recepción.")
@@ -114,9 +129,18 @@ def portal_confirmar(data: dict = Body(...), _=Depends(limitar_intentos_login(10
     with _lock:
         if _fallos.get((id_socio, ventana), 0) >= MAX_INTENTOS:
             raise HTTPException(status_code=429, detail="Demasiados intentos. Pide un código nuevo en unos minutos.")
+    es_ent = isinstance(id_socio, str) and id_socio.startswith("ent:")
     with get_db() as conn:
         cur = conn.cursor()
-        cur.execute("SELECT password_hash FROM portal_accounts WHERE id_socio = %s AND is_active", (id_socio,))
+        if es_ent:
+            try:
+                id_ent = int(id_socio.split(":", 1)[1])
+            except ValueError:
+                raise HTTPException(status_code=401, detail="El código venció. Pide uno nuevo.")
+            cur.execute("SELECT u.password_hash FROM usuarios_sistema u JOIN roles_permisos r ON r.id_rol = u.id_rol "
+                        "WHERE u.id_usuario = %s AND r.nombre_rol = 'Entrenador'", (id_ent,))
+        else:
+            cur.execute("SELECT password_hash FROM portal_accounts WHERE id_socio = %s AND is_active", (id_socio,))
         f = cur.fetchone()
         ok = bool(f) and any(hmac.compare_digest(codigo, _codigo(id_socio, f[0], v)) for v in (ventana, ventana - 1))
         if not ok:
@@ -125,6 +149,11 @@ def portal_confirmar(data: dict = Body(...), _=Depends(limitar_intentos_login(10
                 for k in [k for k in _fallos if k[1] < ventana - 1]:
                     _fallos.pop(k, None)
             raise HTTPException(status_code=401, detail="Código incorrecto")
+        if es_ent:
+            # sync_at lo actualiza el trigger: así "gana el más reciente" y Recepción recibe la contraseña nueva
+            cur.execute("UPDATE usuarios_sistema SET password_hash = %s WHERE id_usuario = %s",
+                        (hash_password(nueva), id_ent))
+            return {"mensaje": "Listo. Ya puedes entrar con tu contraseña nueva."}
         cur.execute(
             "UPDATE portal_accounts SET password_hash = %s, must_change_password = FALSE, temp_password = NULL "
             "WHERE id_socio = %s", (hash_password(nueva), id_socio))
