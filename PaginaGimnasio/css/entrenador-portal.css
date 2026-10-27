@@ -974,3 +974,57 @@ html[data-fondo="claro-tenue"] .mirutina__sw, html[data-fondo="claro-tenue"] .mi
 .rp__vacio i, .rp__vacio strong { display: block; }
 .rp__vacio strong { font-size: 17px; }
 .rp__ctr output { white-space: nowrap; }
+
+/* ---- v3: valores tocables + rueda flotante, selector Entrenador/Personal más chico ---- */
+.rp__ctrs { gap: 8px; margin-top: 10px; }
+.rp__ctr small { margin-bottom: 4px; }
+.rp__val { width: 100%; height: 42px; padding: 0 10px; border: 0; border-radius: 12px; background: rgba(0,0,0,.28); color: inherit; font: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.rp__val b { font-size: 16px; font-weight: 700; white-space: nowrap; }
+.rp__val i { font-size: 11px; opacity: .5; }
+.rp__val:active { transform: scale(.96); background: rgba(20,198,222,.25); }
+.rp__ej { contain: layout; }
+
+.rp__rueda-fondo { position: absolute; inset: 0; z-index: 5; background: rgba(0,0,0,.25); }
+.rp__rueda { position: absolute; padding: 10px 8px 8px; border-radius: 16px; background: #1b1b22; color: #f4f4f6;
+  border: 1px solid rgba(255,255,255,.18); box-shadow: 0 12px 36px rgba(0,0,0,.55); text-align: center; animation: rpPop .14s ease-out; }
+@keyframes rpPop { from { transform: scale(.92); opacity: 0; } to { transform: none; opacity: 1; } }
+.rp__rueda-tit { font-size: 12px; opacity: .65; margin-bottom: 6px; }
+.rp__rueda-caja { position: relative; height: 200px; overflow: hidden; }
+.rp__rueda-sel { position: absolute; left: 0; right: 0; top: 80px; height: 40px; border-radius: 10px; background: rgba(20,198,222,.2); border: 1px solid rgba(20,198,222,.6); pointer-events: none; }
+.rp__rueda-lista { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; padding: 80px 0; scrollbar-width: none; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.rp__rueda-lista::-webkit-scrollbar { display: none; }
+.rp__rueda-it { height: 40px; line-height: 40px; scroll-snap-align: center; font-size: 17px; font-weight: 600; opacity: .45; cursor: pointer; }
+.rp__rueda-it.on { opacity: 1; font-size: 20px; }
+.rp__rueda-ok { width: 100%; height: 38px; margin-top: 8px; border: 0; border-radius: 10px; background: #22c55e; color: #052e16; font: inherit; font-weight: 700; cursor: pointer; }
+html[data-fondo="claro-tenue"] .rp__rueda { background: #fff; color: #141418; border-color: rgba(0,0,0,.15); }
+html[data-fondo="claro-tenue"] .rp__val { background: rgba(0,0,0,.06); }
+
+/* Selector Mi entrenador | Mi rutina: más compacto */
+.mirutina__sw { display: inline-flex; width: auto; gap: 2px; padding: 3px; margin-bottom: 10px; }
+.mirutina__sw button { flex: none; min-height: 30px; padding: 0 12px; font-size: 12.5px; gap: 6px; display: inline-flex; align-items: center; }
+.mirutina__sw button i { font-size: 11px; }
+.mirutina__acc button, .mirutina__crear { min-height: 36px; padding: 0 14px; font-size: 13px; }
+
+/* Diálogos propios (reemplazan los del navegador) */
+.rp__dlg-fondo { position: fixed; inset: 0; z-index: 100004; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.rp__dlg { width: min(360px, 100%); padding: 22px 18px 16px; border-radius: 22px; text-align: center; background: #17171c; color: #f4f4f6; border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 20px 50px rgba(0,0,0,.6); animation: rpPop .16s ease-out; font-family: inherit; }
+.rp__dlg * { box-sizing: border-box; }
+.rp__dlg-ico { width: 54px; height: 54px; margin: 0 auto 12px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; color: #06242a; background: linear-gradient(135deg, #14c6de, #8fe9f2); }
+.rp__dlg-ico.peligro { color: #fff; background: linear-gradient(135deg, #ef4444, #ff2d87); }
+.rp__dlg h4 { margin: 0 0 6px; font-size: 19px; }
+.rp__dlg p { margin: 0 0 14px; opacity: .75; font-size: 14.5px; line-height: 1.4; }
+.rp__dlg-dias { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 14px; }
+.rp__dlg-bt { display: flex; gap: 10px; }
+.rp__dlg-bt button { flex: 1; min-height: 46px; border-radius: 14px; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: inherit; }
+.rp__dlg-bt .rp__dlg-si { border: 0; background: linear-gradient(135deg, #14c6de, #0f97a8); color: #fff; }
+.rp__dlg-bt .rp__dlg-si.peligro { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.rp__dlg-bt .rp__dlg-si:disabled { opacity: .4; cursor: not-allowed; }
+.rp__dlg .rp__chip { min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); color: inherit; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.rp__dlg .rp__chip.active { background: #14c6de; border-color: #14c6de; color: #06242a; }
+html[data-fondo="claro-tenue"] .rp__dlg { background: #fff; color: #141418; border-color: rgba(0,0,0,.12); }
+html[data-fondo="claro-tenue"] .rp__dlg-bt button:not(.rp__dlg-si) { background: rgba(0,0,0,.05); border-color: rgba(0,0,0,.15); }
+html[data-fondo="claro-tenue"] .rp__dlg .rp__chip { background: rgba(0,0,0,.05); border-color: rgba(0,0,0,.15); }
+.rp__ctr .rp__val { width: 100%; height: 42px; padding: 0 10px; border-radius: 12px; background: rgba(0,0,0,.28); font-size: inherit; line-height: normal; }
+html[data-fondo="claro-tenue"] .rp__ctr .rp__val { background: rgba(0,0,0,.06); }

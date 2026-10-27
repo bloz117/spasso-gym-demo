@@ -72,6 +72,28 @@
         return null;
     }
 
+    // ---------- diálogos propios (en lugar de los del navegador) ----------
+    function dialogo(html, alAbrir) {
+        var f = document.createElement('div');
+        f.className = 'rp__dlg-fondo';
+        f.innerHTML = '<div class="rp__dlg" role="dialog" aria-modal="true">' + html + '</div>';
+        document.body.appendChild(f);
+        function cerrarD() { f.remove(); }
+        f.addEventListener('click', function (ev) { if (ev.target === f) cerrarD(); });
+        if (alAbrir) alAbrir(f, cerrarD);
+        return cerrarD;
+    }
+    function confirmar(icono, titulo, texto, okTxt, peligro, siAcepta) {
+        dialogo('<div class="rp__dlg-ico' + (peligro ? ' peligro' : '') + '"><i class="fas ' + icono + '"></i></div>' +
+            '<h4>' + esc(titulo) + '</h4><p>' + esc(texto) + '</p>' +
+            '<div class="rp__dlg-bt"><button type="button" class="rp__dlg-no">Cancelar</button>' +
+            '<button type="button" class="rp__dlg-si' + (peligro ? ' peligro' : '') + '">' + esc(okTxt) + '</button></div>',
+            function (f, cerrarD) {
+                f.querySelector('.rp__dlg-no').onclick = cerrarD;
+                f.querySelector('.rp__dlg-si').onclick = function () { cerrarD(); siAcepta(); };
+            });
+    }
+
     // ---------- editor ----------
     function clonar(o) { return JSON.parse(JSON.stringify(o)); }
     function vacia() {
@@ -111,13 +133,19 @@
 
     function cerrar(forzar) {
         if (!root) return;
-        if (st && st.sucio && !forzar && !confirm('Tienes cambios sin guardar. ¿Salir sin guardar?')) return;
+        if (st && st.sucio && !forzar) {
+            confirmar('fa-triangle-exclamation', '¿Salir sin guardar?', 'Tienes cambios en tu rutina que todavía no guardaste.', 'Salir sin guardar', true, function () { cerrar(true); });
+            return;
+        }
         root.remove(); root = null; st = null;
         document.documentElement.classList.remove('rp-abierto');
     }
 
     function pintar() {
         if (!root) return;
+        cerrarRueda();
+        var antes = root.querySelector('.rp__main'), yMain = antes ? antes.scrollTop : 0;
+        var antesRes = document.getElementById('rpRes'), yRes = antesRes ? antesRes.scrollTop : 0;
         var tot = st.rutina.dias.reduce(function (a, d) { return a + d.ejercicios.length; }, 0);
         var tabs = DIAS.map(function (d) {
             var n = diaObj(d).ejercicios.length;
@@ -143,17 +171,17 @@
             '</div>' +
             (st.picker ? htmlPicker() : '');
         enlazar();
-        if (st.picker) pintarResultados();
+        var m = root.querySelector('.rp__main'); if (m) m.scrollTop = yMain;
+        if (st.picker) { pintarResultados(); var r2 = document.getElementById('rpRes'); if (r2) r2.scrollTop = yRes; }
     }
 
     function tarjeta(e, i) {
         var ref = porId(e.id);
         var img = ref ? '<img loading="lazy" src="' + esc(ref.imagen) + '" alt="">' : '<span class="rp__ph"><i class="fas fa-dumbbell"></i></span>';
         function ctr(campo, v, etq) {
-            return '<div class="rp__ctr"><small>' + etq + '</small><div>' +
-                '<button type="button" data-a="menos" data-c="' + campo + '" data-i="' + i + '" aria-label="Menos">−</button>' +
-                '<output>' + esc(v) + '</output>' +
-                '<button type="button" data-a="mas" data-c="' + campo + '" data-i="' + i + '" aria-label="Más">+</button></div></div>';
+            return '<div class="rp__ctr"><small>' + etq + '</small>' +
+                '<button type="button" class="rp__val" data-a="val" data-c="' + campo + '" data-i="' + i + '" aria-label="Cambiar ' + etq + '">' +
+                '<b>' + esc(v) + '</b><i class="fas fa-sort"></i></button></div>';
         }
         return '<article class="rp__ej">' +
             '<div class="rp__ej-cab">' + img + '<strong>' + esc(e.nombre) + '</strong>' +
@@ -208,14 +236,77 @@
     }
 
     // ---------- eventos ----------
-    function ajustar(campo, e, delta) {
-        if (campo === 'series') e.series = Math.min(10, Math.max(1, (parseInt(e.series, 10) || 3) + delta));
-        else if (campo === 'repeticiones') e.repeticiones = String(Math.min(50, Math.max(1, (parseInt(e.repeticiones, 10) || 10) + delta)));
-        else if (campo === 'descanso') e.descanso = Math.min(300, Math.max(0, segTxt(e.descanso) + delta * 15)) + ' s';
+    var ALTO = 40;
+    function opciones(campo) {
+        var o = [], i;
+        if (campo === 'series') for (i = 1; i <= 10; i++) o.push(i);
+        else if (campo === 'repeticiones') for (i = 1; i <= 50; i++) o.push(i);
+        else for (i = 0; i <= 300; i += 15) o.push(i);
+        return o;
+    }
+    function valorActual(campo, e) {
+        return campo === 'series' ? (parseInt(e.series, 10) || 3)
+            : campo === 'repeticiones' ? (parseInt(e.repeticiones, 10) || 12) : segTxt(e.descanso);
+    }
+    function fijar(campo, e, v) {
+        if (campo === 'series') e.series = v;
+        else if (campo === 'repeticiones') e.repeticiones = String(v);
+        else e.descanso = v + ' s';
         st.sucio = true;
+    }
+    function textoVal(campo, v) { return campo === 'descanso' ? v + 's' : String(v); }
+
+    function cerrarRueda() {
+        var w = document.getElementById('rpRueda'); if (w) w.remove();
+    }
+    // Ventana flotante pequeña con una rueda para subir/bajar el valor (sin volver a pintar la lista)
+    function abrirRueda(btn, campo, i) {
+        cerrarRueda();
+        var e = diaObj(st.dia).ejercicios[i]; if (!e) return;
+        var ops = opciones(campo), actual = valorActual(campo, e);
+        var idx = Math.max(0, ops.indexOf(actual)); if (idx < 0) idx = 0;
+        var tit = campo === 'series' ? 'Series' : campo === 'repeticiones' ? 'Repeticiones' : 'Descanso';
+        var w = document.createElement('div');
+        w.id = 'rpRueda'; w.className = 'rp__rueda-fondo';
+        w.innerHTML = '<div class="rp__rueda" role="dialog" aria-label="' + tit + '"><div class="rp__rueda-tit">' + tit + '</div>' +
+            '<div class="rp__rueda-caja"><div class="rp__rueda-sel"></div><div class="rp__rueda-lista">' +
+            ops.map(function (v) { return '<div class="rp__rueda-it" data-v="' + v + '">' + textoVal(campo, v) + '</div>'; }).join('') +
+            '</div></div><button type="button" class="rp__rueda-ok">Listo</button></div>';
+        root.appendChild(w);
+        var card = w.firstChild, lista = w.querySelector('.rp__rueda-lista');
+        // posición junto al valor tocado
+        var r = btn.getBoundingClientRect(), rr = root.getBoundingClientRect();
+        var ancho = 130, alto = card.offsetHeight || 290;
+        var x = Math.min(Math.max(8, r.left + r.width / 2 - ancho / 2 - rr.left), rr.width - ancho - 8);
+        var y = r.top - rr.top - alto - 8; if (y < 8) y = Math.min(r.bottom - rr.top + 8, rr.height - alto - 8);
+        card.style.left = x + 'px'; card.style.top = Math.max(8, y) + 'px'; card.style.width = ancho + 'px';
+        lista.scrollTop = idx * ALTO;
+        var out = btn.querySelector('b'), t = null, ult = idx;
+        function marcar(n) {
+            var its = lista.children;
+            for (var k = 0; k < its.length; k++) its[k].classList.toggle('on', k === n);
+        }
+        marcar(idx);
+        lista.addEventListener('scroll', function () {
+            var n = Math.min(ops.length - 1, Math.max(0, Math.round(lista.scrollTop / ALTO)));
+            if (n !== ult) {
+                ult = n; marcar(n);
+                fijar(campo, e, ops[n]);
+                if (out) out.textContent = textoVal(campo, ops[n]);
+            }
+        }, { passive: true });
+        lista.addEventListener('click', function (ev) {
+            var it = ev.target.closest('.rp__rueda-it'); if (!it) return;
+            var n = ops.indexOf(parseInt(it.getAttribute('data-v'), 10));
+            lista.scrollTo({ top: n * ALTO, behavior: 'smooth' });
+        });
+        w.addEventListener('click', function (ev) {
+            if (ev.target === w || ev.target.classList.contains('rp__rueda-ok')) { ev.stopPropagation(); cerrarRueda(); }
+        });
     }
     function enlazar() {
         root.onclick = function (ev) {
+            if (ev.target.closest('#rpRueda')) return;
             var b = ev.target.closest('button'); if (!b) return;
             var a = b.getAttribute('data-a');
             var lista = diaObj(st.dia).ejercicios, i = parseInt(b.getAttribute('data-i'), 10);
@@ -223,14 +314,13 @@
             if (b.hasAttribute('data-parte')) { st.parte = b.getAttribute('data-parte'); st.visibles = PAGINA; pintar(); return; }
             if (b.hasAttribute('data-lib')) { st.lib = b.getAttribute('data-lib'); st.parte = 'Todos'; st.visibles = PAGINA; pintar(); return; }
             if (b.hasAttribute('data-add')) {
-                var ref = porId(b.getAttribute('data-add'));
-                if (ref) {
-                    lista.push({ id: ref.id, nombre: ref.nombre, series: 3, repeticiones: '12', descanso: '60 s' });
-                    st.sucio = true; toast('Añadido: ' + ref.nombre);
-                    var cont = document.getElementById('rpRes'), y = cont ? cont.scrollTop : 0;
-                    pintarResultados(); if (cont) cont.scrollTop = y;
-                    var t = root.querySelector('.rp__tit small');
-                }
+                var id = b.getAttribute('data-add'), ref = porId(id), pos = -1;
+                for (var k = lista.length - 1; k >= 0; k--) if (lista[k].id === id) { pos = k; break; }
+                if (pos >= 0) { lista.splice(pos, 1); toast('Quitado'); }
+                else if (ref) { lista.push({ id: ref.id, nombre: ref.nombre, series: 3, repeticiones: '12', descanso: '60 s' }); toast('Añadido'); }
+                st.sucio = true;
+                var cont = document.getElementById('rpRes'), y = cont ? cont.scrollTop : 0;
+                pintarResultados(); if (cont) cont.scrollTop = y;
                 return;
             }
             switch (a) {
@@ -239,8 +329,7 @@
                 case 'picker': st.picker = true; st.visibles = PAGINA; pintar(); break;
                 case 'cerrarPicker': st.picker = false; pintar(); break;
                 case 'verMas': st.visibles += PAGINA; pintarResultados(); break;
-                case 'menos': ajustar(b.getAttribute('data-c'), lista[i], -1); pintar(); break;
-                case 'mas': ajustar(b.getAttribute('data-c'), lista[i], 1); pintar(); break;
+                case 'val': abrirRueda(b, b.getAttribute('data-c'), i); break;
                 case 'sube': if (i > 0) { var x = lista[i]; lista[i] = lista[i - 1]; lista[i - 1] = x; st.sucio = true; pintar(); } break;
                 case 'baja': if (i < lista.length - 1) { var y2 = lista[i]; lista[i] = lista[i + 1]; lista[i + 1] = y2; st.sucio = true; pintar(); } break;
                 case 'quita': lista.splice(i, 1); st.sucio = true; pintar(); break;
@@ -252,18 +341,28 @@
     }
 
     function copiarA() {
-        var cual = prompt('¿A qué días copiar el ' + st.dia + '? Escribe los días separados por coma (ej: Miércoles, Viernes)');
-        if (!cual) return;
-        var norms = cual.split(',').map(function (t) { return norm(t.trim()); });
-        var n = 0;
-        DIAS.forEach(function (d) {
-            if (d === st.dia) return;
-            if (norms.some(function (t) { return t && norm(d).indexOf(t.slice(0, 3)) === 0; })) {
-                diaObj(d).ejercicios = clonar(diaObj(st.dia).ejercicios); n++;
-            }
-        });
-        if (n) { st.sucio = true; toast('Copiado a ' + n + ' día' + (n === 1 ? '' : 's')); pintar(); }
-        else toast('No reconocí esos días', 'err');
+        var chips = DIAS.filter(function (d) { return d !== st.dia; }).map(function (d) {
+            return '<button type="button" class="rp__chip" data-d="' + d + '">' + d + '</button>';
+        }).join('');
+        dialogo('<div class="rp__dlg-ico"><i class="far fa-copy"></i></div><h4>Copiar el ' + esc(st.dia) + '</h4>' +
+            '<p>Elige a qué días quieres copiar estos ejercicios.</p><div class="rp__dlg-dias">' + chips + '</div>' +
+            '<div class="rp__dlg-bt"><button type="button" class="rp__dlg-no">Cancelar</button>' +
+            '<button type="button" class="rp__dlg-si" disabled>Copiar</button></div>',
+            function (f, cerrarD) {
+                var si = f.querySelector('.rp__dlg-si');
+                f.querySelectorAll('.rp__chip').forEach(function (c) {
+                    c.onclick = function () { c.classList.toggle('active'); si.disabled = !f.querySelector('.rp__chip.active'); };
+                });
+                f.querySelector('.rp__dlg-no').onclick = cerrarD;
+                si.onclick = function () {
+                    var n = 0;
+                    f.querySelectorAll('.rp__chip.active').forEach(function (c) {
+                        diaObj(c.getAttribute('data-d')).ejercicios = clonar(diaObj(st.dia).ejercicios); n++;
+                    });
+                    cerrarD();
+                    if (n) { st.sucio = true; toast('Copiado a ' + n + ' día' + (n === 1 ? '' : 's')); pintar(); }
+                };
+            });
     }
 
     function guardarYSalir() {
@@ -279,14 +378,14 @@
     }
 
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && root) { if (st.picker) { st.picker = false; pintar(); } else cerrar(); }
+        if (e.key === 'Escape' && root) { if (document.getElementById('rpRueda')) { cerrarRueda(); return; } if (st.picker) { st.picker = false; pintar(); } else cerrar(); }
     });
     document.addEventListener('click', function (e) {
         var b = e.target.closest('[data-rutina-propia]');
         if (!b) return;
         var acc = b.getAttribute('data-rutina-propia');
         if (acc === 'borrar') {
-            if (confirm('¿Borrar tu rutina personal?')) { borrar(); if (window.recargarMiRutina) window.recargarMiRutina(); }
+            confirmar('fa-trash', '¿Borrar tu rutina?', 'Se eliminará tu rutina personal de este dispositivo.', 'Borrar', true, function () { borrar(); if (window.recargarMiRutina) window.recargarMiRutina(); });
         } else abrir();
     });
 
