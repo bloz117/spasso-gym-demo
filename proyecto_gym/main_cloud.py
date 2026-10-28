@@ -77,6 +77,8 @@ PORTAL_DIR = os.path.abspath(os.path.join(BASE, "..", "PaginaGimnasio"))
 @app.on_event("startup")
 def _preparar_nube():
     with database.get_db() as conn:
+        database.renombrar_dni_a_ci(conn)
+    with database.get_db() as conn:
         cur = conn.cursor()
         with open(os.path.join(BASE, "cloud", "schema_cloud.sql"), encoding="utf-8") as f:
             cur.execute(f.read())

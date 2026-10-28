@@ -35,7 +35,7 @@ class TokenResponse(BaseModel):
 class SocioCreate(BaseModel):
     nombres: str = Field(..., min_length=2, max_length=100)
     apellidos: str = Field(..., min_length=2, max_length=100)
-    dni: str = Field(..., min_length=5, max_length=20)
+    ci: str = Field(..., min_length=5, max_length=20)
     email: Optional[EmailStr] = None
     foto_url: Optional[str] = None
     genero: Optional[str] = None  # 'masculino' | 'femenino'
@@ -51,12 +51,12 @@ class SocioCreate(BaseModel):
     def _apellidos(cls, v):
         return V.nombre_persona(v, "El apellido")
 
-    @field_validator('dni')
+    @field_validator('ci')
     @classmethod
-    def dni_solo_alfanumerico(cls, v):
+    def ci_solo_alfanumerico(cls, v):
         v = (v or '').strip()
         if not re.match(r'^[A-Za-z0-9\-]{5,20}$', v):
-            raise ValueError('El carnet/DNI solo puede contener letras, números y guiones (5 a 20 caracteres)')
+            raise ValueError('El CI solo puede contener letras, números y guiones (5 a 20 caracteres)')
         return v.upper()
 
     @field_validator('email', mode='after')
@@ -83,7 +83,7 @@ class SocioResponse(BaseModel):
     id_socio: int
     nombres: str
     apellidos: str
-    dni: str
+    ci: str
     email: Optional[str]
     fecha_registro: datetime
     # Solo en la respuesta del registro: acceso al portal y si el correo de
@@ -97,8 +97,8 @@ class SocioResponse(BaseModel):
 # ─────────────────────────────────────────────
 
 class AsistenciaCreate(BaseModel):
-    # Puede registrarse por DNI (más común en recepción) o id directo
-    dni_socio: str = Field(..., min_length=5, max_length=20)
+    # Puede registrarse por CI (más común en recepción) o id directo
+    ci_socio: str = Field(..., min_length=5, max_length=20)
 
 
 class AsistenciaResponse(BaseModel):

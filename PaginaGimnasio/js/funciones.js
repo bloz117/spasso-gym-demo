@@ -864,7 +864,7 @@ document.addEventListener('DOMContentLoaded', function() {
         currentUser = {
             name: `${perfil.nombres || ''} ${perfil.apellidos || ''}`.trim() || perfil.email,
             email: perfil.email,
-            dni: perfil.dni || '',
+            ci: perfil.ci || '',
             genero: perfil.genero || '',
             fechaRegistro: perfil.fecha_registro || '',
             role: 'user',
@@ -899,16 +899,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Datos personales del socio en la pestaña "Perfil" (antes "Membresía").
     // Nota: la ficha del socio en el sistema no guarda fecha de nacimiento,
     // por eso ese dato no aparece acá - solo se muestra lo que existe de
-    // verdad en la base de datos (nombre, correo, DNI, fecha de registro).
+    // verdad en la base de datos (nombre, correo, CI, fecha de registro).
     function actualizarPerfilDatos() {
         if (!currentUser) return;
         const nombreEl = document.getElementById('perfilNombre');
         const correoEl = document.getElementById('perfilCorreo');
-        const dniEl = document.getElementById('perfilDni');
+        const ciEl = document.getElementById('perfilCi');
         const desdeEl = document.getElementById('perfilMiembroDesde');
         if (nombreEl) nombreEl.textContent = currentUser.name || '--';
         if (correoEl) correoEl.textContent = currentUser.email || '--';
-        if (dniEl) dniEl.textContent = currentUser.dni || 'No registrado';
+        if (ciEl) ciEl.textContent = currentUser.ci || 'No registrado';
         if (desdeEl) {
             desdeEl.textContent = currentUser.fechaRegistro
                 ? new Date(currentUser.fechaRegistro).toLocaleDateString('es-CL')

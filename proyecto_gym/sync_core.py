@@ -51,7 +51,7 @@ SPECS = [
          push=["id_plan", "nombre_plan", "precio_base", "duracion_dias", "id_categoria",
                "descripcion", "activo", "incluye_rutina"]),
     dict(name="socios", pk=["id_socio"],
-         push=["id_socio", "uuid_web", "nombres", "apellidos", "dni", "email",
+         push=["id_socio", "uuid_web", "nombres", "apellidos", "ci", "email",
                "fecha_registro", "activo", "genero"]),
     dict(name="portal_accounts", pk=["id"], bidi=True, lww="sync_at",
          push=["id", "id_socio", "username", "password_hash", "must_change_password",

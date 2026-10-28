@@ -363,7 +363,7 @@ def obtener_perfil_socio(socio=Depends(get_current_socio)):
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT s.id_socio, s.nombres, s.apellidos, s.email, s.dni, s.fecha_registro,
+            SELECT s.id_socio, s.nombres, s.apellidos, s.email, s.ci, s.fecha_registro,
                    (SELECT COUNT(*) FROM asistencias_log WHERE id_socio = s.id_socio) as total_visitas,
                    (SELECT MAX(fecha_entrada) FROM asistencias_log WHERE id_socio = s.id_socio) as ultima_visita,
                    s.genero
@@ -382,7 +382,7 @@ def obtener_perfil_socio(socio=Depends(get_current_socio)):
         "nombres": row[1],
         "apellidos": row[2],
         "email": row[3],
-        "dni": row[4],
+        "ci": row[4],
         "fecha_registro": row[5].isoformat() if row[5] else None,
         "total_visitas": row[6] or 0,
         "ultima_visita": row[7].isoformat() if row[7] else None,
@@ -408,7 +408,7 @@ def listar_cuentas_portal(usuario=Depends(require_rol(["Administrador"]))):
             """
             SELECT pa.id_socio, s.nombres, s.apellidos, s.email, pa.username,
                    pa.temp_password, pa.must_change_password, pa.is_active,
-                   pa.created_at, pa.last_login, s.dni, s.telefono,
+                   pa.created_at, pa.last_login, s.ci, s.telefono,
                    COALESCE(s.activo, TRUE)
             FROM portal_accounts pa
             JOIN socios s ON pa.id_socio = s.id_socio
@@ -421,7 +421,7 @@ def listar_cuentas_portal(usuario=Depends(require_rol(["Administrador"]))):
     for row in rows:
         (id_socio, nombres, apellidos, email, username, temp_password,
          must_change_password, is_active, created_at, last_login,
-         dni, telefono, socio_activo) = row
+         ci, telefono, socio_activo) = row
         cuentas.append({
             "id_socio": id_socio,
             "nombre_completo": f"{nombres} {apellidos}".strip(),
@@ -432,7 +432,7 @@ def listar_cuentas_portal(usuario=Depends(require_rol(["Administrador"]))):
             "is_active": is_active,
             "created_at": created_at.isoformat() if created_at else None,
             "last_login": last_login.isoformat() if last_login else None,
-            "dni": dni,
+            "ci": ci,
             "telefono": telefono,
             "socio_activo": bool(socio_activo),
         })

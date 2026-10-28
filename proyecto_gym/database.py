@@ -131,3 +131,24 @@ def get_db():
                 pass
     finally:
         _slots.release()
+
+
+def renombrar_dni_a_ci(conn):
+    """
+    Migración idempotente: renombra toda columna 'dni*' a 'ci*' (socios.dni -> socios.ci,
+    huellas/usuarios dni_huella -> ci_huella, etc.). Se ejecuta en cada arranque; si ya
+    no queda ninguna columna 'dni', no hace nada.
+    """
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT table_name, column_name FROM information_schema.columns
+        WHERE table_schema = 'public' AND column_name LIKE 'dni%%'
+    """)
+    for tabla, col in cur.fetchall():
+        nuevo = "ci" + col[3:]
+        cur.execute("SELECT 1 FROM information_schema.columns WHERE table_schema='public' "
+                    "AND table_name=%s AND column_name=%s", (tabla, nuevo))
+        if cur.fetchone():
+            continue
+        cur.execute('ALTER TABLE "%s" RENAME COLUMN "%s" TO "%s"' % (tabla, col, nuevo))
+        print(f"✅ Columna renombrada: {tabla}.{col} -> {nuevo}", flush=True)

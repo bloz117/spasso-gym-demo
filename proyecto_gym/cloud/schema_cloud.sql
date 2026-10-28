@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS socios (
     uuid_web       UUID DEFAULT gen_random_uuid() UNIQUE,
     nombres        VARCHAR(100) NOT NULL,
     apellidos      VARCHAR(100) NOT NULL,
-    dni            VARCHAR(30) NOT NULL UNIQUE,
+    ci            VARCHAR(30) NOT NULL UNIQUE,
     email          VARCHAR(150) UNIQUE,
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     foto_url       TEXT,                 -- no se sincroniza (queda vacío)
