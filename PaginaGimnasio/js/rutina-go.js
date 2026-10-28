@@ -97,7 +97,8 @@
             var dia = b.getAttribute('data-dia'), i = parseInt(b.getAttribute('data-i'), 10);
             var l = listaDe(dia), e = l[i], f = fechaDelDia(dia); f.setHours(0, 0, 0, 0);
             var fila = b.closest('.mirutina__fila');
-            if (!e || f.getTime() >= hoy0.getTime()) { b.innerHTML = ''; b.className = 'mirutina__est'; if (fila) fila.classList.remove('hecha'); return; }
+            if (!e) { b.innerHTML = ''; b.className = 'mirutina__est'; if (fila) fila.classList.remove('hecha'); return; }
+            if (f.getTime() >= hoy0.getTime()) { b.className = 'mirutina__est pend'; b.innerHTML = '<i class="fas fa-clock"></i><span>Pendiente</span>'; if (fila) fila.classList.remove('hecha'); return; }
             var ok = estaHecho(e, i, hechosDe(fechaStr(f)), l, fechaStr(f));
             b.className = 'mirutina__est ' + (ok ? 'ok' : 'no');
             b.innerHTML = ok ? '<i class="fas fa-check"></i><span>Hecho</span>' : '<i class="fas fa-minus"></i><span>Sin hacer</span>';

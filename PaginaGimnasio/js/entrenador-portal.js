@@ -668,6 +668,12 @@
             : (!propia ? '<div class="mirutina__acc">' + btnCrear + '</div>' : '');
         el.innerHTML = sw + renderRutinaSocio(rut, fecha, ver === 'propia') + acciones;
         enlazarRutina(el);
+        sincronizarParpadeo(el);
+    }
+    // El parpadeo del día de hoy sigue un reloj global: aunque se repinte, continúa en la misma fase (no se reinicia).
+    function sincronizarParpadeo(el) {
+        var t = el.querySelector('.mirutina__tab.hoy');
+        if (t) t.style.setProperty('--blink-delay', '-' + ((Date.now() % 1400) / 1000).toFixed(3) + 's');
     }
     window.recargarMiRutina = function () { var el = bloqueSocio(); if (el) pintarMiRutina(el); };
     // Días de la semana programados (0 = lunes) de la rutina vigente: la del entrenador, o la propia si no hay.

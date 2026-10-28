@@ -1321,12 +1321,15 @@ body:has(#profileModal.is-open) .fondo-opt[data-fondo="movimiento"] { display: n
 
 /* El día de hoy parpadea en celeste para ubicarlo siempre (aunque estés mirando otro día) */
 @keyframes mirutinaHoy {
-  0%, 100% { background-color: rgba(34, 211, 238, .12); box-shadow: 0 0 0 0 rgba(34, 211, 238, .55); }
-  50%      { background-color: rgba(34, 211, 238, .55); box-shadow: 0 0 0 6px rgba(34, 211, 238, 0); }
+  0%, 100% { opacity: .15; box-shadow: 0 0 0 0 rgba(34, 211, 238, .55); }
+  50%      { opacity: .85; box-shadow: 0 0 0 6px rgba(34, 211, 238, 0); }
 }
-.mirutina__tab.hoy { animation: mirutinaHoy 1.4s ease-in-out infinite; }
-.mirutina__tab.hoy.active { color: var(--negro, #000); }
-@media (prefers-reduced-motion: reduce) { .mirutina__tab.hoy { animation: none; background-color: rgba(34, 211, 238, .35); } }
+/* Pulso en un pseudo-elemento: no depende de clicks/cambios de pestaña (la fase la fija --blink-delay desde el reloj) */
+.mirutina__tab.hoy { animation: none !important; }
+.mirutina__tab.hoy::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: rgba(34, 211, 238, .8); pointer-events: none; z-index: 0; animation: mirutinaHoy 1.4s ease-in-out infinite; animation-delay: var(--blink-delay, 0s); }
+.mirutina__tab.hoy > * { position: relative; z-index: 1; }
+.mirutina__tab.hoy.active::after { display: none; }
+@media (prefers-reduced-motion: reduce) { .mirutina__tab.hoy::after { animation: none; opacity: .4; } }
 
 /* Estado de los ejercicios de otros días (solo lectura) */
 .mirutina__fila--lec { display: flex; align-items: stretch; gap: 8px; margin-bottom: 8px; }
@@ -1344,3 +1347,9 @@ body:has(#profileModal.is-open) .fondo-opt[data-fondo="movimiento"] { display: n
 .mirutina__sw button i { font-size: 13px !important; }
 .mirutina__dia, .mirutina__dia > *, .mirutina__fila, .mirutina__ej { animation: none !important; }
 .mirutina__ej img { background: transparent; }
+
+/* v4: selector más delgado, sin salto de línea; estado "Pendiente" para días futuros */
+.mirutina__sw { padding: 3px !important; margin: 0 0 8px !important; }
+.mirutina__sw button { min-height: 32px !important; font-size: 12.5px !important; gap: 6px !important; white-space: nowrap; padding: 0 8px !important; }
+.mirutina__sw button i { font-size: 11px !important; }
+.mirutina__est.pend { background: rgba(34, 211, 238, .10); color: #22d3ee; border: 1.5px solid rgba(34, 211, 238, .35); }
