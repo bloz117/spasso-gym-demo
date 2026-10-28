@@ -279,6 +279,7 @@ def cambiar_musica_portal(
         cur.execute(
             "UPDATE cms_theme SET musica_archivo = %s, updated_at = NOW() "
             "WHERE is_active = TRUE RETURNING id",
+            (data.archivo,)
         )
         result = cur.fetchone()
 

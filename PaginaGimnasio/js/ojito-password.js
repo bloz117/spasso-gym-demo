@@ -8,10 +8,11 @@
 
   var css = '.pw-ojo-wrap{position:relative;display:block;width:100%}' +
     '.pw-ojo-wrap>input{width:100%;box-sizing:border-box;padding-right:2.8rem !important}' +
-    '.pw-ojo-btn{position:absolute;right:.45rem;top:50%;transform:translateY(-50%);width:2.1rem;height:2.1rem;' +
-    'display:flex;align-items:center;justify-content:center;padding:0;margin:0;border:0;border-radius:50%;' +
-    'background:transparent;color:inherit;opacity:.6;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:2}' +
-    '.pw-ojo-btn:hover,.pw-ojo-btn:focus-visible{opacity:1;outline:none}' +
+    '.pw-ojo-wrap .pw-ojo-btn{all:unset;box-sizing:border-box;position:absolute;right:.45rem;top:50%;transform:translateY(-50%);width:2.1rem;height:2.1rem;' +
+    'display:flex;align-items:center;justify-content:center;border-radius:50%;color:#6E6E73;opacity:.85;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:2}' +
+    '.pw-ojo-wrap .pw-ojo-btn:hover,.pw-ojo-wrap .pw-ojo-btn:focus-visible{opacity:1;outline:none;transform:translateY(-50%);box-shadow:none}' +
+    '.pw-ojo-wrap .pw-ojo-btn:active{transform:translateY(-50%);box-shadow:none}' +
+    '.login-card .pw-ojo-btn{color:#6E6E73}' +
     '.pw-ojo-btn svg{width:1.2rem;height:1.2rem;pointer-events:none}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -23,6 +24,7 @@
     inp.dataset.ojo = '1';
     var wrap = document.createElement('span');
     wrap.className = 'pw-ojo-wrap';
+    var cs = getComputedStyle(inp); wrap.style.margin = cs.marginTop + ' ' + cs.marginRight + ' ' + cs.marginBottom + ' ' + cs.marginLeft; inp.style.margin = '0';
     inp.parentNode.insertBefore(wrap, inp);
     wrap.appendChild(inp);
     var b = document.createElement('button');
@@ -32,6 +34,8 @@
     b.setAttribute('aria-pressed', 'false');
     b.tabIndex = -1;
     b.innerHTML = OJO;
+    // El ojito toma el color real del texto del campo (así se ve en fondos claros y oscuros)
+    try { var col = getComputedStyle(inp).color; var bg = getComputedStyle(inp).backgroundColor; if (col && !inp.closest('.login-card') && !/rgba\(0, 0, 0, 0\)/.test(col)) b.style.color = col; } catch (_) {}
     // mousedown/touchstart evitan que el campo pierda el foco (y que se cierre el teclado)
     b.addEventListener('mousedown', function (e) { e.preventDefault(); });
     b.addEventListener('click', function (e) {
