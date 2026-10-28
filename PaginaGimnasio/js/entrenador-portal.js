@@ -730,7 +730,7 @@
                 var ref = ejercicio(e.id);
                 var seg = segDescanso(e.descanso);
                 var fila = '<button type="button" class="mirutina__ej" data-id="' + esc(e.id) + '">' +
-                    (ref ? '<img loading="lazy" src="' + esc(ref.imagen) + '" alt="">' : '<span class="mirutina__ph"><i class="fas fa-dumbbell"></i></span>') +
+                    (ref ? '<img decoding="sync" src="' + esc(ref.imagen) + '" alt="">' : '<span class="mirutina__ph"><i class="fas fa-dumbbell"></i></span>') +
                     '<span class="mirutina__ej-info"><strong>' + esc(e.nombre) + '</strong>' +
                     '<small>' + esc(e.series) + '×' + esc(e.repeticiones) + ' · ' + seg + 's</small>' +
                     '</span></button>';
