@@ -606,11 +606,13 @@
     }
 
     var vistaRutina = null;   // 'ent' | 'propia' (cuando el miembro tiene ambas)
+    var diaSel = null;        // día que el miembro está mirando (se conserva al refrescar o cambiar de vista)
 
     function enlazarRutina(el) {
         el.querySelectorAll('.mirutina__tab').forEach(function (t) {
             t.addEventListener('click', function () {
                 var d = t.getAttribute('data-dia');
+                diaSel = d;
                 el.querySelectorAll('.mirutina__tab').forEach(function (x) { x.classList.toggle('active', x === t); });
                 el.querySelectorAll('.mirutina__dia').forEach(function (p) { p.hidden = p.getAttribute('data-dia') !== d; });
             });
@@ -712,12 +714,13 @@
         (rut.dias || []).forEach(function (d) { porDia[d.dia] = d.ejercicios || []; diasConf[d.dia] = true; });
         var fecha = actualizada ? new Date(actualizada).toLocaleDateString('es-CL') : '';
         var hoy = DIAS_SEM[(new Date().getDay() + 6) % 7];
+        var sel = (diaSel && DIAS_SEM.indexOf(diaSel) >= 0) ? diaSel : hoy;
         var head = '<div class="mirutina__head"><div><span class="mirutina__tag"><i class="fas ' + (propia ? 'fa-pen-ruler' : 'fa-user-check') + '"></i> ' + (propia ? 'Mi rutina personal' : 'Tu entrenador') + '</span>' +
             '</div>' +
             (fecha ? '<small>Actualizada ' + esc(fecha) + '</small>' : '') + '</div>';
         var tabs = '<div class="mirutina__tabs" role="tablist">' + DIAS_SEM.map(function (d) {
             var n = (porDia[d] || []).length;
-            return '<button type="button" role="tab" class="mirutina__tab' + (d === hoy ? ' active' : '') + (n ? ' tiene' : '') + '" data-dia="' + d + '">' +
+            return '<button type="button" role="tab" class="mirutina__tab' + (d === sel ? ' active' : '') + (d === hoy ? ' hoy' : '') + (n ? ' tiene' : '') + '" data-dia="' + d + '"' + (d === hoy ? ' title="Hoy"' : '') + '>' +
                 '<span>' + d.slice(0, 3) + '</span><i></i></button>';
         }).join('') + '</div>' +
             '<div class="mirutina__leyenda"><span><b style="border-color:#22c55e"></b>Con rutina</span></div>';
@@ -731,12 +734,12 @@
                     '<span class="mirutina__ej-info"><strong>' + esc(e.nombre) + '</strong>' +
                     '<small>' + esc(e.series) + '×' + esc(e.repeticiones) + ' · ' + seg + 's</small>' +
                     '</span></button>';
-                if (d !== hoy) return fila;
+                if (d !== hoy) return '<div class="mirutina__fila mirutina__fila--lec">' + fila + '<span class="mirutina__est" data-dia="' + d + '" data-i="' + i + '"></span></div>';
                 return '<div class="mirutina__fila">' + fila +
                     '<button type="button" class="mirutina__go" data-i="' + i + '" aria-label="Empezar ' + esc(e.nombre) + '"><i class="fas fa-play"></i><span>GO</span></button></div>';
             }).join('') : '<div class="mirutina__descanso"><i class="fas fa-bed"></i><strong>Día de descanso</strong>' +
                 '<p>' + (propia ? 'No agregaste ejercicios para este día.' : 'Tu entrenador no asignó ejercicios para este día.') + '</p></div>';
-            return '<div class="mirutina__dia" data-dia="' + d + '"' + (d === hoy ? '' : ' hidden') + '><h5>' + d + (d === hoy ? ' · hoy' : '') + '</h5>' + cuerpo + '</div>';
+            return '<div class="mirutina__dia" data-dia="' + d + '"' + (d === sel ? '' : ' hidden') + '><h5>' + d + (d === hoy ? ' · hoy' : '') + '</h5>' + cuerpo + '</div>';
         }).join('');
         return head + tabs + '<div class="mirutina__paneles">' + paneles + '</div>';
     }

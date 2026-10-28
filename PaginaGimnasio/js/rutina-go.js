@@ -36,33 +36,72 @@
         } catch (e) {}
     }
 
-    // ---------- Ejercicios hechos hoy (solo en este celular) ----------
-    function hoyFecha() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+    // ---------- Ejercicios hechos (solo en este celular; se guardan los últimos días para poder consultarlos) ----------
+    function fechaStr(d) { return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+    function hoyFecha() { return fechaStr(new Date()); }
     var mem = {};   // respaldo si el navegador no deja usar localStorage
     function leer() { try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { return mem; } }
-    function hechosHoy() { var a = leer()[hoyFecha()]; return Array.isArray(a) ? a : []; }
-    function marcarHecho(k) {
-        var o = {}, f = hoyFecha(), cur = hechosHoy().slice();
+    function hechosDe(f) { var a = leer()[f]; return Array.isArray(a) ? a : []; }
+    function hechosHoy() { return hechosDe(hoyFecha()); }
+    function marcarHecho(k, f) {
+        f = f || hoyFecha();
+        var o = leer(), cur = hechosDe(f).slice(), lim = Date.now() - 21 * 86400000;
         if (cur.indexOf(k) === -1) cur.push(k);
-        o[f] = cur; mem = o;                                   // solo se guarda el día de hoy
+        o[f] = cur;
+        Object.keys(o).forEach(function (x) {              // se conservan ~3 semanas
+            var p = x.split('-'), t = new Date(+p[0], +p[1] - 1, +p[2]).getTime();
+            if (!isNaN(t) && t < lim) delete o[x];
+        });
+        mem = o;
         try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {}
     }
-    function listaHoy() {
+    function indiceHoy() { return (new Date().getDay() + 6) % 7; }
+    function listaDe(dia) {
         var r = window.__rutinaSocio; if (!r) return [];
-        var hoy = DIAS[(new Date().getDay() + 6) % 7];
-        var d = (r.dias || []).filter(function (x) { return x.dia === hoy; })[0];
+        var d = (r.dias || []).filter(function (x) { return x.dia === dia; })[0];
         return (d && d.ejercicios) || [];
     }
-    function claveDe(e, i) { return i + ':' + e.id; }
+    function listaHoy() { return listaDe(DIAS[indiceHoy()]); }
+    // Fecha (de esta semana) que corresponde a un día de la rutina
+    function fechaDelDia(dia) {
+        var d = new Date(); d.setDate(d.getDate() + (DIAS.indexOf(dia) - indiceHoy()));
+        return d;
+    }
+    // La marca de "hecho" se guarda por EJERCICIO (id + nº de repetición del mismo ejercicio en el día),
+    // ya no por posición: así quitar, añadir o reordenar ejercicios al editar la rutina NO borra el avance.
+    function claveDe(e, i, lista) {
+        var l = lista || listaHoy(), n = 0;
+        for (var k = 0; k <= i && k < l.length; k++) if (l[k] && l[k].id === e.id) n++;
+        return e.id + '#' + (n || 1);
+    }
+    // Compatibilidad: marcas guardadas con el formato anterior (posición:id) se siguen reconociendo y se migran.
+    function estaHecho(e, i, hechos, lista, fecha) {
+        if (!e) return false;
+        if (hechos.indexOf(claveDe(e, i, lista)) !== -1) return true;
+        if (hechos.indexOf(i + ':' + e.id) !== -1) { marcarHecho(claveDe(e, i, lista), fecha); return true; }
+        return false;
+    }
 
     function refrescar() {
         var hechos = hechosHoy(), lista = listaHoy();
         document.querySelectorAll('.mirutina__go').forEach(function (b) {
             var i = parseInt(b.getAttribute('data-i'), 10), e = lista[i];
-            var ok = e && hechos.indexOf(claveDe(e, i)) !== -1;
+            var ok = estaHecho(e, i, hechos, lista);
             b.classList.toggle('hecho', !!ok);
             b.innerHTML = ok ? '<i class="fas fa-check"></i><span>Hecho</span>' : '<i class="fas fa-play"></i><span>GO</span>';
             var fila = b.closest('.mirutina__fila'); if (fila) fila.classList.toggle('hecha', !!ok);
+        });
+        // Otros días (solo lectura): los pasados muestran si se hicieron o no; los futuros quedan sin estado.
+        var hoy0 = new Date(); hoy0.setHours(0, 0, 0, 0);
+        document.querySelectorAll('.mirutina__est').forEach(function (b) {
+            var dia = b.getAttribute('data-dia'), i = parseInt(b.getAttribute('data-i'), 10);
+            var l = listaDe(dia), e = l[i], f = fechaDelDia(dia); f.setHours(0, 0, 0, 0);
+            var fila = b.closest('.mirutina__fila');
+            if (!e || f.getTime() >= hoy0.getTime()) { b.innerHTML = ''; b.className = 'mirutina__est'; if (fila) fila.classList.remove('hecha'); return; }
+            var ok = estaHecho(e, i, hechosDe(fechaStr(f)), l, fechaStr(f));
+            b.className = 'mirutina__est ' + (ok ? 'ok' : 'no');
+            b.innerHTML = ok ? '<i class="fas fa-check"></i><span>Hecho</span>' : '<i class="fas fa-minus"></i><span>Sin hacer</span>';
+            if (fila) fila.classList.toggle('hecha', !!ok);
         });
     }
 
@@ -205,7 +244,7 @@
         }
         function finDelDia() {
             var hechos = hechosHoy(), l = listaHoy();
-            return l.length > 0 && l.every(function (e, i) { return hechos.indexOf(claveDe(e, i)) !== -1; });
+            return l.length > 0 && l.every(function (e, i) { return estaHecho(e, i, hechos); });
         }
         function felicitar() {
             ov.innerHTML = '<div class="go__fiesta"><div class="go__confeti">' + new Array(18).join('<i></i>') + '</div>' +
@@ -235,5 +274,5 @@
         pintaIdle();
     }
 
-    window.RutinaGo = { abrir: abrir, refrescar: refrescar };
+    window.RutinaGo = { abrir: abrir, refrescar: refrescar, claveDe: claveDe, marcarHecho: marcarHecho };
 })();

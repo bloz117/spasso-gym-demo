@@ -1310,3 +1310,30 @@ body:has(#profileModal.is-open) .fondo-opt[data-fondo="movimiento"] { display: n
 @media (min-width: 1025px) and (hover: hover) {
   body:has(#profileModal.is-open) .session-btn-slot { display: none; }
 }
+
+/* ===== Mi rutina: selector "Mi entrenador / Mi rutina" compacto, día de hoy parpadeando, estado de otros días ===== */
+.mirutina__sw { display: inline-flex !important; width: auto !important; gap: 2px !important; padding: 3px !important; margin: 0 0 6px !important; }
+.mirutina__sw button { flex: none !important; min-height: 30px !important; padding: 0 12px !important; }
+.mirutina__sw + .mirutina__head, .mirutina__sw ~ .mirutina__head { margin-top: 0 !important; margin-bottom: 8px !important; }
+.mirutina__head { margin-bottom: 8px !important; }
+.mirutina__tabs { margin: .5rem 0 .8rem !important; }
+.mirutina__leyenda { margin: -.2rem 0 .6rem .1rem !important; }
+
+/* El día de hoy parpadea en celeste para ubicarlo siempre (aunque estés mirando otro día) */
+@keyframes mirutinaHoy {
+  0%, 100% { background-color: rgba(34, 211, 238, .12); box-shadow: 0 0 0 0 rgba(34, 211, 238, .55); }
+  50%      { background-color: rgba(34, 211, 238, .55); box-shadow: 0 0 0 6px rgba(34, 211, 238, 0); }
+}
+.mirutina__tab.hoy { animation: mirutinaHoy 1.4s ease-in-out infinite; }
+.mirutina__tab.hoy.active { color: var(--negro, #000); }
+@media (prefers-reduced-motion: reduce) { .mirutina__tab.hoy { animation: none; background-color: rgba(34, 211, 238, .35); } }
+
+/* Estado de los ejercicios de otros días (solo lectura) */
+.mirutina__fila--lec { display: flex; align-items: stretch; gap: 8px; margin-bottom: 8px; }
+.mirutina__fila--lec .mirutina__ej { flex: 1; min-width: 0; margin-bottom: 0; }
+.mirutina__est { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 62px; padding: 0 8px; border-radius: 14px; font-size: 11px; font-weight: 700; }
+.mirutina__est:empty { display: none; }
+.mirutina__est i { font-size: 15px; }
+.mirutina__est.ok { background: rgba(34, 197, 94, .18); color: #22c55e; border: 1.5px solid rgba(34, 197, 94, .5); }
+.mirutina__est.no { background: rgba(148, 163, 184, .12); color: #94a3b8; border: 1.5px solid rgba(148, 163, 184, .35); }
+.mirutina__fila--lec.hecha .mirutina__ej { opacity: .6; }
