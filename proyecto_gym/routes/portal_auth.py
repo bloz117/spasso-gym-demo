@@ -4,7 +4,7 @@ routes/portal_auth.py - Endpoints de autenticación del Portal Público (Socio)
 El Portal Público permite que los socios accedan a su dashboard personal
 con credenciales diferentes del sistema de recepción.
 """
-from fastapi import APIRouter, HTTPException, status, Depends, Body
+from fastapi import APIRouter, HTTPException, status, Depends, Body, Request, Response
 from datetime import timedelta
 from routes import verificacion as _ver
 from database import get_db
