@@ -42,7 +42,32 @@ function setPortalToken(token, remember = false) {
 function removePortalToken() {
   sessionStorage.removeItem(PORTAL_API.TOKEN_KEY);
   localStorage.removeItem(PORTAL_API.TOKEN_KEY);
+  // También se borra la cookie "Recordarme" del servidor (cerrar sesión de verdad).
+  try { fetch(PORTAL_API.BASE_URL + '/api/portal/salir', { method: 'POST', credentials: 'same-origin', keepalive: true }).catch(function () {}); } catch (e) { /* noop */ }
 }
+
+// "Recordarme": el servidor deja una cookie HttpOnly de 90 días. Si el navegador
+// pierde el token guardado (limpieza de almacenamiento, cierre del navegador del
+// celular, etc.) la sesión se restaura sola desde esa cookie.
+async function _marcarRecordar(token) {
+  try {
+    await fetch(PORTAL_API.BASE_URL + '/api/portal/recordar', {
+      method: 'POST', credentials: 'same-origin', headers: { 'Authorization': 'Bearer ' + token }
+    });
+  } catch (e) { /* si falla igual queda el token local */ }
+}
+
+async function restaurarSesionRecordada() {
+  try {
+    const r = await fetch(PORTAL_API.BASE_URL + '/api/portal/sesion', { method: 'POST', credentials: 'same-origin' });
+    if (!r.ok) return null;
+    const d = await r.json();
+    if (!d || !d.access_token) return null;
+    setPortalToken(d.access_token, true);
+    return d.usuario || {};
+  } catch (e) { return null; }
+}
+window.restaurarSesionRecordada = restaurarSesionRecordada;
 
 function isPortalAuthenticated() {
   return !!getPortalToken();
@@ -72,6 +97,10 @@ async function portalFetch(endpoint, options = {}) {
     if (endpoint.indexOf('/login') === -1) {
       if (response.status === 401 && token) expirada = true;
       else if (response.status === 403) { const d = await response.clone().json().catch(() => ({})); expirada = d.detail === 'Not authenticated'; }
+    }
+    if (expirada && !options._reintentado && await restaurarSesionRecordada()) {
+      // La cookie "Recordarme" renovó la sesión: se repite la petición con el token nuevo.
+      return portalFetch(endpoint, { ...options, _reintentado: true, headers: { ...(options.headers || {}), Authorization: undefined } });
     }
     if (expirada) {
       // Token vencido o inválido: se limpia la sesión para no mostrar la cuenta "vacía".
@@ -125,6 +154,7 @@ async function loginSocio(email, password, remember = false) {
 
   if (response.access_token) {
     setPortalToken(response.access_token, remember);
+    if (remember) await _marcarRecordar(response.access_token);
   }
 
   return response;
@@ -137,7 +167,10 @@ async function verificarCodigoPortal(desafio, codigo, remember = false) {
     body: JSON.stringify({ desafio, codigo, recordar: !!remember })
   });
   if (response.dispositivo) _guardarDispositivoPortal(response.dispositivo);
-  if (response.access_token) setPortalToken(response.access_token, remember);
+  if (response.access_token) {
+    setPortalToken(response.access_token, remember);
+    if (remember) await _marcarRecordar(response.access_token);
+  }
   return response;
 }
 

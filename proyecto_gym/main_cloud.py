@@ -100,7 +100,7 @@ if _origenes:
 
 # ── Lista blanca de rutas /api (todo lo demás: 404) ───────────────────────
 _PERMITIDAS = [
-    ("POST", r"^/api/portal/(login|verificar|change-password|force-change-password)$"),
+    ("POST", r"^/api/portal/(login|verificar|change-password|force-change-password|recordar|sesion|salir)$"),
     ("POST", r"^/api/portal/recuperar/(solicitar|confirmar)$"),
     ("GET", r"^/api/portal/me(/[A-Za-z0-9_\-]+)*$"),
     ("PUT", r"^/api/portal/me/perfil-fisico$"),

@@ -18,6 +18,12 @@ import threading
 import time
 
 router = APIRouter(prefix="/api/portal", tags=["Portal Autenticación"])
+
+# "Recordarme": la sesión dura 90 días y se renueva cada vez que se abre el portal.
+# Además del token del navegador se deja una cookie HttpOnly (el navegador la manda sola),
+# así la sesión sobrevive aunque el celular borre el almacenamiento local de la página.
+DIAS_RECORDAR = 90
+COOKIE_RECORDAR = "spasso_recordar"
 security = HTTPBearer()
 
 
@@ -109,7 +115,7 @@ def _respuesta_entrenador(id_usuario, username, recordar=False):
         "sub": str(id_usuario),
         "username": username,
         "rol": "Entrenador",
-    }, expires_delta=timedelta(days=30) if recordar else None)
+    }, expires_delta=timedelta(days=DIAS_RECORDAR) if recordar else None)
     return {
         "access_token": token,
         "token_type": "bearer",
@@ -219,7 +225,7 @@ def _respuesta_socio(id_socio, nombres, apellidos, email, recordar=False):
         "email": email,
         "nombres": nombres,
         "rol": "Cliente"
-    }, expires_delta=timedelta(days=30) if recordar else None)
+    }, expires_delta=timedelta(days=DIAS_RECORDAR) if recordar else None)
 
     return {
         "access_token": token,
@@ -496,3 +502,45 @@ def alternar_estado_cuenta(
         )
 
     return {"id_socio": id_socio, "is_active": nuevo_estado}
+
+
+def _poner_cookie_recordar(request: Request, response: Response, payload: dict) -> str:
+    base = {k: v for k, v in payload.items() if k != "exp"}
+    tok = create_access_token(base, expires_delta=timedelta(days=DIAS_RECORDAR))
+    response.set_cookie(
+        COOKIE_RECORDAR, tok, max_age=DIAS_RECORDAR * 86400, httponly=True,
+        secure=(request.url.scheme == "https"), samesite="lax", path="/api/portal",
+    )
+    return tok
+
+
+@router.post("/recordar")
+def portal_recordar(request: Request, response: Response, credentials=Depends(security)):
+    """Se llama justo después de iniciar sesión con 'Recordarme' marcado."""
+    p = decode_token(credentials.credentials)
+    if not p or not (p.get("id_socio") or p.get("rol") == "Entrenador"):
+        raise HTTPException(status_code=401, detail="Token inválido o expirado")
+    _poner_cookie_recordar(request, response, p)
+    return {"ok": True}
+
+
+@router.post("/sesion")
+def portal_sesion_recordada(request: Request, response: Response):
+    """Restaura la sesión desde la cookie 'Recordarme' y la renueva por otros 90 días."""
+    c = request.cookies.get(COOKIE_RECORDAR)
+    p = decode_token(c) if c else None
+    if not p or not (p.get("id_socio") or p.get("rol") == "Entrenador"):
+        raise HTTPException(status_code=401, detail="Sin sesión recordada")
+    tok = _poner_cookie_recordar(request, response, p)
+    if p.get("rol") == "Entrenador":
+        usuario = {"id_usuario": int(p.get("sub") or 0), "username": p.get("username"), "rol": "Entrenador"}
+    else:
+        usuario = {"id_socio": p.get("id_socio"), "nombres": p.get("nombres"), "email": p.get("email"), "rol": "Cliente"}
+    return {"access_token": tok, "token_type": "bearer", "usuario": usuario}
+
+
+@router.post("/salir")
+def portal_salir(response: Response):
+    """Cerrar sesión: borra la cookie 'Recordarme'."""
+    response.delete_cookie(COOKIE_RECORDAR, path="/api/portal")
+    return {"ok": True}

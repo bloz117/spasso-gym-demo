@@ -1851,6 +1851,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const isAdminLogin = document.getElementById('adminLogin').checked;
         const isReceptionLogin = document.getElementById('receptionLogin').checked;
         const rememberMe = document.getElementById('rememberMe').checked;
+        try { if (rememberMe && !isAdminLogin && !isReceptionLogin) localStorage.setItem('portal_email_recordado', email); else localStorage.removeItem('portal_email_recordado'); } catch (e) { /* noop */ }
         
         // Validar que no estén ambos checkboxes marcados
         if (isAdminLogin && isReceptionLogin) {
@@ -2211,6 +2212,31 @@ document.addEventListener('DOMContentLoaded', function() {
         initCambioPassword();
         switchTab('hombres');
         
+        // "Recordarme": si el navegador perdió el token pero el servidor aún recuerda
+        // el dispositivo (cookie de 90 días), la sesión se restaura sola.
+        if (window.getPortalToken && !window.getPortalToken() && window.restaurarSesionRecordada) {
+            window.restaurarSesionRecordada().then(async function (u) {
+                if (!u) return;
+                try {
+                    if (u.rol === 'Entrenador') { window.aplicarSesionEntrenador(u.username); return; }
+                    const perfil = await getSocioProfile();
+                    let plan = null;
+                    try { plan = (await getSocioPlan()).plan || null; } catch (e) { /* sin plan */ }
+                    window.aplicarSesionSocio(perfil, plan);
+                } catch (e) { console.warn('No se pudo restaurar la sesión recordada:', e); }
+            });
+        }
+        // Correo recordado: el login lo trae escrito y el "Recordarme" marcado.
+        try {
+            const emailRec = localStorage.getItem('portal_email_recordado');
+            if (emailRec) {
+                const campoEmail = document.getElementById('loginEmail');
+                const chk = document.getElementById('rememberMe');
+                if (campoEmail && !campoEmail.value) campoEmail.value = emailRec;
+                if (chk) chk.checked = true;
+            }
+        } catch (e) { /* noop */ }
+
         // Verificar sesión al cargar y actualizar UI
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
