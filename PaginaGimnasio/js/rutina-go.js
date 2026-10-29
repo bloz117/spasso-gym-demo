@@ -92,7 +92,22 @@
             speechSynthesis.cancel(); speechSynthesis.speak(u);
         } catch (e) {}
     }
-    function voz(clave) {
+    // Preferencia del socio: con voz o sin voz (se guarda en este celular)
+    var KEY_VOZ = 'spassoVozGo';
+    function vozActiva() { try { return localStorage.getItem(KEY_VOZ) !== '0'; } catch (e) { return true; } }
+    function fijarVoz(on) { try { localStorage.setItem(KEY_VOZ, on ? '1' : '0'); } catch (e) {} if (!on) callarVoz(); }
+    var htmlAud = null;
+    function vozArchivo(clave) {   // respaldo si WebAudio no pudo cargar la frase
+        try {
+            if (htmlAud) { htmlAud.pause(); }
+            htmlAud = new Audio('audio/voz/' + (generoCuenta() === 'f' ? 'mujer' : 'hombre') + '/' + clave + '.mp3');
+            htmlAud.volume = 1;
+            var p = htmlAud.play();
+            if (p && p.catch) p.catch(function () { decirTTS(FRASES[clave]); });
+        } catch (e) { decirTTS(FRASES[clave]); }
+    }
+    function voz(clave, forzar) {
+        if (!forzar && !vozActiva()) return;
         var ac = audio(), buf = bufVoz[clave];
         if (ac && buf) {
             try {
@@ -103,11 +118,12 @@
                 return;
             } catch (e) {}
         }
-        decirTTS(FRASES[clave]);
+        vozArchivo(clave);
     }
     function calentarVoz() { cargarVoz(); try { if (window.speechSynthesis) { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); elegirVoz(); } } catch (e) {} }
     function callarVoz() {
         try { if (vozSrc) { vozSrc.stop(); vozSrc = null; } } catch (e) {}
+        try { if (htmlAud) htmlAud.pause(); } catch (e) {}
         try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
     }
     var NUM_VOZ = { 1: 'uno', 2: 'dos', 3: 'tres' };
@@ -251,9 +267,14 @@
         // Alarma de los últimos segundos del descanso: "ti-ti" que sube de tono + vibración
         // La voz dice el número (10, 5, 3, 2, 1) y un tic suave marca el 4; la campanita queda solo para empezar.
         function alarma(r) {
-            if (r === 5) voz('prepara');
-            else if (r <= 3) voz(NUM_VOZ[r]);
-            else beep(700, 0.08, 0.3);
+            if (vozActiva()) {
+                if (r === 5) voz('prepara');
+                else if (r <= 3) voz(NUM_VOZ[r]);
+                else beep(700, 0.08, 0.3);
+            } else {
+                var f = 760 + (5 - r) * 90;
+                beep(f, 0.11, 0.5); setTimeout(function () { beep(f, 0.11, 0.5); }, 150);
+            }
             vib(r <= 3 ? [90, 60, 90] : 60);
         }
 
@@ -285,7 +306,7 @@
             label.textContent = 'Prepárate'; sub.textContent = 'Acomódate bien';
             cuenta(PREP, function (r) {
                 pop(r);
-                if (r <= 3) voz(NUM_VOZ[r]); else beep(520, 0.12, 0.3);
+                if (r <= 3 && vozActiva()) voz(NUM_VOZ[r]); else beep(r <= 3 ? 660 + (3 - r) * 110 : 520, 0.16, 0.4);
                 vib(r <= 3 ? 70 : 35);
             }, trabajo);
         }
@@ -316,7 +337,7 @@
                 if (r <= 5) { pop(r); stage.classList.add('urgente'); alarma(r); }
                 else num.textContent = r;
                 if (r <= 10) { label.textContent = 'Prepárate'; sub.textContent = r <= 5 ? 'Serie ' + (serie + 1) + ' en…' : 'Ya casi'; }
-                if (r === 10) { voz('diez'); vib(60); }
+                if (r === 10) { if (vozActiva()) voz('diez'); else beep(520, 0.18, 0.25); vib(60); }
             }, function () { serie++; trabajo(); });
         }
         function completado() {
@@ -362,5 +383,17 @@
         pintaIdle();
     }
 
-    window.RutinaGo = { abrir: abrir, refrescar: refrescar, claveDe: claveDe, marcarHecho: marcarHecho };
+    // Botón "Voz" de Mi rutina (arriba de los ejercicios): activa o desactiva la voz guía
+    function pintarBotonVoz(b) {
+        var on = vozActiva();
+        b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.innerHTML = '<i class="fas ' + (on ? 'fa-volume-high' : 'fa-volume-xmark') + '"></i><span>' + (on ? 'Con voz' : 'Sin voz') + '</span>';
+    }
+    document.addEventListener('click', function (e) {
+        var b = e.target.closest && e.target.closest('.mirutina__voz'); if (!b) return;
+        var on = !vozActiva(); fijarVoz(on);
+        document.querySelectorAll('.mirutina__voz').forEach(pintarBotonVoz);
+        if (on) { audio(); calentarVoz(); setTimeout(function () { voz('prepara', true); }, 350); }   // prueba al activar
+    });
+    window.RutinaGo = { vozActiva: vozActiva, pintarBotonVoz: pintarBotonVoz, abrir: abrir, refrescar: refrescar, claveDe: claveDe, marcarHecho: marcarHecho };
 })();

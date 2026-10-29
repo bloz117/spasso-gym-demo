@@ -729,7 +729,12 @@
             return '<button type="button" role="tab" class="mirutina__tab' + (d === sel ? ' active' : '') + (d === hoy ? ' hoy' : '') + (n ? ' tiene' : '') + '" data-dia="' + d + '"' + (d === hoy ? ' title="Hoy"' : '') + '>' +
                 '<span>' + d.slice(0, 3) + '</span><i></i></button>';
         }).join('') + '</div>' +
-            '<div class="mirutina__leyenda"><span><b style="border-color:#22c55e"></b>Con rutina</span></div>';
+            '<div class="mirutina__leyenda"><span><b style="border-color:#22c55e"></b>Con rutina</span>' +
+            (function () {
+                var on = !(window.RutinaGo && window.RutinaGo.vozActiva) || window.RutinaGo.vozActiva();
+                return '<button type="button" class="mirutina__voz' + (on ? ' on' : '') + '" aria-pressed="' + on + '" title="Voz guía durante el descanso">' +
+                    '<i class="fas ' + (on ? 'fa-volume-high' : 'fa-volume-xmark') + '"></i><span>' + (on ? 'Con voz' : 'Sin voz') + '</span></button>';
+            })() + '</div>';
         var paneles = DIAS_SEM.map(function (d) {
             var ejs = porDia[d] || [];
             var cuerpo = ejs.length ? ejs.map(function (e, i) {

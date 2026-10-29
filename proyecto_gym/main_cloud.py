@@ -131,6 +131,9 @@ async def _lista_blanca_y_cabeceras(request: Request, call_next):
     h["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     if ruta.startswith("/api/"):
         h["Cache-Control"] = "no-store"
+    elif ruta in ("/", "/portal") or (ruta.startswith("/portal-static/") and ruta.endswith((".html", ".js", ".css"))):
+        # El navegador revalida siempre (ETag): un cambio publicado se ve al recargar, sin copias viejas.
+        h["Cache-Control"] = "no-cache"
     return response
 
 
