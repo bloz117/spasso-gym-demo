@@ -66,7 +66,25 @@
     if (window.speechSynthesis) { try { speechSynthesis.onvoiceschanged = function () { vozElegida = null; }; } catch (e) {} }
     // Frases grabadas (voz de hombre / de mujer según la cuenta). Si no cargan, se usa la voz del celular.
     var FRASES = { diez: 'Ya falta diez', prepara: 'Prepárate, ya casi', tres: 'Tres', dos: 'Dos', uno: 'Uno', empieza: 'Empieza' };
-    var bufVoz = {}, bufGenero = null, vozSrc = null;
+    var bufVoz = {}, bufGenero = null, vozSrc = null, elVoz = {}, elGenero = null;
+    // Respaldo principal: elementos <audio> (suenan aunque el celular esté en silencio y en cualquier navegador).
+    // Se "desbloquean" una vez con el toque del usuario (reproducir en mudo y pausar).
+    function prepararElementos() {
+        var g = generoCuenta();
+        if (elGenero === g && Object.keys(elVoz).length) return;
+        elVoz = {}; elGenero = g;
+        Object.keys(FRASES).forEach(function (k) {
+            try {
+                var a = new Audio('audio/voz/' + (g === 'f' ? 'mujer' : 'hombre') + '/' + k + '.mp3');
+                a.preload = 'auto'; a.volume = 1; a.muted = true;
+                var pr = a.play();
+                var listo = function () { try { a.pause(); a.currentTime = 0; a.muted = false; } catch (e) {} };
+                if (pr && pr.then) pr.then(listo, function () { a.muted = false; }); else listo();
+                elVoz[k] = a;
+            } catch (e) {}
+        });
+        try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    }
     function cargarVoz() {
         var ac = audio(), g = generoCuenta();
         if (!ac || (bufGenero === g && Object.keys(bufVoz).length)) return;
@@ -108,6 +126,19 @@
     }
     function voz(clave, forzar) {
         if (!forzar && !vozActiva()) return;
+        var el = elVoz[clave];
+        if (el) {
+            try {
+                Object.keys(elVoz).forEach(function (k) { if (k !== clave) { try { elVoz[k].pause(); } catch (e) {} } });
+                el.muted = false; el.currentTime = 0;
+                var pr = el.play();
+                if (pr && pr.catch) pr.catch(function () { vozWebAudio(clave); });
+                return;
+            } catch (e) {}
+        }
+        vozWebAudio(clave);
+    }
+    function vozWebAudio(clave) {
         var ac = audio(), buf = bufVoz[clave];
         if (ac && buf) {
             try {
@@ -120,10 +151,11 @@
         }
         vozArchivo(clave);
     }
-    function calentarVoz() { cargarVoz(); try { if (window.speechSynthesis) { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); elegirVoz(); } } catch (e) {} }
+    function calentarVoz() { cargarVoz(); prepararElementos(); try { if (window.speechSynthesis) { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); elegirVoz(); } } catch (e) {} }
     function callarVoz() {
         try { if (vozSrc) { vozSrc.stop(); vozSrc = null; } } catch (e) {}
         try { if (htmlAud) htmlAud.pause(); } catch (e) {}
+        try { Object.keys(elVoz).forEach(function (k) { elVoz[k].pause(); }); } catch (e) {}
         try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
     }
     var NUM_VOZ = { 1: 'uno', 2: 'dos', 3: 'tres' };
@@ -393,7 +425,15 @@
         var b = e.target.closest && e.target.closest('.mirutina__voz'); if (!b) return;
         var on = !vozActiva(); fijarVoz(on);
         document.querySelectorAll('.mirutina__voz').forEach(pintarBotonVoz);
-        if (on) { audio(); calentarVoz(); setTimeout(function () { voz('prepara', true); }, 350); }   // prueba al activar
+        if (on) {
+            audio(); calentarVoz(); setTimeout(function () { voz('prepara', true); }, 350);   // prueba al activar
+            setTimeout(function () {   // aviso con el estado real, para saber si el celular dejó sonar el audio
+                var listos = Object.keys(elVoz).filter(function (k) { return elVoz[k].readyState >= 2; }).length;
+                var msg = listos ? 'Voz activada. Si no la oyes, sube el volumen multimedia del celular.' : 'No se pudieron cargar los audios de voz. Revisa tu conexión y recarga.';
+                var t = document.createElement('div'); t.className = 'mirutina__voz-aviso'; t.textContent = msg;
+                document.body.appendChild(t); setTimeout(function () { t.remove(); }, 4200);
+            }, 1200);
+        }
     });
     window.RutinaGo = { vozActiva: vozActiva, pintarBotonVoz: pintarBotonVoz, abrir: abrir, refrescar: refrescar, claveDe: claveDe, marcarHecho: marcarHecho };
 })();

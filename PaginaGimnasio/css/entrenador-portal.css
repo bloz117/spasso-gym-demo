@@ -1358,3 +1358,4 @@ body:has(#profileModal.is-open) .fondo-opt[data-fondo="movimiento"] { display: n
 .mirutina__voz { margin-left: auto; display: inline-flex; align-items: center; gap: .4rem; padding: .32rem .7rem; border-radius: 999px; font: inherit; font-size: .72rem; font-weight: 700; cursor: pointer; color: inherit; background: rgba(128,128,128,.14); border: 1.5px solid rgba(128,128,128,.35); opacity: 1; transition: transform .15s, background .2s, border-color .2s; }
 .mirutina__voz.on { background: rgba(34,197,94,.16); border-color: #22c55e; }
 .mirutina__voz:active { transform: scale(.94); }
+.mirutina__voz-aviso { position: fixed; left: 50%; bottom: 5.5rem; transform: translateX(-50%); z-index: 99999; max-width: 88vw; padding: .65rem 1rem; border-radius: 14px; background: rgba(20,20,20,.94); color: #fff; font-size: .8rem; font-weight: 600; text-align: center; box-shadow: 0 8px 28px rgba(0,0,0,.4); }
