@@ -218,6 +218,12 @@ def media_video(ruta: str, request: Request):
     return servir_con_rango(os.path.join(PORTAL_DIR, "vid"), ruta, request)
 
 
+@app.get("/portal-static/audio/{ruta:path}", include_in_schema=False)
+def media_audio(ruta: str, request: Request):
+    # Voz guía de los descansos. iPhone/Safari solo reproduce audio si el servidor soporta 'Range' (206).
+    return servir_con_rango(os.path.join(PORTAL_DIR, "audio"), ruta, request)
+
+
 if os.path.isdir(PORTAL_DIR):
     app.mount("/portal-static", StaticFiles(directory=PORTAL_DIR), name="portal-static")
 

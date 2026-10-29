@@ -75,7 +75,7 @@
         elVoz = {}; elGenero = g;
         Object.keys(FRASES).forEach(function (k) {
             try {
-                var a = new Audio('audio/voz/' + (g === 'f' ? 'mujer' : 'hombre') + '/' + k + '.mp3');
+                var a = new Audio('audio/voz/' + (g === 'f' ? 'mujer' : 'hombre') + '/' + k + '.mp3?v=2');
                 a.preload = 'auto'; a.volume = 1; a.muted = true;
                 var pr = a.play();
                 var listo = function () { try { a.pause(); a.currentTime = 0; a.muted = false; } catch (e) {} };
@@ -91,7 +91,7 @@
         bufVoz = {}; bufGenero = g;
         Object.keys(FRASES).forEach(function (k) {
             try {
-                fetch('audio/voz/' + (g === 'f' ? 'mujer' : 'hombre') + '/' + k + '.mp3')
+                fetch('audio/voz/' + (g === 'f' ? 'mujer' : 'hombre') + '/' + k + '.mp3?v=2')
                     .then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); })
                     .then(function (ab) { return new Promise(function (ok, no) { ac.decodeAudioData(ab, ok, no); }); })
                     .then(function (buf) { if (bufGenero === g) bufVoz[k] = buf; })
@@ -118,7 +118,7 @@
     function vozArchivo(clave) {   // respaldo si WebAudio no pudo cargar la frase
         try {
             if (htmlAud) { htmlAud.pause(); }
-            htmlAud = new Audio('audio/voz/' + (generoCuenta() === 'f' ? 'mujer' : 'hombre') + '/' + clave + '.mp3');
+            htmlAud = new Audio('audio/voz/' + (generoCuenta() === 'f' ? 'mujer' : 'hombre') + '/' + clave + '.mp3?v=2');
             htmlAud.volume = 1;
             var p = htmlAud.play();
             if (p && p.catch) p.catch(function () { decirTTS(FRASES[clave]); });
