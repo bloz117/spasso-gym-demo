@@ -80,6 +80,77 @@
         planes.forEach(function (p) { cont.appendChild(tarjetaPlan(p, telefono)); });
     }
 
+    // ---- Sección pública «Promos» (junto a Planes) ----
+    function seccionPromosVisible(promo, vistaPrevia) {
+        return !!(promo && promo.seccion && Array.isArray(promo.items) && promo.items.length &&
+                  (promo.activa || vistaPrevia));
+    }
+
+    function tarjetaPromo(it, telefono) {
+        var card = el('div', 'plan-card plan-card-promo' + (it.destacada ? ' plan-card-popular' : ''));
+        card.appendChild(el('div', 'plan-card-glow plan-card-glow-tl'));
+        card.appendChild(el('div', 'plan-card-glow plan-card-glow-br'));
+        if (it.etiqueta) {
+            var rib = el('div', 'plan-card-ribbon');
+            rib.appendChild(el('span', '', it.etiqueta));
+            card.appendChild(rib);
+        }
+        var head = el('div', 'plan-card-header');
+        head.appendChild(el('h3', 'plan-card-nombre', it.nombre));
+        if (it.precio) {
+            var precio = el('div', 'plan-card-precio');
+            if (it.precio_antes) precio.appendChild(el('span', 'plan-card-antes', it.precio_antes));
+            precio.appendChild(el('span', 'plan-card-monto', it.precio));
+            if (it.periodo) precio.appendChild(el('span', 'plan-card-periodo', it.periodo));
+            head.appendChild(precio);
+        }
+        if (it.descripcion) head.appendChild(el('p', 'plan-card-desc', it.descripcion));
+        card.appendChild(head);
+
+        var ul = el('ul', 'plan-card-features');
+        (it.beneficios || []).forEach(function (b) {
+            var li = el('li');
+            var chk = el('span', 'plan-card-check');
+            chk.innerHTML = SVG_CHECK;
+            li.appendChild(chk);
+            li.appendChild(el('p', '', b));
+            ul.appendChild(li);
+        });
+        card.appendChild(ul);
+
+        if (it.vigencia) {
+            var v = el('div', 'plan-card-vigencia');
+            v.appendChild(el('i', 'fas fa-hourglass-half'));
+            v.appendChild(el('span', '', it.vigencia));
+            card.appendChild(v);
+        }
+
+        var a = el('a', 'plan-card-btn');
+        a.target = '_blank';
+        a.rel = 'noopener';
+        var msg = 'Hola, quiero aprovechar la promoción: ' + it.nombre +
+            (it.precio ? ' (' + it.precio + (it.periodo ? ' ' + it.periodo : '') + ')' : '') + '.';
+        a.href = 'https://wa.me/' + String(telefono || '').replace(/\D/g, '') + '?text=' + encodeURIComponent(msg);
+        var sp = el('span', '', 'Aprovechar oferta');
+        sp.insertAdjacentHTML('beforeend', ' ' + SVG_FLECHA);
+        a.appendChild(sp);
+        card.appendChild(a);
+        return card;
+    }
+
+    function aplicarSeccionPromos(promo, telefono, vistaPrevia) {
+        var sec = document.getElementById('promociones');
+        var nav = document.getElementById('navPromos');
+        var cont = document.getElementById('promosContenedor');
+        var visible = seccionPromosVisible(promo, vistaPrevia);
+        if (sec) sec.style.display = visible ? '' : 'none';
+        if (nav) nav.style.display = visible ? '' : 'none';
+        if (!cont) return false;
+        cont.textContent = '';
+        if (visible) promo.items.forEach(function (it) { cont.appendChild(tarjetaPromo(it, telefono)); });
+        return visible;
+    }
+
     // opciones.vistaPrevia: la usa el editor de Recepción (iframe): muestra la
     // alerta al instante y sin recordar que ya se vio.
     // Panel "Promociones" del perfil del socio (detallado).
@@ -124,43 +195,88 @@
     }
     window.renderPromosPanel = renderPromosPanel;
 
+    var promoTimers = [];
     function aplicarPromocion(promo, opciones) {
         opciones = opciones || {};
+        promoTimers.forEach(clearTimeout); promoTimers = [];
         renderPromosPanel(promo && (promo.activa || opciones.vistaPrevia) ? Object.assign({}, promo, { activa: true }) : promo, window.__telPortal);
+        var hayPromos = aplicarSeccionPromos(promo, window.__telPortal, !!opciones.vistaPrevia);
         var caja = document.getElementById('promoAlerta');
         if (!caja) return;
-        var mostrar = promo && promo.titulo && (promo.activa || opciones.vistaPrevia);
+        var vistaPrevia = !!opciones.vistaPrevia;
+        // En la vista previa se muestra aunque falte texto (con ejemplos), para poder diseñarla en vivo.
+        var mostrar = promo && promo.activa && (promo.titulo || vistaPrevia);
         if (!mostrar) {
             caja.classList.remove('visible');
             caja.hidden = true;
             return;
         }
+        var titulo = promo.titulo || 'Título de tu promoción';
+        var texto = promo.texto || (promo.titulo ? '' : 'Aquí va el mensaje que verá el visitante.');
         var clave = 'promoVista:' + promo.titulo + '|' + promo.texto;
-        if (!opciones.vistaPrevia) {
+        var unaVez = promo.frecuencia !== 'siempre';
+        if (!vistaPrevia && unaVez) {
             try { if (sessionStorage.getItem(clave)) return; } catch (e) {}
         }
 
-        document.getElementById('promoAlertaTitulo').textContent = promo.titulo;
-        document.getElementById('promoAlertaTexto').textContent = promo.texto || '';
-        document.getElementById('promoAlertaVigencia').textContent = promo.vigencia || '';
+        caja.className = 'promo-alerta promo-c-' + (promo.color || 'rosa') + (promo.posicion === 'esquina' ? ' promo-alerta--esquina' : '');
+        document.getElementById('promoAlertaTitulo').textContent = titulo;
+        document.getElementById('promoAlertaTexto').textContent = texto;
+        document.getElementById('promoAlertaVigencia').textContent = promo.vigencia || (vistaPrevia && !promo.titulo ? 'Vigencia de la promoción' : '');
+        caja.querySelector('.promo-alerta__badge').textContent = promo.etiqueta || 'PROMOCIÓN';
+
+        var btn = document.getElementById('promoAlertaBtn');
+        var accion = promo.boton_accion || 'planes';
+        btn.textContent = promo.boton_texto || (accion === 'promos' ? 'Ver promociones' : 'Ver planes');
+        btn.style.display = accion === 'ninguno' && !promo.boton_texto ? 'none' : '';
+        if (accion === 'whatsapp' && window.__telPortal) {
+            btn.href = 'https://wa.me/' + String(window.__telPortal).replace(/\D/g, '');
+            btn.target = '_blank'; btn.rel = 'noopener';
+        } else {
+            btn.href = accion === 'promos' ? (hayPromos ? '#promociones' : '#planes') : (accion === 'planes' ? '#planes' : '#');
+            btn.removeAttribute('target');
+        }
+
+        var barra = caja.querySelector('.promo-alerta__barra');
+        if (!barra) {
+            barra = document.createElement('div');
+            barra.className = 'promo-alerta__barra';
+            barra.appendChild(document.createElement('i'));
+            caja.querySelector('.promo-alerta__caja').appendChild(barra);
+        }
+        var seg = parseInt(promo.cierre_auto, 10) || 0;
+        barra.style.display = seg ? '' : 'none';
 
         function cerrar() {
+            promoTimers.forEach(clearTimeout); promoTimers = [];
             caja.classList.remove('visible');
-            setTimeout(function () { caja.hidden = true; }, 300);
-            if (!opciones.vistaPrevia) {
+            promoTimers.push(setTimeout(function () { caja.hidden = true; }, 350));
+            if (!vistaPrevia && unaVez) {
                 try { sessionStorage.setItem(clave, '1'); } catch (e) {}
             }
         }
         document.getElementById('promoAlertaCerrar').onclick = cerrar;
-        document.getElementById('promoAlertaBtn').onclick = cerrar;
-        caja.onclick = function (e) { if (e.target === caja) cerrar(); };
+        btn.onclick = function (e) { if (accion === 'ninguno') e.preventDefault(); cerrar(); };
+        caja.onclick = function (e) { if (e.target === caja && promo.posicion !== 'esquina') cerrar(); };
 
         function abrir() {
             caja.hidden = false;
-            requestAnimationFrame(function () { caja.classList.add('visible'); });
+            var fill = barra.firstChild;
+            if (seg) { fill.style.transition = 'none'; fill.style.transform = 'scaleX(1)'; }
+            requestAnimationFrame(function () {
+                caja.classList.add('visible');
+                if (seg) {
+                    requestAnimationFrame(function () {
+                        fill.style.transition = 'transform ' + seg + 's linear';
+                        fill.style.transform = 'scaleX(0)';
+                    });
+                }
+            });
+            if (seg) promoTimers.push(setTimeout(cerrar, seg * 1000));
         }
-        // Espera a que termine la intro de bienvenida (~3 s) en la visita real.
-        if (opciones.vistaPrevia) abrir(); else setTimeout(abrir, 3200);
+        // Visita real: espera la intro (~3 s) + el retraso elegido. Vista previa: casi inmediata.
+        var retraso = vistaPrevia ? (opciones.repetir ? 150 : 400) : 3200 + (parseInt(promo.retraso, 10) || 0) * 1000;
+        promoTimers.push(setTimeout(abrir, retraso));
     }
 
     // **negrita** -> <strong>, sin permitir HTML
@@ -253,7 +369,7 @@
         if (e.data.tipo === 'portal-preview') {
             var cont = e.data.contenido || {};
             if (!e.data.promoVisible) cont = Object.assign({}, cont, { promocion: { activa: false } });
-            aplicar(cont, { vistaPrevia: true });
+            aplicar(cont, { vistaPrevia: true, repetir: !!e.data.replay });
             if (Array.isArray(e.data.hero) && e.data.hero.length && typeof window.__establecerImagenesHero === 'function') {
                 window.__establecerImagenesHero(e.data.hero.map(function (f) { return 'img/' + f; }));
             }

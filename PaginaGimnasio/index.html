@@ -6,7 +6,7 @@
     <title>Spasso - Sauna & Gym Premium</title>
     <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
     <link href="vendor/fonts/fonts.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=20261230">
+    <link rel="stylesheet" href="css/styles.css?v=20261232">
     <link rel="stylesheet" href="css/fondos-portal.css?v=20261106">
     <link rel="stylesheet" href="css/entrenador-portal.css?v=20261305">
     <script>
@@ -207,9 +207,9 @@
                 <li style="display:none"><a href="#piscina" class="nav-link">Piscina</a></li>
                 <li><a href="#gimnasio" class="nav-link" data-nav="gimnasio">Gimnasio</a></li>
                 <li><a href="#planes" class="nav-link" data-nav="planes">Planes</a></li>
-                <!-- Promociones: oculto hasta que se habilite dinámicamente
-                     desde la app de recepción (igual que Saunas/Piscina) -->
-                <li style="display:none"><a href="#promociones" class="nav-link">Promociones</a></li>
+                <!-- Promos: oculto hasta que Recepción active la sección
+                     (Página Web > Promo > «Mostrar sección Promos»). -->
+                <li id="navPromos" style="display:none"><a href="#promociones" class="nav-link" data-nav="promos">Promos</a></li>
                 <!-- Ubicaciones y Contacto ya no es una sección más del
                      scroll: se abre como ventana flotante solo al hacer
                      clic aquí (no aparece si simplemente bajas la página). -->
@@ -529,45 +529,12 @@
         </div>
     </section>
 
-    <!-- Sección Promociones: oculta hasta que se habilite dinámicamente
-         desde la app de recepción (mismo patrón que Saunas/Piscina). El
-         contenido queda listo, solo hace falta quitar el display:none
-         cuando esa función se active del lado de recepción. -->
+    <!-- Sección Promos: la llena y la muestra contenido-portal.js solo cuando
+         Recepción la activa (Página Web > Promo). Mismas tarjetas que Planes. -->
     <section id="promociones" class="section" style="display:none">
-        <h2 class="section-title">PROMOCIONES ESPECIALES</h2>
-        <div class="promo-grid">
-            <div class="promo-card">
-                <div class="promo-badge">¡NUEVO!</div>
-                <h3>Inscripción de Temporada</h3>
-                <p class="promo-date">Válido del 1 al 30 de Junio</p>
-                <p>Inscríbete este mes y obtén un 30% de descuento en tu primera mensualidad.</p>
-                <button class="promo-btn" data-promo="Inscripción de Temporada - 30% descuento primera mensualidad">Aprovechar Oferta</button>
-            </div>
-            
-            <div class="promo-card">
-                <div class="promo-badge">¡EXCLUSIVO!</div>
-                <h3>Trae un Amigo</h3>
-                <p class="promo-date">Válido todo el año</p>
-                <p>Si traes a un amigo, ambos obtienen 2 semanas gratis adicionales a su membresía.</p>
-                <button class="promo-btn" data-promo="Trae un Amigo - 2 semanas gratis para ambos">Aprovechar Oferta</button>
-            </div>
-            
-            <div class="promo-card">
-                <div class="promo-badge">¡LIMITADO!</div>
-                <h3>Combo Premium</h3>
-                <p class="promo-date">Válido hasta agotar stock</p>
-                <p>Membresía VIP + 5 sesiones de sauna privado por solo $150.000 (normal 180 bs).</p>
-                <button class="promo-btn" data-promo="Combo Premium - VIP + 5 saunas $150.000">Aprovechar Oferta</button>
-            </div>
-            
-            <div class="promo-card">
-                <div class="promo-badge">¡FLASH!</div>
-                <h3>Día del Padre</h3>
-                <p class="promo-date">Válido hasta el 30 de Junio</p>
-                <p>20% de descuento en todas las membresías para padres. Presenta certificado de nacimiento.</p>
-                <button class="promo-btn" data-promo="Día del Padre - 20% descuento membresías">Aprovechar Oferta</button>
-            </div>
-        </div>
+        <h2 class="section-title" data-tit="promos">PROMOS</h2>
+        <p class="section-subtitle" data-tit="promos_sub">Ofertas por tiempo limitado</p>
+        <div class="membership-tiers" id="promosContenedor"></div>
     </section>
 
     <!-- Pie de página del sitio: Logo + Horario + Redes, en fila, al estilo
@@ -1314,7 +1281,7 @@
     <script src="js/ejercicio-video.js?v=20261213"></script>
     <script src="js/ejercicios.js?v=20261213"></script>
     <script src="js/fondos-portal.js?v=20261234"></script>
-    <script src="js/contenido-portal.js?v=20261015"></script>
+    <script src="js/contenido-portal.js?v=20261016"></script>
     <script src="js/entrenador-portal.js?v=20261305"></script>
     <script src="js/rutina-go.js?v=20261303"></script>
     <script src="js/rutina-propia.js?v=20261241"></script>

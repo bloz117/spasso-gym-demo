@@ -6045,3 +6045,27 @@ body:has(#profileModal.is-open) .header-back-btn i { color: #fff !important; }
 .codigo-box__link{align-self:center;font-size:13.5px;color:var(--celeste,#22d3ee);text-decoration:none;opacity:.95}
 .codigo-box__link:hover{text-decoration:underline}
 .codigo-box__link--tenue{color:inherit;opacity:.65}
+
+/* ---- Sección «Promos» (tarjetas como las de Planes) ---- */
+.plan-card-promo .plan-card-ribbon span { font-size: 0.58rem; letter-spacing: 0.03em; }
+.plan-card-antes {
+    align-self: center;
+    margin-right: 0.45rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    opacity: 0.55;
+    text-decoration: line-through;
+}
+.plan-card-vigencia {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.2rem 0 0.9rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    opacity: 0.85;
+}
+.plan-card-vigencia i { color: var(--rosa-fucsia); }
+/* Promos: 1, 2 o 3 tarjetas siempre centradas */
+#promosContenedor { display: flex; flex-wrap: wrap; justify-content: center; max-width: 1020px; }
+#promosContenedor > .plan-card { flex: 1 1 280px; max-width: 320px; }
