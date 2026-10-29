@@ -27,6 +27,58 @@
             o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
         } catch (e) {}
     }
+    // Campanita de "¡empieza!": parciales agudos con caída larga; suena distinta a cualquier pitido
+    function campana() {
+        var ac = audio(); if (!ac) return;
+        try {
+            var t = ac.currentTime;
+            [[1568, 0.55], [2349, 0.3], [3136, 0.2], [4186, 0.1]].forEach(function (p) {
+                var o = ac.createOscillator(), g = ac.createGain();
+                o.type = 'sine'; o.frequency.value = p[0];
+                g.gain.setValueAtTime(0.0001, t);
+                g.gain.exponentialRampToValueAtTime(p[1], t + 0.008);
+                g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+                o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + 1.7);
+            });
+        } catch (e) {}
+    }
+
+    // ---------- Voz guía (masculina o femenina según la cuenta) ----------
+    var VOZ_F = /sabina|helena|elvira|paulina|monica|mónica|laura|elena|lucia|lucía|marisol|dalia|camila|female|mujer|google espa/i;
+    var VOZ_M = /pablo|raul|raúl|jorge|diego|alvaro|álvaro|enrique|carlos|juan|male|hombre/i;
+    var vozElegida = null, vozGenero = null;
+    function generoCuenta() {
+        try {
+            var u = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            return u && u.genero === 'femenino' ? 'f' : 'm';
+        } catch (e) { return 'm'; }
+    }
+    function elegirVoz() {
+        var g = generoCuenta();
+        if (vozElegida && vozGenero === g) return vozElegida;
+        var vs = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
+        var es = vs.filter(function (v) { return /^es(-|_|$)/i.test(v.lang); });
+        var pref = es.filter(function (v) { return (g === 'f' ? VOZ_F : VOZ_M).test(v.name); });
+        var noOpuesta = es.filter(function (v) { return !(g === 'f' ? VOZ_M : VOZ_F).test(v.name); });
+        vozElegida = pref[0] || noOpuesta[0] || es[0] || null; vozGenero = g;
+        return vozElegida;
+    }
+    if (window.speechSynthesis) { try { speechSynthesis.onvoiceschanged = function () { vozElegida = null; }; } catch (e) {} }
+    function decir(txt, enfasis) {
+        try {
+            if (!window.speechSynthesis) return;
+            var u = new SpeechSynthesisUtterance(txt), v = elegirVoz(), g = generoCuenta();
+            u.lang = 'es-ES'; if (v) { u.voice = v; u.lang = v.lang; }
+            u.volume = 1; u.rate = enfasis ? 1.0 : 1.08;
+            // Si no hay una voz del género pedido, el tono ayuda a distinguirla
+            var propia = v && (g === 'f' ? VOZ_F : VOZ_M).test(v.name);
+            u.pitch = propia ? 1 : (g === 'f' ? 1.3 : 0.7);
+            speechSynthesis.cancel(); speechSynthesis.speak(u);
+        } catch (e) {}
+    }
+    function calentarVoz() { try { if (window.speechSynthesis) { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); elegirVoz(); } } catch (e) {} }
+    function callarVoz() { try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
+    var NUM_VOZ = { 1: 'uno', 2: 'dos', 3: 'tres', 4: 'cuatro', 5: 'cinco' };
     function vib(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
     var wake = null;
     function pantallaEncendida(on) {
@@ -113,7 +165,7 @@
     function abrir(idx) {
         var lista = listaHoy(), ej = lista[idx];
         if (!ej) return;
-        audio();                        // el toque del usuario habilita el sonido
+        audio(); calentarVoz();         // el toque del usuario habilita el sonido y la voz
         pantallaEncendida(true);
 
         var total = Math.max(1, parseInt(ej.series, 10) || 1);
@@ -165,10 +217,12 @@
             num.classList.add(ya ? 'pop--ya' : 'pop'); stage.classList.add('tick');
         }
         // Alarma de los últimos segundos del descanso: "ti-ti" que sube de tono + vibración
+        // La voz dice el número (10, 5, 3, 2, 1) y un tic suave marca el 4; la campanita queda solo para empezar.
         function alarma(r) {
-            var f = 760 + (5 - r) * 90;
-            beep(f, 0.11, 0.5); setTimeout(function () { beep(f, 0.11, 0.5); }, 150);
-            vib([90, 60, 90]);
+            if (r === 5) decir('Cinco. Ya es hora', true);
+            else if (r <= 3) decir(NUM_VOZ[r]);
+            else beep(700, 0.08, 0.3);
+            vib(r <= 3 ? [90, 60, 90] : 60);
         }
 
         var serie = 1, fase = 'idle', fin = 0, dur = 0, ini = 0, ultimo = -1, timer = null;
@@ -199,13 +253,14 @@
             label.textContent = 'Prepárate'; sub.textContent = 'Acomódate bien';
             cuenta(PREP, function (r) {
                 pop(r);
-                beep(r <= 3 ? 660 + (3 - r) * 110 : 520, 0.16, 0.45); vib(r <= 3 ? 70 : 35);
+                if (r <= 3) decir(NUM_VOZ[r]); else beep(520, 0.12, 0.3);
+                vib(r <= 3 ? 70 : 35);
             }, trabajo);
         }
         function trabajo() {
             setFase('work');
             stage.classList.remove('urgente');
-            beep(1040, 0.35, 0.45); vib([180]);
+            callarVoz(); campana(); setTimeout(function () { decir('¡Empieza!', true); }, 250); vib([180]);
             label.textContent = '¡Ya! · Serie ' + serie + ' de ' + total;
             sub.textContent = repsTxt ? repsTxt + ' · toca al terminar' : 'Toca al terminar';
             btn.textContent = 'TERMINÉ'; btn.hidden = false; anillo(1);
@@ -229,7 +284,7 @@
                 if (r <= 5) { pop(r); stage.classList.add('urgente'); alarma(r); }
                 else num.textContent = r;
                 if (r <= 10) { label.textContent = 'Prepárate'; sub.textContent = r <= 5 ? 'Serie ' + (serie + 1) + ' en…' : 'Ya casi'; }
-                if (r === 10) { beep(520, 0.18, 0.25); vib(60); }
+                if (r === 10) { decir('Ya faltan diez. Prepárate', true); vib(60); }
             }, function () { serie++; trabajo(); });
         }
         function completado() {
@@ -240,7 +295,7 @@
             marcarHecho(claveDe(ej, idx)); refrescar();
         }
         function cerrar() {
-            paraTimer(); pantallaEncendida(false); ov.remove();
+            paraTimer(); callarVoz(); pantallaEncendida(false); ov.remove();
             document.documentElement.style.overflow = '';
         }
         function finDelDia() {
