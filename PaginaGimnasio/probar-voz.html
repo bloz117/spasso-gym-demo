@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prueba de voz</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#111;color:#fff;margin:0;padding:16px}
+h1{font-size:1.15rem;margin:0 0 4px} p{font-size:.85rem;opacity:.75;margin:0 0 14px}
+button{display:block;width:100%;padding:16px;margin:0 0 10px;border:0;border-radius:14px;font-size:1rem;font-weight:700;background:#22c55e;color:#06210f}
+button.b{background:#38bdf8;color:#04202e} button.c{background:#fbbf24;color:#2b1d00} button.d{background:#f472b6;color:#2e0a1c}
+pre{white-space:pre-wrap;word-break:break-word;background:#000;border:1px solid #333;border-radius:10px;padding:10px;font-size:.78rem;min-height:120px}
+</style></head><body>
+<h1>Prueba de voz (Spasso)</h1>
+<p>Sube el volumen multimedia y toca cada botón. Dime cuáles SÍ suenan.</p>
+<button id="b1">1) Pitido</button>
+<button id="b2" class="b">2) Voz grabada – método A (audio normal)</button>
+<button id="b3" class="c">3) Voz grabada – método B (WebAudio)</button>
+<button id="b4" class="d">4) Voz del teléfono</button>
+<pre id="log">Esperando…</pre>
+<script>
+var L=document.getElementById('log');function log(t){L.textContent+='\n'+t}L.textContent='Navegador: '+navigator.userAgent;
+var g='hombre';
+document.getElementById('b1').onclick=function(){try{var ac=new(window.AudioContext||window.webkitAudioContext)();ac.resume();var o=ac.createOscillator(),gn=ac.createGain();o.frequency.value=880;gn.gain.value=.5;o.connect(gn);gn.connect(ac.destination);o.start();o.stop(ac.currentTime+.4);log('1 pitido enviado (estado '+ac.state+')')}catch(e){log('1 ERROR '+e)}};
+document.getElementById('b2').onclick=function(){var a=new Audio('audio/voz/'+g+'/diez.mp3?v=3');a.volume=1;
+ a.onerror=function(){log('2 ERROR de audio código '+(a.error&&a.error.code))};
+ var p=a.play();if(p&&p.then)p.then(function(){log('2 reproduciendo (dur '+a.duration+')')},function(e){log('2 BLOQUEADO: '+e)})};
+document.getElementById('b3').onclick=function(){try{var ac=new(window.AudioContext||window.webkitAudioContext)();ac.resume();
+ fetch('audio/voz/'+g+'/prepara.mp3?v=3').then(function(r){log('3 descarga '+r.status);return r.arrayBuffer()}).then(function(ab){return new Promise(function(ok,no){ac.decodeAudioData(ab,ok,no)})}).then(function(b){var s=ac.createBufferSource();s.buffer=b;s.connect(ac.destination);s.start();log('3 reproduciendo (estado '+ac.state+')')}).catch(function(e){log('3 ERROR '+e)})}catch(e){log('3 ERROR '+e)}};
+document.getElementById('b4').onclick=function(){try{if(!window.speechSynthesis){log('4 este navegador no tiene voz');return}var u=new SpeechSynthesisUtterance('Ya falta diez, prepárate');u.lang='es-ES';u.onstart=function(){log('4 hablando')};u.onerror=function(e){log('4 ERROR '+e.error)};speechSynthesis.speak(u);log('4 voces disponibles: '+speechSynthesis.getVoices().length)}catch(e){log('4 ERROR '+e)}};
+</script></body></html>
