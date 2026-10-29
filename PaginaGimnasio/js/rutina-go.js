@@ -416,24 +416,24 @@
     }
 
     // Botón "Voz" de Mi rutina (arriba de los ejercicios): activa o desactiva la voz guía
+    var ICONO_VOZ = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.3 2.5-5.6 5.5-5.6s5.5 2.3 5.5 5.6"/><path class="w1" d="M16.6 7.4a3.6 3.6 0 0 1 0 5"/><path class="w2" d="M19.2 5a7 7 0 0 1 0 9.8"/></svg><i class="mirutina__voz-x"></i>';
     function pintarBotonVoz(b) {
         var on = vozActiva();
         b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
-        b.innerHTML = '<i class="fas ' + (on ? 'fa-volume-high' : 'fa-volume-xmark') + '"></i><span>' + (on ? 'Con voz' : 'Sin voz') + '</span>';
+        b.setAttribute('aria-label', on ? 'Entrenar con audio (activado)' : 'Entrenar sin audio (desactivado)');
+        if (!b.querySelector('svg')) b.innerHTML = ICONO_VOZ;
+        var t = b.parentNode && b.parentNode.querySelector('.mirutina__voz-txt');
+        if (t) t.innerHTML = '<b>' + (on ? 'Entrenar con audio' : 'Entrenar sin audio') + '</b><small>' + (on ? 'Toca para silenciar la voz' : 'Toca para activar la voz') + '</small>';
     }
+    function pintarVacios() { document.querySelectorAll('.mirutina__voz').forEach(function (b) { if (!b.querySelector('svg')) pintarBotonVoz(b); }); }
+    try { new MutationObserver(pintarVacios).observe(document.body, { childList: true, subtree: true }); } catch (e) {}
+    pintarVacios();
     document.addEventListener('click', function (e) {
         var b = e.target.closest && e.target.closest('.mirutina__voz'); if (!b) return;
         var on = !vozActiva(); fijarVoz(on);
         document.querySelectorAll('.mirutina__voz').forEach(pintarBotonVoz);
-        if (on) {
-            audio(); calentarVoz(); setTimeout(function () { voz('prepara', true); }, 350);   // prueba al activar
-            setTimeout(function () {   // aviso con el estado real, para saber si el celular dejó sonar el audio
-                var listos = Object.keys(elVoz).filter(function (k) { return elVoz[k].readyState >= 2; }).length;
-                var msg = listos ? 'Voz activada. Si no la oyes, sube el volumen multimedia del celular.' : 'No se pudieron cargar los audios de voz. Revisa tu conexión y recarga.';
-                var t = document.createElement('div'); t.className = 'mirutina__voz-aviso'; t.textContent = msg;
-                document.body.appendChild(t); setTimeout(function () { t.remove(); }, 4200);
-            }, 1200);
-        }
+        if (on) { audio(); calentarVoz(); }   // solo prepara los audios (en silencio); no suena nada al activar
+        else callarVoz();
     });
     window.RutinaGo = { vozActiva: vozActiva, pintarBotonVoz: pintarBotonVoz, abrir: abrir, refrescar: refrescar, claveDe: claveDe, marcarHecho: marcarHecho };
 })();

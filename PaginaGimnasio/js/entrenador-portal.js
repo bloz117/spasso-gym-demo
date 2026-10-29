@@ -732,8 +732,9 @@
             '<div class="mirutina__leyenda"><span><b style="border-color:#22c55e"></b>Con rutina</span>' +
             (function () {
                 var on = !(window.RutinaGo && window.RutinaGo.vozActiva) || window.RutinaGo.vozActiva();
-                return '<button type="button" class="mirutina__voz' + (on ? ' on' : '') + '" aria-pressed="' + on + '" title="Voz guía durante el descanso">' +
-                    '<i class="fas ' + (on ? 'fa-volume-high' : 'fa-volume-xmark') + '"></i><span>' + (on ? 'Con voz' : 'Sin voz') + '</span></button>';
+                return '<span class="mirutina__vozbox"><span class="mirutina__voz-txt"><b>' + (on ? 'Entrenar con audio' : 'Entrenar sin audio') + '</b><small>' + (on ? 'Toca para silenciar la voz' : 'Toca para activar la voz') + '</small></span>' +
+                    '<i class="fas fa-arrow-right mirutina__voz-flecha"></i>' +
+                    '<button type="button" class="mirutina__voz' + (on ? ' on' : '') + '" aria-pressed="' + on + '" title="Voz guía durante el descanso"></button></span>';
             })() + '</div>';
         var paneles = DIAS_SEM.map(function (d) {
             var ejs = porDia[d] || [];

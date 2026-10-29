@@ -1355,7 +1355,26 @@ body:has(#profileModal.is-open) .fondo-opt[data-fondo="movimiento"] { display: n
 .mirutina__est.pend { background: rgba(34, 211, 238, .10); color: #22d3ee; border: 1.5px solid rgba(34, 211, 238, .35); }
 
 /* Botón de voz guía (Mi rutina) */
-.mirutina__voz { margin-left: auto; display: inline-flex; align-items: center; gap: .4rem; padding: .32rem .7rem; border-radius: 999px; font: inherit; font-size: .72rem; font-weight: 700; cursor: pointer; color: inherit; background: rgba(128,128,128,.14); border: 1.5px solid rgba(128,128,128,.35); opacity: 1; transition: transform .15s, background .2s, border-color .2s; }
-.mirutina__voz.on { background: rgba(34,197,94,.16); border-color: #22c55e; }
-.mirutina__voz:active { transform: scale(.94); }
+.mirutina__vozbox { margin-left: auto; display: inline-flex; align-items: center; gap: .5rem; min-width: 0; }
+.mirutina__voz-txt { display: flex; flex-direction: column; text-align: right; line-height: 1.15; min-width: 0; }
+.mirutina__voz-txt b { font-size: .74rem; font-weight: 800; }
+.mirutina__voz-txt small { font-size: .62rem; opacity: .65; }
+.mirutina__voz-flecha { font-size: .7rem; opacity: .55; animation: vozFlecha 1.4s ease-in-out infinite; }
+@keyframes vozFlecha { 0%,100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+.mirutina__voz { position: relative; flex: 0 0 auto; width: 40px; height: 40px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; color: inherit; background: rgba(128,128,128,.16); border: 2px solid rgba(128,128,128,.4); box-shadow: 0 3px 10px rgba(0,0,0,.25); transition: transform .18s cubic-bezier(.3,1.4,.5,1), background .25s, border-color .25s, color .25s; }
+.mirutina__voz:hover { transform: scale(1.06); }
+.mirutina__voz:active { transform: scale(.9); }
+.mirutina__voz .w1, .mirutina__voz .w2 { transition: opacity .2s; }
+.mirutina__voz-x { position: absolute; left: 7px; right: 7px; top: 50%; height: 2.5px; border-radius: 2px; background: #ef4444; transform: rotate(-45deg) scaleX(1); transition: transform .25s; pointer-events: none; }
+.mirutina__voz.on { background: rgba(34,197,94,.2); border-color: #22c55e; color: #22c55e; animation: vozPulso 2.2s ease-out infinite; }
+.mirutina__voz.on .mirutina__voz-x { transform: rotate(-45deg) scaleX(0); }
+.mirutina__voz:not(.on) .w1, .mirutina__voz:not(.on) .w2 { opacity: .25; }
+@keyframes vozPulso { 0% { box-shadow: 0 0 0 0 rgba(34,197,94,.5); } 70%,100% { box-shadow: 0 0 0 10px rgba(34,197,94,0); } }
+@media (prefers-reduced-motion: reduce) { .mirutina__voz.on, .mirutina__voz-flecha { animation: none; } }
 .mirutina__voz-aviso { position: fixed; left: 50%; bottom: 5.5rem; transform: translateX(-50%); z-index: 99999; max-width: 88vw; padding: .65rem 1rem; border-radius: 14px; background: rgba(20,20,20,.94); color: #fff; font-size: .8rem; font-weight: 600; text-align: center; box-shadow: 0 8px 28px rgba(0,0,0,.4); }
+
+/* la leyenda tiene reglas genéricas para <b>/<span>: las neutralizamos dentro del control de voz */
+.mirutina__leyenda .mirutina__vozbox { display: inline-flex; opacity: 1; gap: .5rem; }
+.mirutina__leyenda .mirutina__voz-txt { display: flex; opacity: 1; gap: 0; }
+.mirutina__leyenda .mirutina__voz-txt b { width: auto; height: auto; border: 0; border-radius: 0; display: block; opacity: 1; }
+.mirutina__leyenda { padding-right: .15rem; }
