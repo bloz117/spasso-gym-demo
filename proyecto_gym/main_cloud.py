@@ -166,8 +166,8 @@ _NOMBRE_OK = re.compile(r"^[\w \-.()]{1,150}$")
 _media_cache = {"t": 0.0, "idx": {}}
 
 
-def _indice_media():
-    if time.time() - _media_cache["t"] > 60:
+def _indice_media(forzar=False):
+    if time.time() - _media_cache["t"] > (3 if forzar else 60):
         try:
             with database.get_db() as conn:
                 cur = conn.cursor()
@@ -182,7 +182,7 @@ def _indice_media():
 def _servir_media(carpeta: str, nombre: str, request: Request):
     if not _NOMBRE_OK.match(nombre) or nombre.startswith("."):
         return JSONResponse({"detail": "No encontrado"}, status_code=404)
-    sha = _indice_media().get((carpeta, nombre))
+    sha = _indice_media().get((carpeta, nombre)) or _indice_media(forzar=True).get((carpeta, nombre))
     if sha:
         if request.headers.get("if-none-match") == f'"{sha}"':
             return Response(status_code=304)

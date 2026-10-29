@@ -86,7 +86,11 @@ async def firmado_nube(request: Request):
     ok, motivo = sc.verificar_firma(secreto, request.method, path_qs, request.headers, body)
     if not ok:
         _registrar_fallo(ip)
-        raise HTTPException(status_code=401, detail="No autorizado")
+        # Solo se revela el motivo del reloj (no expone nada secreto); el resto es genérico
+        # Huella corta (6 hex de un SHA-256) para que Recepción diga si las claves son iguales, sin revelar la clave
+        fp = hashlib.sha256(secreto.encode()).hexdigest()[:6]
+        raise HTTPException(status_code=401,
+                            detail=("No autorizado (hora)" if "hora" in (motivo or "") else "No autorizado") + f" fp={fp}")
     request.state.body = body
 
 
