@@ -64,21 +64,53 @@
         return vozElegida;
     }
     if (window.speechSynthesis) { try { speechSynthesis.onvoiceschanged = function () { vozElegida = null; }; } catch (e) {} }
-    function decir(txt, enfasis) {
+    // Frases grabadas (voz de hombre / de mujer según la cuenta). Si no cargan, se usa la voz del celular.
+    var FRASES = { diez: 'Ya falta diez', prepara: 'Prepárate, ya casi', tres: 'Tres', dos: 'Dos', uno: 'Uno', empieza: 'Empieza' };
+    var bufVoz = {}, bufGenero = null, vozSrc = null;
+    function cargarVoz() {
+        var ac = audio(), g = generoCuenta();
+        if (!ac || (bufGenero === g && Object.keys(bufVoz).length)) return;
+        bufVoz = {}; bufGenero = g;
+        Object.keys(FRASES).forEach(function (k) {
+            try {
+                fetch('audio/voz/' + (g === 'f' ? 'mujer' : 'hombre') + '/' + k + '.mp3')
+                    .then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); })
+                    .then(function (ab) { return new Promise(function (ok, no) { ac.decodeAudioData(ab, ok, no); }); })
+                    .then(function (buf) { if (bufGenero === g) bufVoz[k] = buf; })
+                    .catch(function () {});
+            } catch (e) {}
+        });
+    }
+    function decirTTS(txt) {
         try {
             if (!window.speechSynthesis) return;
             var u = new SpeechSynthesisUtterance(txt), v = elegirVoz(), g = generoCuenta();
             u.lang = 'es-ES'; if (v) { u.voice = v; u.lang = v.lang; }
-            u.volume = 1; u.rate = enfasis ? 1.0 : 1.08;
-            // Si no hay una voz del género pedido, el tono ayuda a distinguirla
+            u.volume = 1; u.rate = 1.05;
             var propia = v && (g === 'f' ? VOZ_F : VOZ_M).test(v.name);
             u.pitch = propia ? 1 : (g === 'f' ? 1.3 : 0.7);
             speechSynthesis.cancel(); speechSynthesis.speak(u);
         } catch (e) {}
     }
-    function calentarVoz() { try { if (window.speechSynthesis) { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); elegirVoz(); } } catch (e) {} }
-    function callarVoz() { try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
-    var NUM_VOZ = { 1: 'uno', 2: 'dos', 3: 'tres', 4: 'cuatro', 5: 'cinco' };
+    function voz(clave) {
+        var ac = audio(), buf = bufVoz[clave];
+        if (ac && buf) {
+            try {
+                if (vozSrc) { try { vozSrc.stop(); } catch (e) {} }
+                var src = ac.createBufferSource(), g = ac.createGain();
+                src.buffer = buf; g.gain.value = 1.4;
+                src.connect(g); g.connect(ac.destination); src.start(0); vozSrc = src;
+                return;
+            } catch (e) {}
+        }
+        decirTTS(FRASES[clave]);
+    }
+    function calentarVoz() { cargarVoz(); try { if (window.speechSynthesis) { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); elegirVoz(); } } catch (e) {} }
+    function callarVoz() {
+        try { if (vozSrc) { vozSrc.stop(); vozSrc = null; } } catch (e) {}
+        try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {}
+    }
+    var NUM_VOZ = { 1: 'uno', 2: 'dos', 3: 'tres' };
     function vib(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
     var wake = null;
     function pantallaEncendida(on) {
@@ -219,8 +251,8 @@
         // Alarma de los últimos segundos del descanso: "ti-ti" que sube de tono + vibración
         // La voz dice el número (10, 5, 3, 2, 1) y un tic suave marca el 4; la campanita queda solo para empezar.
         function alarma(r) {
-            if (r === 5) decir('Cinco. Ya es hora', true);
-            else if (r <= 3) decir(NUM_VOZ[r]);
+            if (r === 5) voz('prepara');
+            else if (r <= 3) voz(NUM_VOZ[r]);
             else beep(700, 0.08, 0.3);
             vib(r <= 3 ? [90, 60, 90] : 60);
         }
@@ -253,14 +285,14 @@
             label.textContent = 'Prepárate'; sub.textContent = 'Acomódate bien';
             cuenta(PREP, function (r) {
                 pop(r);
-                if (r <= 3) decir(NUM_VOZ[r]); else beep(520, 0.12, 0.3);
+                if (r <= 3) voz(NUM_VOZ[r]); else beep(520, 0.12, 0.3);
                 vib(r <= 3 ? 70 : 35);
             }, trabajo);
         }
         function trabajo() {
             setFase('work');
             stage.classList.remove('urgente');
-            callarVoz(); campana(); setTimeout(function () { decir('¡Empieza!', true); }, 250); vib([180]);
+            callarVoz(); campana(); setTimeout(function () { voz('empieza'); }, 250); vib([180]);
             label.textContent = '¡Ya! · Serie ' + serie + ' de ' + total;
             sub.textContent = repsTxt ? repsTxt + ' · toca al terminar' : 'Toca al terminar';
             btn.textContent = 'TERMINÉ'; btn.hidden = false; anillo(1);
@@ -284,7 +316,7 @@
                 if (r <= 5) { pop(r); stage.classList.add('urgente'); alarma(r); }
                 else num.textContent = r;
                 if (r <= 10) { label.textContent = 'Prepárate'; sub.textContent = r <= 5 ? 'Serie ' + (serie + 1) + ' en…' : 'Ya casi'; }
-                if (r === 10) { decir('Ya faltan diez. Prepárate', true); vib(60); }
+                if (r === 10) { voz('diez'); vib(60); }
             }, function () { serie++; trabajo(); });
         }
         function completado() {
