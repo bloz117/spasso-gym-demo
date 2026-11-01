@@ -60,6 +60,7 @@
                 '<div class="trn__tit"><strong id="trnTitulo">Mis socios</strong><small id="trnSubtitulo"></small></div>' +
                 '<button type="button" class="trn__yo" id="trnYo" aria-label="Mi cuenta de entrenador"><span id="trnYoIni">E</span></button>' +
                 '<div class="trn__brand"><i class="fas fa-dumbbell"></i><div><strong>Panel de Entrenador</strong><span id="trnUsuario"></span></div></div>' +
+                '<button type="button" class="trn__btn trn__btn--ghost trn__tema" id="trnTema" aria-label="Cambiar entre modo claro y oscuro"><i class="fas fa-moon"></i> <span>Modo claro</span></button>' +
                 '<button class="trn__btn trn__btn--ghost" id="trnSalir"><i class="fas fa-right-from-bracket"></i> Cerrar sesión</button>' +
             '</header>' +
             '<div class="trn__body">' +
@@ -79,6 +80,7 @@
                 '</div>' +
                 '<div class="trn__dr-tit"><span>Mis socios</span><em id="trnDrCount"></em></div>' +
                 '<div class="trn__dr-lista" id="trnDrSocios"></div>' +
+                '<button type="button" class="trn__dr-item trn__tema" id="trnDrTema" aria-label="Cambiar entre modo claro y oscuro"><i class="fas fa-moon"></i> <span>Modo claro</span></button>' +
                 '<button type="button" class="perfil-logout trn__dr-salir" id="trnDrSalir"><i class="fas fa-right-from-bracket"></i> Cerrar sesión</button>' +
             '</div>' +
             '<div class="trn__picker" id="trnPicker" hidden></div>' +
@@ -89,6 +91,8 @@
             if (estado.sucio && !confirm('Tienes cambios sin guardar. ¿Cerrar sesión de todos modos?')) return;
             if (window.cerrarSesionCompleta) window.cerrarSesionCompleta(); else cerrar();
         });
+        panel.querySelectorAll('.trn__tema').forEach(function (b) { b.addEventListener('click', alternarTema); });
+        pintarTema();
         panel.querySelector('#trnMenuBtn').addEventListener('click', function () { menu(!panel.classList.contains('trn--menu')); });
         panel.querySelector('#trnScrim').addEventListener('click', function () { menu(false); });
         panel.querySelector('#trnDrSalir').addEventListener('click', function () { menu(false); panel.querySelector('#trnSalir').click(); });
@@ -104,6 +108,33 @@
             estado.filtro = e.target.value.toLowerCase();
             pintarSocios();
         });
+    }
+
+    // Modo claro / oscuro del panel: reutiliza el fondo del portal (data-fondo) y lo recuerda en el navegador.
+    function esClaro() { return document.documentElement.getAttribute('data-fondo') === 'claro-tenue'; }
+    function pintarTema() {
+        if (!panel) return;
+        var claro = esClaro();
+        panel.querySelectorAll('.trn__tema').forEach(function (b) {
+            b.querySelector('i').className = claro ? 'fas fa-moon' : 'fas fa-sun';
+            b.querySelector('span').textContent = claro ? 'Modo oscuro' : 'Modo claro';
+        });
+    }
+    function alternarTema() {
+        var raiz = document.documentElement, nuevo;
+        if (esClaro()) {
+            var prev = 'liso';
+            try { prev = localStorage.getItem('fondoPortalOscuro') || 'liso'; } catch (e) {}
+            nuevo = prev;
+        } else {
+            try { localStorage.setItem('fondoPortalOscuro', raiz.getAttribute('data-fondo') || 'liso'); } catch (e) {}
+            nuevo = 'claro-tenue';
+        }
+        raiz.setAttribute('data-fondo', nuevo);
+        try { localStorage.setItem('fondoPortal', nuevo); } catch (e) {}
+        var nombre = document.getElementById('fondoNombreActual');
+        if (nombre) nombre.textContent = nuevo === 'claro-tenue' ? 'Claro tenue' : (nuevo === 'liso' ? 'Liso oscuro' : 'En movimiento');
+        pintarTema();
     }
 
     function menu(abierto) {
