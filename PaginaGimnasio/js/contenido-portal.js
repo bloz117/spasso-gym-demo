@@ -195,6 +195,66 @@
     }
     window.renderPromosPanel = renderPromosPanel;
 
+    // ----- Aviso del gimnasio (cierre, horario especial, feriado...) -----
+    // Se muestra como cintillo arriba y una ventana (una vez por sesión) mientras esté vigente.
+    // Todo el texto va con textContent: nunca se interpreta como HTML.
+    function aplicarAviso(av) {
+        var viejoBanner = document.getElementById('avisoGimnasioBanner');
+        if (viejoBanner) viejoBanner.remove();
+        var viejoModal = document.getElementById('avisoGimnasioModal');
+        if (viejoModal) viejoModal.remove();
+        if (!av || !av.activo || !av.titulo || !av.texto) return;
+        var hoy = new Date();
+        var iso = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+        if (av.desde && iso < av.desde) return;
+        if (av.hasta && iso > av.hasta) return;
+        var iconos = { cierre: '⛔', horario: '🕒', feriado: '🎉', mantenimiento: '🛠️', otro: '📢' };
+        var icono = iconos[av.tipo] || '📢';
+
+        var banner = document.createElement('div');
+        banner.id = 'avisoGimnasioBanner';
+        banner.className = 'aviso-gym-banner aviso-' + (iconos[av.tipo] ? av.tipo : 'otro');
+        banner.setAttribute('role', 'status');
+        var t = document.createElement('span');
+        t.className = 'aviso-gym-texto';
+        t.textContent = icono + ' ' + av.titulo + ' — ' + av.texto;
+        var ver = document.createElement('button');
+        ver.type = 'button'; ver.className = 'aviso-gym-ver'; ver.textContent = 'Ver';
+        banner.appendChild(t); banner.appendChild(ver);
+        document.body.insertBefore(banner, document.body.firstChild);
+        document.body.classList.add('con-aviso-gym');
+
+        function abrirModal() {
+            if (document.getElementById('avisoGimnasioModal')) return;
+            var fondo = document.createElement('div');
+            fondo.id = 'avisoGimnasioModal'; fondo.className = 'aviso-gym-fondo';
+            var caja = document.createElement('div');
+            caja.className = 'aviso-gym-caja'; caja.setAttribute('role', 'dialog'); caja.setAttribute('aria-modal', 'true');
+            var i = document.createElement('div'); i.className = 'aviso-gym-icono'; i.textContent = icono;
+            var h = document.createElement('h3'); h.textContent = av.titulo;
+            var p = document.createElement('p'); p.textContent = av.texto;
+            caja.appendChild(i); caja.appendChild(h); caja.appendChild(p);
+            if (av.hasta) {
+                var f = document.createElement('small');
+                f.textContent = 'Vigente hasta el ' + av.hasta.split('-').reverse().join('/');
+                caja.appendChild(f);
+            }
+            var ok = document.createElement('button');
+            ok.type = 'button'; ok.className = 'aviso-gym-ok'; ok.textContent = 'Entendido';
+            caja.appendChild(ok); fondo.appendChild(caja); document.body.appendChild(fondo);
+            function cerrar() { fondo.remove(); }
+            ok.addEventListener('click', cerrar);
+            fondo.addEventListener('click', function (e) { if (e.target === fondo) cerrar(); });
+            ok.focus();
+        }
+        ver.addEventListener('click', abrirModal);
+        var clave = 'avisoGym:' + av.titulo + '|' + (av.actualizado || '');
+        var visto = false;
+        try { visto = sessionStorage.getItem(clave) === '1'; sessionStorage.setItem(clave, '1'); } catch (e) {}
+        if (!visto) setTimeout(abrirModal, 800);
+    }
+    window.aplicarAviso = aplicarAviso;
+
     var promoTimers = [];
     function aplicarPromocion(promo, opciones) {
         opciones = opciones || {};
@@ -361,6 +421,7 @@
         aplicarPlanes(c.planes, k.telefono);
         window.__telPortal = k.telefono || '';
         aplicarPromocion(c.promocion, opciones);
+        aplicarAviso(c.aviso);
     }
 
     // Vista previa en vivo desde el editor de Recepción (mismo origen, iframe).

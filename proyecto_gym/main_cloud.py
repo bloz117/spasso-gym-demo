@@ -56,6 +56,7 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Resp
 from fastapi.staticfiles import StaticFiles
 
 import database
+import portal_licencia
 import sync_core
 from routes import sync as sync_routes
 from routes.cms import router as cms_router
@@ -87,6 +88,8 @@ def _preparar_nube():
     with database.get_db() as conn:
         sync_routes.leer_seq(conn)
     database.POST_COMMIT = sync_routes.post_commit_nube
+    if portal_licencia.iniciar():
+        print("🔑 Licencia del portal: exigida (se consulta a la Llave Maestra)", flush=True)
     print("✅ Nube lista (base de datos conectada, esquema verificado)", flush=True)
 
 
@@ -119,6 +122,14 @@ _PERMITIDAS = [(m, re.compile(p)) for m, p in _PERMITIDAS]
 @app.middleware("http")
 async def _lista_blanca_y_cabeceras(request: Request, call_next):
     ruta = request.url.path
+    # Licencia del portal: si está suspendida/vencida se muestra solo un aviso. Los datos NO se tocan y la
+    # sincronización con Recepción y el chequeo de salud siguen funcionando.
+    if portal_licencia.bloqueado() and not (ruta == "/api/health" or ruta.startswith("/api/sync/")):
+        if ruta.startswith("/api/"):
+            return JSONResponse({"detail": "Servicio suspendido", "portal_suspendido": True}, status_code=503,
+                                headers={"Cache-Control": "no-store"})
+        return Response(portal_licencia.PAGINA_SUSPENDIDO, status_code=503, media_type="text/html; charset=utf-8",
+                        headers={"Cache-Control": "no-store", "Retry-After": "300"})
     if ruta.startswith("/api/") and request.method != "OPTIONS":
         if not any(request.method == m and p.match(ruta) for m, p in _PERMITIDAS):
             return JSONResponse({"detail": "No encontrado"}, status_code=404)

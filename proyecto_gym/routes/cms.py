@@ -749,6 +749,8 @@ def obtener_contenido_portal():
     for clave in ("textos", "contacto", "promocion", "nav", "titulos"):
         if isinstance(guardado.get(clave), dict):
             resultado[clave].update(guardado[clave])
+    if isinstance(guardado.get("aviso"), dict):
+        resultado["aviso"] = guardado["aviso"]  # aviso del gimnasio (cierre, horario especial...)
     if isinstance(guardado.get("planes"), list) and guardado["planes"]:
         resultado["planes"] = guardado["planes"]
     if isinstance(guardado.get("beneficios"), list) and len(guardado["beneficios"]) == 3:
