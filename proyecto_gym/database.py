@@ -43,6 +43,12 @@ def _parametros_conexion():
         "keepalives_interval": 10,
         "keepalives_count": 3,
     }
+    # Nube: si una conexión murió en silencio (Neon se durmió), sin esto la consulta se queda colgada ~60 s.
+    # Con DB_TCP_USER_TIMEOUT (ms) falla en pocos segundos y se abre otra conexión. Solo si se define la variable.
+    tut = os.getenv("DB_TCP_USER_TIMEOUT")
+    if tut:
+        extra["tcp_user_timeout"] = int(tut)
+        extra["keepalives_idle"] = 10
     zona = os.getenv("APP_TIMEZONE")
     if zona:
         # Hora del gimnasio: CURRENT_DATE / now() / timestamps sin zona coinciden con Recepción
