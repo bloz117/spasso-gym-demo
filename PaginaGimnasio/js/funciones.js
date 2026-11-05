@@ -1760,14 +1760,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Traer los datos reales del socio y su plan actual
-        const perfil = await getSocioProfile();
-        let plan = null;
-        try {
-            const planResp = await getSocioPlan();
-            plan = planResp.plan || null;
-        } catch (e) {
-            console.warn('No se pudo obtener el plan del socio:', e);
-        }
+        // Perfil y plan se piden a la vez (antes uno esperaba al otro y el ingreso se sentía lento).
+        const [perfil, planResp] = await Promise.all([
+            getSocioProfile(),
+            getSocioPlan().catch(function (e) { console.warn('No se pudo obtener el plan del socio:', e); return null; })
+        ]);
+        const plan = (planResp && planResp.plan) || null;
 
         window.aplicarSesionSocio(perfil, plan);
 
@@ -1832,13 +1830,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const codigo = input.value.replace(/\D/g, '');
             if (codigo.length !== 6) { showNotification('Escribe los 6 dígitos del código', 'error'); return; }
             const ok = document.getElementById('loginCodigoOk'); ok.disabled = true;
+            const textoOk = ok.textContent; ok.textContent = 'Verificando…';
             try {
                 const r = await verificarCodigoPortal(resp.desafio, codigo, rememberMe);
                 cerrar();
                 await alTerminar(r);
             } catch (err) {
                 showNotification(err.message || 'Código incorrecto', 'error');
-            } finally { ok.disabled = false; }
+            } finally { ok.disabled = false; ok.textContent = textoOk; }
         };
         document.getElementById('loginCodigoOk').onclick = enviar;
         input.onkeydown = (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); enviar(); } };

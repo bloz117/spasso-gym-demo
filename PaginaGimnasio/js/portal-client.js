@@ -154,7 +154,7 @@ async function loginSocio(email, password, remember = false) {
 
   if (response.access_token) {
     setPortalToken(response.access_token, remember);
-    if (remember) await _marcarRecordar(response.access_token);
+    if (remember) _marcarRecordar(response.access_token);
   }
 
   return response;
@@ -169,7 +169,8 @@ async function verificarCodigoPortal(desafio, codigo, remember = false) {
   if (response.dispositivo) _guardarDispositivoPortal(response.dispositivo);
   if (response.access_token) {
     setPortalToken(response.access_token, remember);
-    if (remember) await _marcarRecordar(response.access_token);
+    // En segundo plano: la cookie "Recordarme" no hace falta para seguir, así no se espera otro viaje al servidor.
+    if (remember) _marcarRecordar(response.access_token);
   }
   return response;
 }

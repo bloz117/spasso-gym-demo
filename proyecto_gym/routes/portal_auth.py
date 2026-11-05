@@ -8,11 +8,10 @@ from fastapi import APIRouter, HTTPException, status, Depends, Body, Request, Re
 from datetime import timedelta
 from routes import verificacion as _ver
 from database import get_db
-from schemas import PortalLoginRequest, PortalChangePasswordRequest, TokenResponse
+from schemas import PortalLoginRequest, PortalChangePasswordRequest
 from auth import verify_password, create_access_token, hash_password, decode_token
 from dependencies import require_rol, limitar_intentos_login
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional
 import secrets
 import threading
 import time
@@ -212,11 +211,16 @@ def portal_login(data: PortalLoginRequest, _=Depends(limitar_intentos_login(max_
     return _respuesta_socio(id_socio, nombres, apellidos, email, bool(data.recordar))
 
 
-def _respuesta_socio(id_socio, nombres, apellidos, email, recordar=False):
-    # Último ingreso (se muestra en Configuración > Página Web > Usuarios del Portal)
-    with get_db() as conn:
-        cur = conn.cursor()
+def _respuesta_socio(id_socio, nombres, apellidos, email, recordar=False, cur=None):
+    # Último ingreso (se muestra en Configuración > Página Web > Usuarios del Portal).
+    # Si el llamador ya tiene una conexión abierta (cur), se reutiliza: en la nube cada conexión extra
+    # cuesta varios viajes de red a la base de datos.
+    if cur is not None:
         cur.execute("UPDATE portal_accounts SET last_login = NOW() WHERE id_socio = %s", (id_socio,))
+    else:
+        with get_db() as conn:
+            c2 = conn.cursor()
+            c2.execute("UPDATE portal_accounts SET last_login = NOW() WHERE id_socio = %s", (id_socio,))
 
     # Crear token JWT para el socio
     token = create_access_token({
@@ -259,16 +263,18 @@ def verificar_codigo_portal(data: dict = Body(...), _=Depends(limitar_intentos_l
         resp = _respuesta_entrenador(ch["id"], f[0], recordar)
         ph = f[1]
     elif ch.get("rol") == "Cliente":
+        # Una sola conexión: leer la cuenta, validar el código y anotar el último ingreso.
+        # Si el código es incorrecto, validar_codigo lanza error y get_db revierte sin escribir nada.
         with get_db() as conn:
             cur = conn.cursor()
             cur.execute(
                 "SELECT s.nombres, s.apellidos, s.email, pa.password_hash, pa.is_active, COALESCE(s.activo, TRUE) "
                 "FROM portal_accounts pa JOIN socios s ON pa.id_socio = s.id_socio WHERE pa.id_socio = %s", (ch["id"],))
             f = cur.fetchone()
-        if not f or not f[4] or not f[5]:
-            raise HTTPException(status_code=403, detail="Esta cuenta no está habilitada. Contacta a recepción.")
-        clave, _id, _rol = _ver.validar_codigo(data.get("desafio"), data.get("codigo"), f[3])
-        resp = _respuesta_socio(ch["id"], f[0], f[1], f[2], recordar)
+            if not f or not f[4] or not f[5]:
+                raise HTTPException(status_code=403, detail="Esta cuenta no está habilitada. Contacta a recepción.")
+            clave, _id, _rol = _ver.validar_codigo(data.get("desafio"), data.get("codigo"), f[3])
+            resp = _respuesta_socio(ch["id"], f[0], f[1], f[2], recordar, cur=cur)
         ph = f[3]
     else:
         raise HTTPException(status_code=401, detail="Código incorrecto")
@@ -298,8 +304,6 @@ def cambiar_contrasena(
     if not row:
         raise HTTPException(status_code=404, detail="Cuenta del portal no encontrada")
 
-    password_hash = row[0]
-
     # Hashear nueva contraseña
     new_hash = hash_password(data.password_nuevo)
 
@@ -313,48 +317,6 @@ def cambiar_contrasena(
     return {
         "mensaje": "Contraseña actualizada exitosamente",
         "id_socio": id_socio
-    }
-
-
-@router.post("/force-change-password")
-def forzar_cambio_contrasena(
-    data: PortalChangePasswordRequest,
-    socio=Depends(get_current_socio)
-):
-    """
-    Fuerza el cambio de contraseña si el socio tiene el flag must_change_password = TRUE.
-    Esta ruta es llamada automáticamente en el primer login si se requiere cambio.
-    """
-    id_socio = socio.get("id_socio")
-
-    with get_db() as conn:
-        cur = conn.cursor()
-        cur.execute(
-            "SELECT must_change_password FROM portal_accounts WHERE id_socio = %s",
-            (id_socio,)
-        )
-        row = cur.fetchone()
-
-    if not row or not row[0]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No es necesario cambiar la contraseña en este momento"
-        )
-
-    # Hashear nueva contraseña
-    new_hash = hash_password(data.password_nuevo)
-
-    with get_db() as conn:
-        cur = conn.cursor()
-        cur.execute(
-            "UPDATE portal_accounts SET password_hash = %s, must_change_password = FALSE, temp_password = NULL WHERE id_socio = %s",
-            (new_hash, id_socio)
-        )
-
-    return {
-        "mensaje": "Contraseña actualizada exitosamente",
-        "id_socio": id_socio,
-        "debe_cambiar": False
     }
 
 
@@ -401,7 +363,7 @@ def obtener_perfil_socio(socio=Depends(get_current_socio)):
 # público desde la sección "Página Web" de Configuración en recepción.
 
 @router.get("/accounts")
-def listar_cuentas_portal(usuario=Depends(require_rol(["Administrador"]))):
+def listar_cuentas_portal(request: Request, usuario=Depends(require_rol(["Administrador"]))):
     """
     Lista todas las cuentas del portal público, con datos del socio dueño.
     Si la cuenta todavía no cambió su contraseña temporal (must_change_password
@@ -423,6 +385,8 @@ def listar_cuentas_portal(usuario=Depends(require_rol(["Administrador"]))):
         )
         rows = cur.fetchall()
 
+    from dependencies import es_acceso_remoto
+    remoto = es_acceso_remoto(request)  # por acceso remoto no se muestran contraseñas
     cuentas = []
     for row in rows:
         (id_socio, nombres, apellidos, email, username, temp_password,
@@ -433,7 +397,7 @@ def listar_cuentas_portal(usuario=Depends(require_rol(["Administrador"]))):
             "nombre_completo": f"{nombres} {apellidos}".strip(),
             "email": email,
             "username": username,
-            "temp_password": temp_password if must_change_password else None,
+            "temp_password": (temp_password if (must_change_password and not remoto) else None),
             "must_change_password": must_change_password,
             "is_active": is_active,
             "created_at": created_at.isoformat() if created_at else None,
