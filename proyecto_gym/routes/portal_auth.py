@@ -220,12 +220,18 @@ def _respuesta_socio(id_socio, nombres, apellidos, email, recordar=False, cur=No
     # Último ingreso (se muestra en Configuración > Página Web > Usuarios del Portal).
     # Si el llamador ya tiene una conexión abierta (cur), se reutiliza: en la nube cada conexión extra
     # cuesta varios viajes de red a la base de datos.
-    if cur is not None:
-        cur.execute("UPDATE portal_accounts SET last_login = NOW() WHERE id_socio = %s", (id_socio,))
-    else:
-        with get_db() as conn:
-            c2 = conn.cursor()
-            c2.execute("UPDATE portal_accounts SET last_login = NOW() WHERE id_socio = %s", (id_socio,))
+    # Es solo informativo: se anota en segundo plano y con límite de espera, para que si la cuenta está
+    # bloqueada por una sincronización de Recepción, el ingreso del socio NO espere (antes tardaba hasta 60 s).
+    def _anotar():
+        try:
+            with get_db() as conn:
+                c2 = conn.cursor()
+                c2.execute("SET LOCAL lock_timeout = '3s'")
+                c2.execute("UPDATE portal_accounts SET last_login = NOW() WHERE id_socio = %s", (id_socio,))
+        except Exception:  # noqa: BLE001
+            pass
+    import threading as _th
+    _th.Thread(target=_anotar, daemon=True).start()
 
     # Crear token JWT para el socio
     token = create_access_token({
@@ -280,8 +286,10 @@ def verificar_codigo_portal(data: dict = Body(...), _=Depends(limitar_intentos_l
             f = cur.fetchone()
             if not f or not f[4] or not f[5]:
                 raise HTTPException(status_code=403, detail="Esta cuenta no está habilitada. Contacta a recepción.")
+            _t_sel = _time.time()
             clave, _id, _rol = _ver.validar_codigo(data.get("desafio"), data.get("codigo"), f[3])
-            resp = _respuesta_socio(ch["id"], f[0], f[1], f[2], recordar, cur=cur)
+        resp = _respuesta_socio(ch["id"], f[0], f[1], f[2], recordar)
+        print(f"⏱ portal/verificar detalle: BD {int((_t_sel - _t0) * 1000)} ms", flush=True)
         ph = f[3]
     else:
         raise HTTPException(status_code=401, detail="Código incorrecto")
