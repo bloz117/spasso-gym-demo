@@ -9,7 +9,7 @@ from datetime import timedelta
 from routes import verificacion as _ver
 from database import get_db
 from schemas import PortalLoginRequest, PortalChangePasswordRequest
-from auth import verify_password, create_access_token, hash_password, decode_token
+from auth import verify_password, create_access_token, hash_password, hash_password_nube, decode_token
 from dependencies import require_rol, limitar_intentos_login
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import secrets
@@ -129,6 +129,8 @@ def portal_login(data: PortalLoginRequest, _=Depends(limitar_intentos_login(max_
     importar mayúsculas/espacios) y contraseña.
     Retorna un JWT para acceso al dashboard personal.
     """
+    import time as _time
+    _t0 = _time.time()
     identificador = (data.email or "").strip().lower()[:150]
     if _cuenta_bloqueada(identificador):
         raise HTTPException(
@@ -203,9 +205,12 @@ def portal_login(data: PortalLoginRequest, _=Depends(limitar_intentos_login(max_
             detail="Correo/usuario o contraseña incorrectos"
         )
     _limpiar_fallos_cuenta(identificador)
+    _t1 = _time.time()
 
     # Verificación por correo una sola vez por dispositivo
     _d = _ver.exigir_codigo(f"socio:{id_socio}", id_socio, "Cliente", password_hash, email, data.dispositivo, nombres)
+    # Aparece en los Logs de Render: contraseña/base de datos vs. envío del correo.
+    print(f"⏱ portal/login: contraseña+BD {int((_t1 - _t0) * 1000)} ms, correo/código {int((_time.time() - _t1) * 1000)} ms", flush=True)
     if _d:
         return _d
     return _respuesta_socio(id_socio, nombres, apellidos, email, bool(data.recordar))
@@ -247,6 +252,8 @@ def _respuesta_socio(id_socio, nombres, apellidos, email, recordar=False, cur=No
 @router.post("/verificar")
 def verificar_codigo_portal(data: dict = Body(...), _=Depends(limitar_intentos_login(12, 60))):
     """Paso 2 del ingreso al portal (solo en un dispositivo nuevo): el código que llegó al correo."""
+    import time as _time
+    _t0 = _time.time()
     from auth import decode_token
     ch = decode_token(str(data.get("desafio") or ""))
     if not ch or ch.get("typ") != "chal":
@@ -279,6 +286,7 @@ def verificar_codigo_portal(data: dict = Body(...), _=Depends(limitar_intentos_l
     else:
         raise HTTPException(status_code=401, detail="Código incorrecto")
     resp["dispositivo"] = _ver.token_dispositivo(clave, ph)
+    print(f"⏱ portal/verificar: {int((_time.time() - _t0) * 1000)} ms", flush=True)
     return resp
 
 
@@ -305,7 +313,7 @@ def cambiar_contrasena(
         raise HTTPException(status_code=404, detail="Cuenta del portal no encontrada")
 
     # Hashear nueva contraseña
-    new_hash = hash_password(data.password_nuevo)
+    new_hash = hash_password_nube(data.password_nuevo)
 
     with get_db() as conn:
         cur = conn.cursor()

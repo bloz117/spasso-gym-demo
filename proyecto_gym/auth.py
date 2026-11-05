@@ -41,6 +41,12 @@ def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
+def hash_password_nube(password: str) -> str:
+    """bcrypt con 10 rondas (OWASP lo acepta como mínimo): ~4 veces más rápido que las 12 por defecto.
+    Para la nube (Render gratis tiene una fracción de CPU). Los hashes de 12 rondas ya guardados siguen valiendo."""
+    return pwd_context.using(bcrypt__rounds=10).hash(password)
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifica una contraseña contra su hash bcrypt."""
     return pwd_context.verify(plain_password, hashed_password)

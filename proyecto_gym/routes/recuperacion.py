@@ -16,7 +16,7 @@ from datetime import timedelta
 from fastapi import APIRouter, Body, Depends, HTTPException
 
 import validadores as V
-from auth import SECRET_KEY, create_access_token, decode_token, hash_password
+from auth import SECRET_KEY, create_access_token, decode_token, hash_password, hash_password_nube
 from database import get_db
 from dependencies import limitar_intentos_login
 from routes import verificacion as _ver
@@ -29,6 +29,9 @@ MAX_INTENTOS = 6
 _lock = threading.Lock()
 _ultimo = {}
 _fallos = {}
+
+# Calienta bcrypt al arrancar: la primera vez que se usa carga el motor y en Render gratis tardaba segundos.
+threading.Thread(target=hash_password_nube, args=("calentar-bcrypt",), daemon=True).start()
 
 
 def _huella(ph):
@@ -149,12 +152,17 @@ def portal_confirmar(data: dict = Body(...), _=Depends(limitar_intentos_login(10
                 for k in [k for k in _fallos if k[1] < ventana - 1]:
                     _fallos.pop(k, None)
             raise HTTPException(status_code=401, detail="Código incorrecto")
+        t1 = time.time()
+        nuevo_hash = hash_password_nube(nueva)   # 10 rondas: ~4 veces más rápido que 12 en la CPU de Render gratis
+        t2 = time.time()
         if es_ent:
             # sync_at lo actualiza el trigger: así "gana el más reciente" y Recepción recibe la contraseña nueva
             cur.execute("UPDATE usuarios_sistema SET password_hash = %s WHERE id_usuario = %s",
-                        (hash_password(nueva), id_ent))
-            return {"mensaje": "Listo. Ya puedes entrar con tu contraseña nueva."}
-        cur.execute(
-            "UPDATE portal_accounts SET password_hash = %s, must_change_password = FALSE, temp_password = NULL "
-            "WHERE id_socio = %s", (hash_password(nueva), id_socio))
+                        (nuevo_hash, id_ent))
+        else:
+            cur.execute(
+                "UPDATE portal_accounts SET password_hash = %s, must_change_password = FALSE, temp_password = NULL "
+                "WHERE id_socio = %s", (nuevo_hash, id_socio))
+    # Aparece en los Logs de Render: sirve para ver qué paso tarda si algún día se vuelve lento.
+    print(f"⏱ recuperar/confirmar: hash {int((t2 - t1) * 1000)} ms, total {int((time.time() - t1) * 1000)} ms", flush=True)
     return {"mensaje": "Listo. Ya puedes entrar con tu contraseña nueva."}
