@@ -6034,6 +6034,7 @@ body:has(#profileModal.is-open) .header-back-btn i { color: #fff !important; }
 .recuperar__txt{margin:0;font-size:14px;line-height:1.45;opacity:.8;text-align:center}
 .recuperar__codigo{text-align:center;font-size:24px;letter-spacing:10px;font-weight:800}
 .recuperar__link{align-self:center;font-size:13px;opacity:.75;text-decoration:none;color:inherit}
+.recuperar__ident--fijo{opacity:.7;cursor:not-allowed;pointer-events:none}
 .recuperar__link:hover{opacity:1;text-decoration:underline}
 .recuperar__msg{min-height:18px;font-size:13.5px;text-align:center;opacity:.9}
 .recuperar__msg--error{color:#ef4444;opacity:1}

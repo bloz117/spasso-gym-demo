@@ -27,11 +27,19 @@
   }
 
   function abrir() {
-    var prev = ($('loginEmail') || {}).value || '';
-    $('recIdent').value = prev.trim();
+    var prev = (($('loginEmail') || {}).value || '').trim();
+    $('recIdent').value = prev;
+    // Si ya escribió su correo/usuario al iniciar sesión, aquí queda fijo (no editable):
+    // el código siempre va al correo que el gimnasio registró para esa cuenta.
+    $('recIdent').readOnly = !!prev;
+    $('recIdent').classList.toggle('recuperar__ident--fijo', !!prev);
+    var t1 = document.querySelector('#recPaso1 .recuperar__txt');
+    if (t1) t1.textContent = prev
+      ? 'Te enviamos un código de 6 dígitos al correo que diste en el gimnasio para esta cuenta. Si no es tu cuenta, vuelve atrás.'
+      : 'Escribe tu correo (o usuario). Te enviamos un código de 6 dígitos al correo que diste en el gimnasio.';
     desafio = null;
     vista('pedir');
-    setTimeout(function () { $('recIdent').focus(); }, 50);
+    if (!prev) setTimeout(function () { $('recIdent').focus(); }, 50);
   }
   window.abrirRecuperarPortal = abrir;
 
