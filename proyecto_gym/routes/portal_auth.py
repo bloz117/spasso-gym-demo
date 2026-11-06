@@ -12,6 +12,7 @@ from schemas import PortalLoginRequest, PortalChangePasswordRequest
 from auth import verify_password, create_access_token, hash_password, hash_password_nube, decode_token
 from dependencies import require_rol, limitar_intentos_login
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import os
 import secrets
 import threading
 import time
@@ -142,7 +143,7 @@ def portal_login(data: PortalLoginRequest, _=Depends(limitar_intentos_login(max_
         cur.execute(
             """
             SELECT pa.id_socio, pa.password_hash, s.nombres, s.apellidos, s.email, pa.is_active,
-                   COALESCE(s.activo, TRUE)
+                   COALESCE(s.activo, TRUE), pa.last_login
             FROM portal_accounts pa
             JOIN socios s ON pa.id_socio = s.id_socio
             WHERE lower(trim(s.email)) = %s OR lower(pa.username) = %s
@@ -166,7 +167,7 @@ def portal_login(data: PortalLoginRequest, _=Depends(limitar_intentos_login(max_
             detail="Correo/usuario o contraseña incorrectos"
         )
 
-    id_socio, password_hash, nombres, apellidos, email, is_active, socio_activo = account
+    id_socio, password_hash, nombres, apellidos, email, is_active, socio_activo, ultimo_ingreso = account
 
     if not socio_activo:
         raise HTTPException(
@@ -207,8 +208,19 @@ def portal_login(data: PortalLoginRequest, _=Depends(limitar_intentos_login(max_
     _limpiar_fallos_cuenta(identificador)
     _t1 = _time.time()
 
-    # Verificación por correo una sola vez por dispositivo
-    _d = _ver.exigir_codigo(f"socio:{id_socio}", id_socio, "Cliente", password_hash, email, data.dispositivo, nombres)
+    # Con usuario y contraseña correctos entra directo. El código por correo solo se pide si la cuenta
+    # estuvo más de PORTAL_DIAS_SIN_CODIGO (30) días sin entrar y este dispositivo no está recordado.
+    # El primer ingreso (nunca entró) no pide código. El código de verificación es sobre todo para recuperar la contraseña.
+    from datetime import datetime, timezone
+    _dias = int(os.getenv("PORTAL_DIAS_SIN_CODIGO", "30"))
+    _reciente = ultimo_ingreso is None
+    if ultimo_ingreso is not None:
+        _u = ultimo_ingreso if ultimo_ingreso.tzinfo else ultimo_ingreso.replace(tzinfo=timezone.utc)
+        _reciente = (datetime.now(timezone.utc) - _u) < timedelta(days=_dias)
+    if _reciente:
+        _d = None
+    else:
+        _d = _ver.exigir_codigo(f"socio:{id_socio}", id_socio, "Cliente", password_hash, email, data.dispositivo, nombres)
     # Aparece en los Logs de Render: contraseña/base de datos vs. envío del correo.
     print(f"⏱ portal/login: contraseña+BD {int((_t1 - _t0) * 1000)} ms, correo/código {int((_time.time() - _t1) * 1000)} ms", flush=True)
     if _d:
