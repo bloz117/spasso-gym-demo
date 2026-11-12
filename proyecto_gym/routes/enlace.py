@@ -10,6 +10,7 @@ El token (enlace_token.py) va cifrado: contiene el comprobante y las credenciale
 sensible. El comprobante no caduca; la contraseña temporal solo se muestra durante TOKEN_DIAS días.
 """
 import html
+import json
 
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse, Response
@@ -34,13 +35,27 @@ cursor:pointer;color:#fff;background:linear-gradient(135deg,#e11d74,#7c3aed)}
 .dato small{color:#9a9aa5;display:block;margin-bottom:4px}.dato b{font-size:1.15rem;word-break:break-all;letter-spacing:.3px}
 .copiar{float:right;background:#26262c;color:#fff;border:0;border-radius:8px;padding:6px 10px;font-size:.8rem;cursor:pointer}
 .aviso{background:#2a2110;border:1px solid #6b5316;color:#f5d98b;border-radius:12px;padding:12px;margin:12px 0;font-size:.92rem;text-align:left}
+.ok{background:#102a1b;border:1px solid #1f6b3d;color:#9be8b8}
+"""
+
+# El comprobante SIEMPRE es una hoja blanca (se vea en pantalla, se guarde o se imprima).
+_CSS_BLANCO = """
+body{background:#e9e9ee;color:#1a1a1a}
+.card{background:#fff;border:1px solid #d9d9df;color:#1a1a1a;box-shadow:0 6px 24px rgba(0,0,0,.08)}
+h1{color:#E619A8}p{color:#555}
+.fila{border-bottom:1px solid #e4e4ea}.fila span:first-child{color:#6e6e73}.fila span:last-child{color:#1a1a1a;font-weight:600}
+.total{background:#f5f5f7;border-radius:12px;padding:12px;color:#E619A8}
+.btn.sec{background:#eeeef2;color:#1a1a1a}
+@media print{body{background:#fff;padding:0}.card{border:0;box-shadow:none}.btn,#msg{display:none}}
 """
 
 
-def _pagina(titulo: str, cuerpo: str, script: str = "") -> HTMLResponse:
+def _pagina(titulo: str, cuerpo: str, script: str = "", blanco: bool = False) -> HTMLResponse:
+    css = _CSS + (_CSS_BLANCO if blanco else "")
     doc = (f"<!doctype html><html lang='es'><head><meta charset='utf-8'>"
            f"<meta name='viewport' content='width=device-width,initial-scale=1'><meta name='robots' content='noindex'>"
-           f"<title>{html.escape(titulo)}</title><style>{_CSS}</style></head><body><div class='card'>{cuerpo}</div>"
+           f"<meta name='color-scheme' content='light'>"
+           f"<title>{html.escape(titulo)}</title><style>{css}</style></head><body><div class='card'>{cuerpo}</div>"
            f"{('<script>' + script + '</script>') if script else ''}</body></html>")
     return HTMLResponse(doc, headers=_CABECERAS)
 
@@ -99,7 +114,7 @@ def comprobante(token: str):
     script = (f"setTimeout(function(){{var a=document.createElement('a');a.href='{pdf}';a.download='';"
               f"document.body.appendChild(a);a.click();a.remove();"
               f"document.getElementById('msg').textContent='Si no se descargó, toca «Guardar comprobante».';}},700);")
-    return _pagina(f"Comprobante - {g}", cuerpo, script)
+    return _pagina(f"Comprobante - {g}", cuerpo, script, blanco=True)
 
 
 @router.get("/{token}/comprobante.pdf", include_in_schema=False)
@@ -121,10 +136,10 @@ def comprobante_pdf(token: str):
                     headers={**_CABECERAS, "Content-Disposition": f'attachment; filename="comprobante_{nombre}.pdf"'})
 
 
-def _clave_vigente(d: dict, edad: float) -> bool:
-    """La contraseña temporal se muestra solo si aún no la cambió y el enlace tiene menos de TOKEN_DIAS días."""
-    if not d.get("p") or edad > enlace_token.TOKEN_DIAS:
-        return False
+def _estado_clave(d: dict, edad: float) -> str:
+    """'temporal' (se muestra), 'cambiada' (el miembro ya eligió la suya) o 'vencida' (enlace viejo / sin dato)."""
+    if not d.get("p"):
+        return "vencida"
     try:
         import database
         with database.get_db() as conn:
@@ -132,15 +147,16 @@ def _clave_vigente(d: dict, edad: float) -> bool:
             cur.execute("SELECT must_change_password FROM portal_accounts WHERE id_socio = %s", (int(d.get("s") or 0),))
             f = cur.fetchone()
     except Exception:
-        return False   # ante la duda, no mostrar la contraseña
-    return True if f is None else bool(f[0])   # sin fila: la sincronización aún no llegó (miembro nuevo)
+        return "vencida"   # ante la duda, no mostrar la contraseña
+    if f is not None and not bool(f[0]):
+        return "cambiada"
+    if edad > enlace_token.TOKEN_DIAS:
+        return "vencida"
+    return "temporal"   # sin fila: la sincronización aún no llegó (miembro nuevo)
 
 
-def _copiar_js() -> str:
-    return ("function cp(id,b){var t=document.getElementById(id).textContent;"
-            "if(navigator.clipboard){navigator.clipboard.writeText(t)}else{var x=document.createElement('textarea');x.value=t;"
-            "document.body.appendChild(x);x.select();document.execCommand('copy');x.remove()}"
-            "b.textContent='¡Copiado!';setTimeout(function(){b.textContent='Copiar'},1500)}")
+def _js_str(v: str) -> str:
+    return json.dumps(v or "").replace("</", "<\\/")
 
 
 @router.get("/{token}/acceso", include_in_schema=False)
@@ -151,18 +167,37 @@ def acceso(token: str):
     t = html.escape(token)
     g = html.escape(d.get("g") or "Gimnasio")
     usuario = html.escape(d.get("u") or "")
+    estado = _estado_clave(d, edad)
     partes = [f"<h1>Tu acceso al portal</h1><p>{g}</p>",
-              f"<div class='dato'><button class='copiar' onclick=\"cp('u',this)\">Copiar</button><small>Usuario</small><b id='u'>{usuario}</b></div>"]
-    if _clave_vigente(d, edad):
+              f"<div class='dato'><small>Usuario</small><b id='u'>{usuario}</b></div>"]
+    script = ""
+    if estado == "temporal":
         clave = html.escape(d.get("p") or "")
-        partes.append(f"<div class='dato'><button class='copiar' onclick=\"cp('p',this)\">Copiar</button>"
-                      f"<small>Contraseña temporal</small><b id='p'>{clave}</b></div>"
-                      "<div class='aviso'>Copia tu usuario y contraseña, entra al portal y <b>cámbiala</b> cuando te lo pida.</div>")
+        partes.append(f"<div class='dato'><small>Contraseña temporal</small><b id='p'>{clave}</b></div>"
+                      "<button class='btn sec' id='cpAmbos' type='button'>Copiar usuario y contraseña</button>"
+                      "<div class='aviso'>Toca «Entrar a mi portal»: ya te llevará con los dos datos escritos. "
+                      "Cuando entres, <b>cámbiala</b> por una tuya.</div>")
+        script = ("var U=" + _js_str(d.get("u")) + ",P=" + _js_str(d.get("p")) + ";"
+                  "function cpTxt(t){if(navigator.clipboard){return navigator.clipboard.writeText(t)}"
+                  "var x=document.createElement('textarea');x.value=t;document.body.appendChild(x);x.select();"
+                  "document.execCommand('copy');x.remove();return Promise.resolve()}"
+                  "document.getElementById('cpAmbos').onclick=function(){var b=this;cpTxt(U+' / '+P).then(function(){"
+                  "b.textContent='¡Copiados!';setTimeout(function(){b.textContent='Copiar usuario y contraseña'},1600)})};"
+                  "document.getElementById('entrar').onclick=function(){try{sessionStorage.setItem('gym_prefill',"
+                  "JSON.stringify({u:U,p:P}))}catch(e){}};")
+        entrar = "<a class='btn' id='entrar' href='/portal-static/index.html'>Entrar a mi portal</a>"
+    elif estado == "cambiada":
+        partes.append("<div class='aviso ok'>Ya cambiaste tu contraseña. Ingresa con la que elegiste.</div>")
+        script = ("document.getElementById('entrar').onclick=function(){try{sessionStorage.setItem('gym_prefill',"
+                  "JSON.stringify({u:" + _js_str(d.get("u")) + ",p:''}))}catch(e){}};")
+        entrar = "<a class='btn' id='entrar' href='/portal-static/index.html'>Entrar a mi portal</a>"
     else:
         tel = html.escape(d.get("t") or "")
         extra = (f" o escríbenos al <b>{tel}</b>" if tel else "")
         partes.append("<div class='aviso'>Por seguridad la contraseña temporal ya no se muestra. "
                       f"Si la olvidaste, usa «¿Olvidaste tu contraseña?» en el portal{extra} y Recepción te genera una nueva.</div>")
-    partes.append("<a class='btn' href='/portal-static/index.html'>Entrar a mi portal</a>"
-                  f"<a class='btn sec' href='/r/{t}'>← Volver</a>")
-    return _pagina(f"Acceso - {d.get('g') or 'Gimnasio'}", "".join(partes), _copiar_js())
+        script = ("document.getElementById('entrar').onclick=function(){try{sessionStorage.setItem('gym_prefill',"
+                  "JSON.stringify({u:" + _js_str(d.get("u")) + ",p:''}))}catch(e){}};")
+        entrar = "<a class='btn' id='entrar' href='/portal-static/index.html'>Entrar a mi portal</a>"
+    partes.append(entrar + f"<a class='btn sec' href='/r/{t}'>← Volver</a>")
+    return _pagina(f"Acceso - {d.get('g') or 'Gimnasio'}", "".join(partes), script)

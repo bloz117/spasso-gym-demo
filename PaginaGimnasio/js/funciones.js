@@ -2236,6 +2236,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (e) { /* noop */ }
 
+        // Acceso desde el enlace de Recepción (/r/.../acceso): usuario y contraseña ya escritos.
+        try {
+            const pre = sessionStorage.getItem('gym_prefill');
+            if (pre) {
+                sessionStorage.removeItem('gym_prefill');
+                const o = JSON.parse(pre);
+                const cu = document.getElementById('loginEmail');
+                const cp = document.getElementById('loginPassword');
+                if (cu && o.u) cu.value = o.u;
+                if (cp && o.p) cp.value = o.p;
+                if (typeof showModal === 'function' && loginModal) { loginModal.style.display = ''; showModal(loginModal); }
+            }
+        } catch (e) { /* noop */ }
+        // Pegar "usuario / contraseña" en el campo de usuario rellena los dos campos.
+        try {
+            const cu2 = document.getElementById('loginEmail');
+            if (cu2) cu2.addEventListener('paste', function (ev) {
+                const txt = ((ev.clipboardData || window.clipboardData).getData('text') || '').trim();
+                const m = txt.match(/^(\S+)\s*[\/\n\r|]\s*(\S+)$/);
+                if (!m) return;
+                ev.preventDefault();
+                cu2.value = m[1];
+                const cp2 = document.getElementById('loginPassword');
+                if (cp2) cp2.value = m[2];
+            });
+        } catch (e) { /* noop */ }
+
         // Verificar sesión al cargar y actualizar UI
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
