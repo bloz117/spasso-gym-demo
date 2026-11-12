@@ -13,10 +13,11 @@ Variables obligatorias:
     SYNC_SECRET    secreto compartido con Recepción (mínimo 32 caracteres)
 Opcionales: CORS_ORIGINS, IA_API_URL/IA_API_KEY/IA_MODEL (generador de rutinas con IA),
             APP_TIMEZONE (por defecto America/La_Paz)
+Licencia del portal (opcional; sin estas variables el portal funciona libre):
+            PORTAL_LICENCIA_CLAVE (GYM-... con módulo "portal") y LLAVE_URL (servidor de licencias)
 """
 import os
 import re
-import sys
 import time
 
 # La nube es el modo "cloud" y trabaja con la hora del gimnasio (no con UTC)
@@ -60,10 +61,10 @@ import portal_licencia
 import sync_core
 from routes import sync as sync_routes
 from routes.cms import router as cms_router
+from routes.enlace import router as enlace_router
 from routes.entrenador import router as entrenador_router
 from routes.portal_auth import router as portal_auth_router
 from routes.portal_client import router as portal_client_router
-from routes.recuperacion import router_portal as recuperacion_portal_router
 
 app = FastAPI(
     title="Spasso — Portal (nube)",
@@ -103,14 +104,13 @@ if _origenes:
 
 # ── Lista blanca de rutas /api (todo lo demás: 404) ───────────────────────
 _PERMITIDAS = [
-    ("POST", r"^/api/portal/(login|verificar|change-password|force-change-password|recordar|sesion|salir)$"),
-    ("POST", r"^/api/portal/recuperar/(solicitar|confirmar)$"),
+    ("POST", r"^/api/portal/(login|change-password|recordar|sesion|salir)$"),
     ("GET", r"^/api/portal/me(/[A-Za-z0-9_\-]+)*$"),
     ("PUT", r"^/api/portal/me/perfil-fisico$"),
     ("GET", r"^/api/entrenador/socios(/\d+/rutina)?$"),
     ("PUT", r"^/api/entrenador/socios/\d+/(rutina|genero)$"),
     ("POST", r"^/api/entrenador/ia/rutina$"),
-    ("GET", r"^/api/cms/(active-theme|contenido|hero-imagenes|hero-fondo|musica)$"),
+    ("GET", r"^/api/cms/(active-theme|contenido|hero-imagenes|musica)$"),
     ("GET", r"^/api/health$"),
     ("GET", r"^/api/sync/(ping|pull|digest|media/index)$"),
     ("POST", r"^/api/sync/push$"),
@@ -165,7 +165,7 @@ async def _error_generico(request, exc: Exception):
     return JSONResponse(status_code=500, content={"detail": "Error interno del servidor"})
 
 
-for r in (portal_auth_router, recuperacion_portal_router, portal_client_router, entrenador_router, cms_router, sync_routes.router):
+for r in (portal_auth_router, portal_client_router, entrenador_router, cms_router, sync_routes.router, enlace_router):
     app.include_router(r)
 
 
@@ -218,21 +218,6 @@ def media_img(nombre: str, request: Request):
 @app.get("/portal-static/music/{nombre}", include_in_schema=False)
 def media_music(nombre: str, request: Request):
     return _servir_media("music", nombre, request)
-
-
-from rutina_util import servir_con_rango  # noqa: E402
-
-
-@app.get("/portal-static/vid/{ruta:path}", include_in_schema=False)
-def media_video(ruta: str, request: Request):
-    # Videos de ejercicios con soporte de Range (adelantar/retroceder)
-    return servir_con_rango(os.path.join(PORTAL_DIR, "vid"), ruta, request)
-
-
-@app.get("/portal-static/audio/{ruta:path}", include_in_schema=False)
-def media_audio(ruta: str, request: Request):
-    # Voz guía de los descansos. iPhone/Safari solo reproduce audio si el servidor soporta 'Range' (206).
-    return servir_con_rango(os.path.join(PORTAL_DIR, "audio"), ruta, request)
 
 
 if os.path.isdir(PORTAL_DIR):
