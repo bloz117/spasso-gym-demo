@@ -104,9 +104,8 @@ def _login_entrenador(usuario: str, password: str, dispositivo=None, recordar=Fa
         return None
     if not verify_password(password, password_hash):
         return None
-    d = _ver.exigir_codigo(f"ent:{id_usuario}", id_usuario, "Entrenador", password_hash, correo_ent, dispositivo, username)
-    if d:
-        return d
+    # El entrenador entra directo con usuario y contraseña (sin código por correo).
+    # El código de verificación se usa solo para recuperar/cambiar la contraseña.
     return _respuesta_entrenador(id_usuario, username, recordar)
 
 
